@@ -11,8 +11,8 @@ what broke along the way. Newest entries at the bottom.
 |---|---|---|
 | D1 | Sealed world — domain model, personas, outcome engine, batch generator | ✅ **done** |
 | D2 | Detection, append-only ledger, invariants R1–R6 | ✅ **done** |
-| D3 | Root-cause diagnosis + labelled evaluation and confusion matrix | ⬅ next |
-| D4 | Policy engine, budgets, retry scheduler | ⬜ |
+| D3 | Root-cause diagnosis + labelled evaluation and confusion matrix | 🟡 **batch B run in flight** |
+| D4 | Policy engine, budgets, retry scheduler | ⬅ next |
 | D5 | Executor + Razorpay test-mode integration | ⬜ |
 | D6 | Evaluation harness, four arms, metrics, charts | ⬜ |
 | D7 | Console polish + one injected failure handled gracefully | ⬜ (shell built early, D2) |
@@ -491,3 +491,146 @@ different numbers of actions. Pairing each case to its own RNG stream would make
 properly paired comparison and tighten the lift estimate. It needs a change inside
 `synth/outcome.py`, which has been frozen since D1, so it is a deliberate decision and not a
 casual edit.
+
+---
+
+### D3 — Diagnosis, and what a keyword matcher structurally cannot do · 2026-08-27
+
+**Built**
+
+```
+reclaim/core/diagnose.py     Diagnoser protocol; StubDiagnoser; Gemini and Groq providers;
+                             the resumable, committed diagnosis cache
+reclaim/eval/confusion.py    scoring against ground truth - per-class with support counts,
+                             the three engineered pairs individually, cost-weighted error
+tests/test_diagnose.py       27 tests, including the seal at the prompt boundary
+```
+
+Three decisions worth recording.
+
+**The model runs once per batch, ever.** Output goes to `data/<batch>/diagnoses.jsonl`, which
+is committed, and the eval harness reads that file rather than calling a model. This is not a
+cost optimisation. The README claims every number reproduces on a clean checkout, and someone
+cloning this repo has no API key of any kind - so a diagnosis step that needs a live API is a
+reproducibility claim that is simply false. Caching it is what makes the claim true. That the
+same decision also collapses the running cost to a one-time charge is a side effect.
+
+**The stub is an arm, not a fallback.** `StubDiagnoser` is deterministic keyword matching with
+no network. It exists to be beaten, and running it as its own arm separates two things that
+otherwise get credited to the same place: how much of the agent's lift comes from the
+*diagnosis*, and how much from the policy wrapped around it. An agent that beats naive retry
+by a mile but only beats a regex by a hair has a good policy and an expensive classifier.
+
+**Diagnosis is per case, independently.** Batching ten cases into one request would cut token
+cost roughly fourfold and was tempting under a tokens-per-minute limit. Rejected: it lets case
+seven's diagnosis be influenced by case three. Independent classification is the honest design
+and the four-hour run is the price.
+
+**The finding**
+
+The stub cannot diagnose `ambiguous_debited`. Not "does it badly" - **0 out of 20 on batch A
+and 0 out of 26 on batch B**. This is structural rather than a tuning failure: separating a
+real ambiguous debit from a plain issuer timeout means weighing whether a bank reference came
+back, which is a *tendency* (78% against 16%), not a keyword. A string matcher has no way to
+weigh a tendency. A test pins this, so that if some future edit teaches the stub this class by
+another route, the claim gets rewritten rather than silently kept.
+
+That is the whole argument for the model, and it is the class where being wrong causes a
+double charge.
+
+**Provider selection, and a trap avoided**
+
+The first choice, Gemini 2.5 Flash, has a free-tier cap of **20 requests per day**. Not per
+minute - per day. Discovered when a 40-case pilot died at call twenty. Finding this on a
+pilot rather than seven hundred cases into a reported run was luck dressed up as process.
+
+Free-tier limits are per model and vary enormously, so the alternatives were probed directly
+rather than trusted from documentation:
+
+| provider / model | binding limit | throughput |
+|---|---|---|
+| gemini-2.5-flash | 20 requests/day | unusable |
+| gemini-3.5-flash-lite | 500 requests/day | 1,200 cases = 2 days |
+| groq openai/gpt-oss-120b | 8,000 tokens/min | 1,200 cases = 3.7 hours |
+
+Groq's constraint is tokens rather than requests, and at 1,462 tokens per call - of which
+**1,148 are the system prompt, resent every time** - that works out to 5.5 calls a minute.
+Trimming the prompt is the obvious lever and was rejected: that prompt is what produces the
+accuracy, and this is a one-time unattended run.
+
+The quota day also resets on **Pacific time**, not local midnight, which is why an apparently
+fresh quota at 01:00 IST was still the previous day's exhausted budget.
+
+**Model comparison, identical prompt and identical payload**
+
+Both providers call the same `observable()` function and the same system prompt, so this
+compares models and nothing else. Stratified 40-case sample of batch A, weighted to the hard
+pair:
+
+| | stub | gemini-3.5-flash-lite | groq gpt-oss-120b |
+|---|---|---|---|
+| accuracy | 0.325 | 0.850 | **0.950** |
+| `ambiguous_debited` caught | 0/15 | 15/15 | **15/15** |
+| false alarms | 0/25 | 1/25 | **1/25** |
+
+**Verified**
+
+```
+$ .venv/Scripts/python -m pytest
+193 passed
+
+$ .venv/Scripts/python -m reclaim.eval.confusion --batch A --provider gemini
+batch A  provider=gemini  model=gemini-3.5-flash-lite  n=477
+accuracy 0.878   macro-F1 0.813   weighted-F1 0.887   cost-weighted error 0.122
+```
+
+Like-for-like against the stub on those same 477 cases:
+
+| | stub | gemini | |
+|---|---|---|---|
+| accuracy | 0.532 | 0.878 | +0.346 |
+| macro-F1 | 0.461 | 0.813 | +0.352 |
+| cost-weighted error | 0.900 | 0.122 | **-87%** |
+| `ambiguous_debited` recall | 0/15 | 15/15 | |
+| `mandate_revoked` recall | 8/26 | 26/26 | |
+
+Cost-weighted error is the figure to lead with. It counts each mistake by what the mistake
+*does* rather than by whether it was a mistake, so calling an ambiguous debit a technical
+decline - which causes a double charge - is weighted ten times a confusion between two causes
+that both imply "wait, then retry". It fell by 87%.
+
+**What broke**
+
+1. **The seal's string check fired on a docstring.** `tests/test_seal.py` fails if the
+   simulated world's module name appears anywhere under `core/`, and the new module said in
+   prose that it must not import it. The check is crude - it cannot tell a comment from
+   `importlib.import_module(...)` - and that crudeness is exactly why it has no false
+   negatives. Reworded the docstring rather than teaching the check to parse. A guard that
+   gets narrowed every time it is inconvenient stops being a guard.
+
+2. **Over-calling the dangerous class.** `ambiguous_debited` recall is 15/15, but precision is
+   **0.306** - 49 cases flagged, 34 of them wrong. Erring toward "this may already have been
+   debited" is the safe direction, since the cost is a missed recovery rather than a double
+   charge, but it is not free: `psp_routing_failure` recall fell to 0.509 as collateral, and
+   the agent arm will show lower gross recovery because of it. This is a prompt problem, not a
+   model problem, and it is the reason iteration speed mattered enough to change providers.
+
+3. **A convenience method that undercut a safety property.** `record_charge()` claimed and
+   settled a charge in one call. It was also a shortcut past the insert-first discipline that
+   R1 depends on, and a shortcut past a safety property is not a convenience. Deleted, and the
+   test covering it deleted with it, rather than keeping both paths.
+
+**Next**
+
+D4: the policy engine. Diagnosis becomes action - `insufficient_funds` waits for payday rather
+than burning a retry, `ambiguous_debited` routes to reconcile-hold and never retries,
+`auth_abandoned` gets outreach inside the contact window because a silent retry against an
+absent human is worthless. The bounds already exist in `core/compliance.py`, so the policy has
+only to obey them and the guards will catch it if it does not.
+
+That produces the two remaining arms - `rules` (hand-written table, no model) and `agent`
+(model diagnosis, same policy) - and the gap between them is the number this project exists to
+report.
+
+Before that: fix the precision problem above, now that testing a prompt change costs five
+minutes rather than a day of quota.
