@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>reclaim</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand">
+    <span class="mark">R</span>
+    <div>
+      <h1>reclaim</h1>
+      <p>bounded revenue recovery for failed payments and mandates</p>
+    </div>
+  </div>
+
+  <div class="bar-right">
+    <label class="field">
+      <span>batch</span>
+      <select id="batch"></select>
+    </label>
+    <label class="field">
+      <span>arm</span>
+      <select id="run"></select>
+    </label>
+    <nav class="tabs" role="tablist">
+      <button class="tab is-active" data-view="live" role="tab">Live</button>
+      <button class="tab" data-view="results" role="tab">Results</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ================= LIVE ================= -->
+  <section id="view-live" class="view is-active">
+
+    <div class="strip">
+      <div class="stat"><b id="s-worked">0</b><span>cases worked</span></div>
+      <div class="stat"><b id="s-charges">0</b><span>charge attempts</span></div>
+      <div class="stat"><b id="s-contacts">0</b><span>messages sent</span></div>
+      <div class="stat good"><b id="s-recovered">0</b><span>captured</span></div>
+      <div class="stat bad"><b id="s-double">0</b><span>double charges</span></div>
+      <div class="stat"><b id="s-rows">0</b><span>ledger rows</span></div>
+      <div class="player">
+        <button id="play" class="btn primary">Play</button>
+        <button id="restart" class="btn">Restart</button>
+        <label class="speed">
+          <span>speed</span>
+          <input id="speed" type="range" min="1" max="60" value="18">
+        </label>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Decision stream</h2>
+          <span class="hint" id="stream-hint">replaying recorded run</span>
+        </div>
+        <ol id="stream" class="stream" aria-live="polite"></ol>
+        <div class="panel-foot">
+          <span id="stream-progress">0 / 0 events</span>
+          <span class="tag ledger">append-only ledger</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Case detail</h2>
+          <span class="hint">what the agent saw, and what it did</span>
+        </div>
+        <div id="detail" class="detail">
+          <p class="empty">Press <b>Play</b>, or pick a case from the stream.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RESULTS ================= -->
+  <section id="view-results" class="view">
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Arms over the held-out batch</h2>
+        <span class="hint" id="results-hint"></span>
+      </div>
+      <div class="scroll-x">
+        <table id="arms" class="table">
+          <thead>
+            <tr>
+              <th>arm</th>
+              <th class="n">recovered</th>
+              <th class="n">rate</th>
+              <th class="n">of which organic</th>
+              <th class="n">lift vs control</th>
+              <th class="n">gross</th>
+              <th class="n">cost</th>
+              <th class="n">net</th>
+              <th class="n">net lift</th>
+              <th class="n">halt rate</th>
+              <th class="n">double charges</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="panel-foot">
+        <span class="note">
+          Lift is the only honest headline: some of these cases were always coming back,
+          and the control arm measures exactly how many.
+        </span>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Invariants</h2>
+          <span class="hint">asserted after every run, against the ledger</span>
+        </div>
+        <div id="invariants" class="invariants"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Detection</h2>
+          <span class="hint">what was opened for recovery, and what was not</span>
+        </div>
+        <div id="detection" class="detection"></div>
+        <div class="panel-foot">
+          <span class="note">
+            Dispositions other than <code>eligible</code> do not occur in the generated
+            batches - the generator emits one clean failure per customer. They are the
+            rules that stop a pending collect request or a redelivered webhook from
+            becoming a double charge, and they are covered by unit tests instead.
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

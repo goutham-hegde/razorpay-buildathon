@@ -60,30 +60,71 @@ def test_core_never_references_synth_by_string() -> None:
     assert not offenders, "\n  ".join(offenders)
 
 
+class _Poison:
+    """A meta-path finder that refuses to let `reclaim.synth` be imported.
+
+    Must implement `find_spec`. The legacy `find_module` hook this originally used was
+    deprecated in Python 3.4 and *removed* from meta-path finders in 3.12, so a finder
+    defining only `find_module` is silently never consulted - and a poison that is never
+    consulted is a test that always passes. See `test_the_poison_actually_bites`.
+    """
+
+    def find_spec(self, fullname, path=None, target=None):  # noqa: D102
+        if fullname == FORBIDDEN or fullname.startswith(FORBIDDEN + "."):
+            raise AssertionError(f"core tried to import {fullname}")
+        return None
+
+
+def _core_module_names() -> list[str]:
+    return [f"reclaim.core.{m.name}" for m in pkgutil.iter_modules([str(CORE)]) if not m.ispkg]
+
+
+def test_the_poison_actually_bites() -> None:
+    """Prove the mechanism fires before trusting the test that depends on it.
+
+    Without this, `test_core_imports_cleanly_with_synth_poisoned` is indistinguishable
+    from a test that imports some modules and asserts nothing at all.
+    """
+    for name in list(sys.modules):
+        if name.startswith(FORBIDDEN):
+            sys.modules.pop(name)
+    sys.meta_path.insert(0, _Poison())
+    try:
+        with pytest.raises(AssertionError, match="tried to import"):
+            importlib.import_module("reclaim.synth.outcome")
+    finally:
+        sys.meta_path.pop(0)
+
+
 def test_core_imports_cleanly_with_synth_poisoned() -> None:
     """Runtime proof: every core module loads with `reclaim.synth` made unimportable."""
-    modules = [
-        f"reclaim.core.{m.name}"
-        for m in pkgutil.iter_modules([str(CORE)])
-        if not m.ispkg
-    ]
+    modules = _core_module_names()
     if not modules:
         pytest.skip("no core modules yet")
 
-    class Poison:
-        def find_module(self, fullname, path=None):  # noqa: D102 - legacy hook shape
-            if fullname.startswith(FORBIDDEN):
-                raise AssertionError(f"core tried to import {fullname}")
-            return None
-
-    for name in modules:
+    for name in modules + [m for m in sys.modules if m.startswith(FORBIDDEN)]:
         sys.modules.pop(name, None)
-    sys.meta_path.insert(0, Poison())
+    sys.meta_path.insert(0, _Poison())
     try:
         for name in modules:
             importlib.import_module(name)
     finally:
         sys.meta_path.pop(0)
+
+
+def test_core_cannot_read_ground_truth() -> None:
+    """The agent's file loader refuses `truth.jsonl` even when handed it directly.
+
+    The import boundary stops `core` reaching the world's parameters. This stops it
+    reaching the world's answers, which are on disk next to the data it is meant to read.
+    """
+    from reclaim.core import feed
+
+    d = ROOT / "data" / "B"
+    if not (d / "truth.jsonl").exists():
+        pytest.skip("batch B not generated")
+    with pytest.raises(feed.SealViolation):
+        list(feed._lines(d / "truth.jsonl"))
 
 
 def test_truth_is_a_separate_file_from_cases() -> None:
