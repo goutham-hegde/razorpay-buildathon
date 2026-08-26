@@ -47,7 +47,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable, Protocol
 
-from reclaim.domain import Case, ObservedError, Rail, RootCause
+from reclaim.domain import Case, ObservedError, RootCause
 
 # ---------------------------------------------------------------------------
 # The prediction
@@ -260,6 +260,38 @@ _RESPONSE_SCHEMA = {
 }
 
 
+class QuotaExhausted(RuntimeError):
+    """A free-tier quota is spent. Distinct from a transient error: waiting will not help.
+
+    Raised rather than swallowed so a run stops loudly with what it has, instead of burning
+    an hour of retries against a daily cap. The cache is already written, so resuming after
+    the quota resets costs nothing.
+    """
+
+
+def _retry_delay(res) -> float | None:
+    """Google returns how long to wait. Use it rather than guessing."""
+    try:
+        for detail in res.json().get("error", {}).get("details", []):
+            if detail.get("@type", "").endswith("RetryInfo"):
+                return float(str(detail.get("retryDelay", "0s")).rstrip("s"))
+    except (ValueError, TypeError, AttributeError):
+        pass
+    return None
+
+
+def _quota_note(res) -> str:
+    """The quota id and limit, so a 429 says which ceiling was hit rather than just 429."""
+    try:
+        for detail in res.json().get("error", {}).get("details", []):
+            if detail.get("@type", "").endswith("QuotaFailure"):
+                v = (detail.get("violations") or [{}])[0]
+                return f"{v.get('quotaId', 'quota')} = {v.get('quotaValue', '?')}"
+    except (ValueError, TypeError, AttributeError):
+        pass
+    return res.text[:160]
+
+
 class GeminiDiagnoser:
     """Google AI Studio (Gemini). Chosen because its free tier needs no card.
 
@@ -270,7 +302,10 @@ class GeminiDiagnoser:
 
     #: Flash is the right tier here: this is short-context classification, run once, and the
     #: hard part is judgement about ambiguity rather than reasoning depth.
-    DEFAULT_MODEL = "gemini-2.5-flash"
+    #: Chosen empirically over gemini-2.5-flash, which has a 20-request *daily* free cap -
+    #: unusable for a 1,200-case pass. This tier matched it on the hard confusion pair
+    #: (10/10 ambiguous_debited caught) with enough headroom to finish a batch.
+    DEFAULT_MODEL = "gemini-3.5-flash-lite"
     ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
     def __init__(
@@ -278,6 +313,10 @@ class GeminiDiagnoser:
         api_key: str | None = None,
         model: str | None = None,
         timeout: float = 60.0,
+        max_attempts: int = 5,
+        #: A wait longer than this means a daily cap rather than a burst limit. Stop and
+        #: say so; the cache makes resuming after the reset free.
+        max_wait: float = 120.0,
     ) -> None:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
         if not self.api_key:
@@ -288,6 +327,8 @@ class GeminiDiagnoser:
         self.name = "gemini"
         self.model = model or self.DEFAULT_MODEL
         self.timeout = timeout
+        self.max_attempts = max_attempts
+        self.max_wait = max_wait
         self._client = None
 
     def _http(self):
@@ -317,7 +358,7 @@ class GeminiDiagnoser:
         }
 
         last: Exception | None = None
-        for attempt in range(5):
+        for attempt in range(self.max_attempts):
             try:
                 res = self._http().post(
                     self.ENDPOINT.format(model=self.model),
@@ -325,9 +366,16 @@ class GeminiDiagnoser:
                     json=payload,
                 )
                 if res.status_code == 429 or res.status_code >= 500:
-                    # Free tiers rate-limit by design. Back off rather than lose the run.
-                    time.sleep(min(60.0, 2.0 * (2**attempt)))
-                    last = RuntimeError(f"HTTP {res.status_code}: {res.text[:200]}")
+                    # Free tiers rate-limit by design, and Google says how long to wait.
+                    # Honouring `retryDelay` beats guessing: a fixed backoff either gives
+                    # up while quota is about to return, or sleeps far longer than needed.
+                    delay = _retry_delay(res) or min(60.0, 2.0 * (2**attempt))
+                    last = QuotaExhausted(
+                        f"HTTP {res.status_code} on {self.model}: {_quota_note(res)}"
+                    )
+                    if delay > self.max_wait:
+                        raise last  # a daily cap, not a burst limit - stop and report
+                    time.sleep(delay)
                     continue
                 res.raise_for_status()
                 return self._parse(case, res.json())
@@ -335,7 +383,7 @@ class GeminiDiagnoser:
                 last = exc
                 time.sleep(min(30.0, 2.0 * (2**attempt)))
 
-        raise RuntimeError(f"{case.id}: giving up after 5 attempts") from last
+        raise RuntimeError(f"{case.id}: giving up after {self.max_attempts} attempts") from last
 
     def _parse(self, case: Case, body: dict) -> Diagnosis:
         try:
@@ -364,15 +412,140 @@ class GeminiDiagnoser:
         )
 
 
+
+class GroqDiagnoser:
+    """Groq. Same prompt, same payload, same schema as the Gemini path - only the transport
+    differs, so a comparison between providers is a comparison of models and nothing else.
+
+    Chosen over Gemini for one reason that has nothing to do with quality: Gemini's free
+    tier caps at 500 requests per *day* per model, which makes a 1,200-case pass a two-day
+    affair and makes iterating on the prompt effectively impossible. Groq's free tier is
+    generous enough that `tune on A, report on B` is a loop rather than a one-shot.
+    """
+
+    #: gpt-oss-120b over the 20b and the qwen models: on the stratified pilot it was the
+    #: only one that matched Gemini on the ambiguous_debited/issuer_technical_decline pair,
+    #: which is the distinction the whole taxonomy exists to make.
+    DEFAULT_MODEL = "openai/gpt-oss-120b"
+    ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model: str | None = None,
+        timeout: float = 60.0,
+        max_attempts: int = 5,
+        max_wait: float = 120.0,
+    ) -> None:
+        self.api_key = api_key or os.environ.get("GROQ_API_KEY", "")
+        if not self.api_key:
+            raise RuntimeError(
+                "no Groq API key. Set GROQ_API_KEY, or pass --provider stub to run without "
+                "a model. A free key with no card is at https://console.groq.com/keys"
+            )
+        self.name = "groq"
+        self.model = model or self.DEFAULT_MODEL
+        self.timeout = timeout
+        self.max_attempts = max_attempts
+        self.max_wait = max_wait
+        self._client = None
+
+    def _http(self):
+        if self._client is None:
+            import httpx
+
+            self._client = httpx.Client(timeout=self.timeout)
+        return self._client
+
+    def diagnose(self, case: Case) -> Diagnosis:
+        import httpx
+
+        payload = {
+            "model": self.model,
+            "temperature": 0.0,  # classification, not generation - determinism is wanted
+            "max_completion_tokens": 4096,
+            "messages": [
+                {"role": "system", "content": _SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": json.dumps(observable(case), separators=(",", ":")),
+                },
+            ],
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "diagnosis",
+                    "schema": {**_RESPONSE_SCHEMA, "additionalProperties": False},
+                },
+            },
+        }
+
+        last: Exception | None = None
+        for attempt in range(self.max_attempts):
+            try:
+                res = self._http().post(
+                    self.ENDPOINT,
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                    json=payload,
+                )
+                if res.status_code == 429 or res.status_code >= 500:
+                    delay = float(res.headers.get("retry-after", 0)) or min(
+                        60.0, 2.0 * (2**attempt)
+                    )
+                    last = QuotaExhausted(f"HTTP {res.status_code} on {self.model}")
+                    if delay > self.max_wait:
+                        raise last
+                    time.sleep(delay)
+                    continue
+                res.raise_for_status()
+                return self._parse(case, res.json())
+            except httpx.HTTPError as exc:
+                last = exc
+                time.sleep(min(30.0, 2.0 * (2**attempt)))
+
+        raise RuntimeError(f"{case.id}: giving up after {self.max_attempts} attempts") from last
+
+    def _parse(self, case: Case, body: dict) -> Diagnosis:
+        try:
+            raw = json.loads(body["choices"][0]["message"]["content"])
+            cause = RootCause(raw["root_cause"])
+        except (KeyError, IndexError, ValueError, TypeError) as exc:
+            # Recorded as a real prediction with zero confidence rather than dropped -
+            # silently skipping unparseable cases removes exactly the hardest ones.
+            return Diagnosis(
+                case.id,
+                RootCause.ISSUER_TECHNICAL_DECLINE,
+                0.0,
+                f"unparseable model response ({type(exc).__name__})",
+                self.name,
+                self.model,
+            )
+        return Diagnosis(
+            case_id=case.id,
+            root_cause=cause,
+            confidence=max(0.0, min(1.0, float(raw.get("confidence", 0.5)))),
+            rationale=str(raw.get("rationale", ""))[:400],
+            provider=self.name,
+            model=self.model,
+        )
+
+
 # ---------------------------------------------------------------------------
 # The cache — the committed artifact
 # ---------------------------------------------------------------------------
 
 
+#: The model arm's committed artifact. One file per provider, so switching providers can
+#: never silently overwrite results produced by a different model.
+_CACHE_NAMES = {
+    "stub": "diagnoses.stub.jsonl",
+    "gemini": "diagnoses.gemini.jsonl",
+    "groq": "diagnoses.jsonl",
+}
+
+
 def cache_path(batch_dir: Path, provider: str) -> Path:
-    return batch_dir / (
-        "diagnoses.jsonl" if provider != "stub" else "diagnoses.stub.jsonl"
-    )
+    return batch_dir / _CACHE_NAMES.get(provider, f"diagnoses.{provider}.jsonl")
 
 
 def load_diagnoses(path: Path) -> dict[str, Diagnosis]:
@@ -394,6 +567,7 @@ def run(
     path: Path,
     resume: bool = True,
     progress_every: int = 25,
+    rpm: int | None = None,
 ) -> dict[str, Diagnosis]:
     """Diagnose `cases`, appending to `path` as it goes.
 
@@ -405,15 +579,24 @@ def run(
     if not todo:
         return done
 
+    # Pace proactively rather than discovering the limit by being refused. Bouncing off a
+    # 429 and waiting out the retry delay works, but it wastes a request and a minute each
+    # time; spacing calls to the known rate is strictly cheaper.
+    interval = 60.0 / rpm if rpm else 0.0
+
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a" if resume else "w", encoding="utf-8") as fh:
         for i, case in enumerate(todo, 1):
+            started = time.monotonic()
             d = diagnoser.diagnose(case)
             fh.write(d.to_json() + "\n")
             fh.flush()  # durability beats throughput when a run takes an hour
             done[case.id] = d
             if progress_every and i % progress_every == 0:
-                print(f"  {i}/{len(todo)}  {case.id} -> {d.root_cause} ({d.confidence:.2f})")
+                print(f"  {i}/{len(todo)}  {case.id} -> {d.root_cause} ({d.confidence:.2f})",
+                      flush=True)
+            if interval:
+                time.sleep(max(0.0, interval - (time.monotonic() - started)))
     return done
 
 
@@ -422,7 +605,9 @@ def build(provider: str, model: str | None = None) -> Diagnoser:
         return StubDiagnoser()
     if provider == "gemini":
         return GeminiDiagnoser(model=model)
-    raise ValueError(f"unknown provider {provider!r}; known: stub, gemini")
+    if provider == "groq":
+        return GroqDiagnoser(model=model)
+    raise ValueError(f"unknown provider {provider!r}; known: stub, gemini, groq")
 
 
 def main() -> int:
@@ -433,9 +618,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Diagnose a batch's root causes, once.")
     ap.add_argument("--batch", default="B")
     ap.add_argument("--root", default="data")
-    ap.add_argument("--provider", default="stub", choices=["stub", "gemini"])
+    ap.add_argument("--provider", default="stub", choices=["stub", "gemini", "groq"])
     ap.add_argument("--model", default=None)
     ap.add_argument("--limit", type=int, default=None, help="diagnose only the first N cases")
+    ap.add_argument("--rpm", type=int, default=None, help="pace calls to this rate")
     ap.add_argument("--no-resume", action="store_true", help="rewrite the cache from scratch")
     args = ap.parse_args()
 
@@ -447,7 +633,7 @@ def main() -> int:
     print(f"batch {b.name}  {len(cases)} cases  provider={diagnoser.name} model={diagnoser.model}")
     print(f"cache: {path}")
     started = time.time()
-    out = run(cases, diagnoser, path, resume=not args.no_resume)
+    out = run(cases, diagnoser, path, resume=not args.no_resume, rpm=args.rpm)
     print(f"{len(out)} diagnoses in {time.time() - started:.1f}s")
 
     counts: dict[str, int] = {}
