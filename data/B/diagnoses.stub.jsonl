@@ -1,0 +1,600 @@
+{"case_id":"case_B00000","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00001","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00002","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00003","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00004","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00005","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00006","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00007","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00008","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00009","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00010","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00011","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00012","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00013","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00014","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00015","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00016","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00017","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00018","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00019","root_cause":"limit_exceeded","confidence":0.72,"rationale":"matched /limit|exceed|per txn cap|daily cap/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00020","root_cause":"limit_exceeded","confidence":0.72,"rationale":"matched /limit|exceed|per txn cap|daily cap/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00021","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00022","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00023","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00024","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00025","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00026","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00027","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00028","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00029","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00030","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00031","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00032","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00033","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00034","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00035","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00036","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00037","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00038","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00039","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00040","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00041","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00042","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00043","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00044","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00045","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00046","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00047","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00048","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00049","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00050","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00051","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00052","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00053","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00054","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00055","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00056","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00057","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00058","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00059","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00060","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00061","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00062","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00063","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00064","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00065","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00066","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00067","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00068","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00069","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00070","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00071","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00072","root_cause":"issuer_technical_decline","confidence":0.5,"rationale":"matched /timeout|timed out|no response|deemed|pending settlement|unknown/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00073","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00074","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00075","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00076","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00077","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00078","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00079","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00080","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00081","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00082","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00083","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00084","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00085","root_cause":"limit_exceeded","confidence":0.72,"rationale":"matched /limit|exceed|per txn cap|daily cap/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00086","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00087","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00088","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00089","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00090","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00091","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00092","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00093","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00094","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00095","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00096","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00097","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00098","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00099","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00100","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00101","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00102","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00103","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00104","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00105","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00106","root_cause":"issuer_technical_decline","confidence":0.5,"rationale":"matched /timeout|timed out|no response|deemed|pending settlement|unknown/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00107","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00108","root_cause":"issuer_technical_decline","confidence":0.5,"rationale":"matched /timeout|timed out|no response|deemed|pending settlement|unknown/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00109","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00110","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00111","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00112","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00113","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00114","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00115","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00116","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00117","root_cause":"issuer_technical_decline","confidence":0.5,"rationale":"matched /timeout|timed out|no response|deemed|pending settlement|unknown/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00118","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00119","root_cause":"limit_exceeded","confidence":0.72,"rationale":"matched /limit|exceed|per txn cap|daily cap/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00120","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00121","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00122","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00123","root_cause":"mandate_revoked","confidence":0.66,"rationale":"matched /revoked|cancelled by|mandate not|umn not found|de-?registered/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00124","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00125","root_cause":"mandate_revoked","confidence":0.66,"rationale":"matched /revoked|cancelled by|mandate not|umn not found|de-?registered/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00126","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00127","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00128","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00129","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00130","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00131","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00132","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00133","root_cause":"mandate_revoked","confidence":0.66,"rationale":"matched /revoked|cancelled by|mandate not|umn not found|de-?registered/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00134","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00135","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00136","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00137","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00138","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00139","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00140","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00141","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00142","root_cause":"risk_declined","confidence":0.7,"rationale":"matched /risk|fraud|suspicious|velocity|declined by rule/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00143","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00144","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00145","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00146","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00147","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00148","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00149","root_cause":"limit_exceeded","confidence":0.72,"rationale":"matched /limit|exceed|per txn cap|daily cap/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00150","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00151","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00152","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00153","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00154","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00155","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00156","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00157","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00158","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00159","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00160","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00161","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00162","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00163","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00164","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00165","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00166","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00167","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00168","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00169","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00170","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00171","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00172","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00173","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00174","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00175","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00176","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00177","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00178","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00179","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00180","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00181","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00182","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00183","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00184","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00185","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00186","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00187","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00188","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00189","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00190","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00191","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00192","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00193","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00194","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00195","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00196","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00197","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00198","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00199","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00200","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00201","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00202","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00203","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00204","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00205","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00206","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00207","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00208","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00209","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00210","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00211","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00212","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00213","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00214","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00215","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00216","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00217","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00218","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00219","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00220","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00221","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00222","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00223","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00224","root_cause":"mandate_revoked","confidence":0.66,"rationale":"matched /revoked|cancelled by|mandate not|umn not found|de-?registered/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00225","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00226","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00227","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00228","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00229","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00230","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00231","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00232","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00233","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00234","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00235","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00236","root_cause":"risk_declined","confidence":0.7,"rationale":"matched /risk|fraud|suspicious|velocity|declined by rule/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00237","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00238","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00239","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00240","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00241","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00242","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00243","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00244","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00245","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00246","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00247","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00248","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00249","root_cause":"issuer_technical_decline","confidence":0.5,"rationale":"matched /timeout|timed out|no response|deemed|pending settlement|unknown/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00250","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00251","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00252","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00253","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00254","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00255","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00256","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00257","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00258","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00259","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00260","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00261","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00262","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00263","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00264","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00265","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00266","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00267","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00268","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00269","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00270","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00271","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00272","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00273","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00274","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00275","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00276","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00277","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00278","root_cause":"mandate_revoked","confidence":0.66,"rationale":"matched /revoked|cancelled by|mandate not|umn not found|de-?registered/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00279","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00280","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00281","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00282","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00283","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00284","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00285","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00286","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00287","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00288","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00289","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00290","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00291","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00292","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00293","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00294","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00295","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00296","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00297","root_cause":"mandate_revoked","confidence":0.66,"rationale":"matched /revoked|cancelled by|mandate not|umn not found|de-?registered/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00298","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00299","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00300","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00301","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00302","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00303","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00304","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00305","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00306","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00307","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00308","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00309","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00310","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00311","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00312","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00313","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00314","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00315","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00316","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00317","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00318","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00319","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00320","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00321","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00322","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00323","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00324","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00325","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00326","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00327","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00328","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00329","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00330","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00331","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00332","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00333","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00334","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00335","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00336","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00337","root_cause":"limit_exceeded","confidence":0.72,"rationale":"matched /limit|exceed|per txn cap|daily cap/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00338","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00339","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00340","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00341","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00342","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00343","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00344","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00345","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00346","root_cause":"limit_exceeded","confidence":0.72,"rationale":"matched /limit|exceed|per txn cap|daily cap/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00347","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00348","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00349","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00350","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00351","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00352","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00353","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00354","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00355","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00356","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00357","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00358","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00359","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00360","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00361","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00362","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00363","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00364","root_cause":"mandate_revoked","confidence":0.66,"rationale":"matched /revoked|cancelled by|mandate not|umn not found|de-?registered/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00365","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00366","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00367","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00368","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00369","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00370","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00371","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00372","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00373","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00374","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00375","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00376","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00377","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00378","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00379","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00380","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00381","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00382","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00383","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00384","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00385","root_cause":"limit_exceeded","confidence":0.72,"rationale":"matched /limit|exceed|per txn cap|daily cap/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00386","root_cause":"issuer_technical_decline","confidence":0.5,"rationale":"matched /timeout|timed out|no response|deemed|pending settlement|unknown/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00387","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00388","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00389","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00390","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00391","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00392","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00393","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00394","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00395","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00396","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00397","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00398","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00399","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00400","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00401","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00402","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00403","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00404","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00405","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00406","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00407","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00408","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00409","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00410","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00411","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00412","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00413","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00414","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00415","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00416","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00417","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00418","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00419","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00420","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00421","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00422","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00423","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00424","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00425","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00426","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00427","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00428","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00429","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00430","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00431","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00432","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00433","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00434","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00435","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00436","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00437","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00438","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00439","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00440","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00441","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00442","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00443","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00444","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00445","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00446","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00447","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00448","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00449","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00450","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00451","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00452","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00453","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00454","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00455","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00456","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00457","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00458","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00459","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00460","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00461","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00462","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00463","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00464","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00465","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00466","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00467","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00468","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00469","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00470","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00471","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00472","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00473","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00474","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00475","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00476","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00477","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00478","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00479","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00480","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00481","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00482","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00483","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00484","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00485","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00486","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00487","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00488","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00489","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00490","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00491","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00492","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00493","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00494","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00495","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00496","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00497","root_cause":"limit_exceeded","confidence":0.72,"rationale":"matched /limit|exceed|per txn cap|daily cap/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00498","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00499","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00500","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00501","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00502","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00503","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00504","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00505","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00506","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00507","root_cause":"limit_exceeded","confidence":0.72,"rationale":"matched /limit|exceed|per txn cap|daily cap/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00508","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00509","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00510","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00511","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00512","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00513","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00514","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00515","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00516","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00517","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00518","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00519","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00520","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00521","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00522","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00523","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00524","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00525","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00526","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00527","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00528","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00529","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00530","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00531","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00532","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00533","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00534","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00535","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00536","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00537","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00538","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00539","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00540","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00541","root_cause":"mandate_revoked","confidence":0.66,"rationale":"matched /revoked|cancelled by|mandate not|umn not found|de-?registered/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00542","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00543","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00544","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00545","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00546","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00547","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00548","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00549","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00550","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00551","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00552","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00553","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00554","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00555","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00556","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00557","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00558","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00559","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00560","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00561","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00562","root_cause":"auth_abandoned","confidence":0.66,"rationale":"matched /abandon|cancelled at|not approved by payer|expired.*collect|user dropped/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00563","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00564","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00565","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00566","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00567","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00568","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00569","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00570","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00571","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00572","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00573","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00574","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00575","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00576","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00577","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00578","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00579","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00580","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00581","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00582","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00583","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00584","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00585","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00586","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00587","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00588","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00589","root_cause":"mandate_revoked","confidence":0.66,"rationale":"matched /revoked|cancelled by|mandate not|umn not found|de-?registered/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00590","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00591","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00592","root_cause":"instrument_invalid","confidence":0.68,"rationale":"matched /expired|invalid card|blocked|closed|do not honour|card not/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00593","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00594","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00595","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00596","root_cause":"psp_routing_failure","confidence":0.55,"rationale":"matched /gateway|route|upstream|psp|switch/","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00597","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00598","root_cause":"issuer_technical_decline","confidence":0.25,"rationale":"no rule matched; fell back to the modal cause","provider":"stub","model":"keyword-rules"}
+{"case_id":"case_B00599","root_cause":"insufficient_funds","confidence":0.8,"rationale":"matched /insufficient|bal(ance)? low|not enough|nsf|acct bal/","provider":"stub","model":"keyword-rules"}
