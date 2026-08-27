@@ -1183,6 +1183,62 @@ everything evenly and cutting the one place that can afford it. It lands at 5:00
 Every figure in it sits in a marked slot next to the command that prints it, and the
 preamble says outright that today's batch A stand-ins must be replaced before recording.
 
+**One open question closed, without spending any budget on it.**
+
+Cutting the token reservation mid-batch raised a fair objection: are the cases diagnosed at
+1024 the same artifact as the 306 done at 4096? Re-diagnosing a case to compare would have
+cost budget on the critical path, so the run's own output answered it instead:
+
+```
+reserved 4096: 306 cases, accuracy 0.984, 0 unparseable, 0 zero-confidence
+reserved 1024:  30 cases, accuracy 0.933, 0 unparseable, 0 zero-confidence
+```
+
+The mechanical risk was truncation, and it is cleanly absent — nothing unparseable, no
+zero-confidence rows, and the mean rationale is marginally *longer* at the lower cap
+(299.7 chars against 293.3). The truncation guard would have raised anyway; it never fired.
+
+The accuracy gap is two errors in thirty. At the old rate you would expect 0.49, and
+P(≥2) = 0.086 — not significant, and this is a post-hoc split on a small sample. More to the
+point, both errors are the same thing:
+
+```
+case_B00311  said ambiguous_debited, truth issuer_technical_decline, conf 0.60
+case_B00324  said ambiguous_debited, truth issuer_technical_decline, conf 0.65
+```
+
+That is the engineered confusion pair, failing in the **safe** direction — over-calling the
+dangerous class costs a reconcile hold, not a duplicate debit — and both sit below the 0.75
+bar the charge gate requires, so the policy would not have acted on either. It is the
+failure mode this taxonomy was built to produce, not evidence of a degraded call.
+
+Worth re-checking when the batch finishes and the sample is larger. Recorded now so that
+the check is a measurement rather than a memory.
+
+**The demo console was run against the corrected figures**, because a change to the
+simulator is exactly the sort of thing that leaves a demo quietly reporting last week's
+numbers. It serves them live and they match the CLI:
+
+```
+control  rec  28.2%  net lift            0  halt   0.0%  doubles 0
+naive    rec  52.5%  net lift   -6,012,174  halt  59.9%  doubles 20
+rules    rec  51.7%  net lift      424,427  halt   0.0%  doubles 4
+```
+
+`/api/case/case_A00440` is worth keeping for the video. It is one of the four cases where
+the keyword matcher walked into the trap, and the trail says so without commentary:
+
+```
+decision -> charge (pay_A00440_0) -> decision -> closed: reconcile_hold
+observed_error: "No confirmation received from SBI. Debit may have been processed."
+bank_reference: None
+```
+
+The error text is the engineered `ambiguous_debited` / `issuer_technical_decline` pair, the
+missing bank reference is the only signal separating them, the stub charged it anyway, and
+the ledger records both the charge and the hold. That is the whole thesis of the project in
+one case, and it is a screen rather than a claim.
+
 **Next**
 
 The reported table still needs batch B's diagnoses, and nothing else is blocked on them.
