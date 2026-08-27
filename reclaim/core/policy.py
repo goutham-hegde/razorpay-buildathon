@@ -410,7 +410,16 @@ class PolicyEngine:
         acquirer and nothing for us, because the authorisation the charge needs does not
         exist yet.
         """
-        if self._came_back(view) and view.charge_attempts < view.charge_budget:
+        # Both halves are required, and the second one is easy to leave out. Engagement
+        # alone is not evidence that a dead card was replaced - a customer can open a
+        # balance nudge without touching their instrument, and presenting against a card
+        # that is still closed spends an attempt to learn nothing. On a stored mandate it
+        # spends a *consecutive* failure, which is the currency the rail halts you for.
+        if (
+            view.reauth_requested
+            and self._came_back(view)
+            and view.charge_attempts < view.charge_budget
+        ):
             return self._charge(
                 view,
                 "customer engaged with the re-authorisation request; presenting once against "

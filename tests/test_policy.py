@@ -741,3 +741,19 @@ def test_a_spent_budget_closes_when_no_outreach_is_permitted(engine: PolicyEngin
         )
     )
     assert action.kind == "close"
+
+
+@pytest.mark.parametrize("cause", [RC.INSTRUMENT_INVALID, RC.MANDATE_REVOKED])
+def test_a_dead_instrument_is_not_charged_on_unrelated_engagement(
+    engine: PolicyEngine, cause: RC
+) -> None:
+    """Engagement alone does not mean the instrument was replaced.
+
+    A customer can open a balance nudge without touching their card. Presenting against an
+    instrument that is still closed spends an attempt to learn nothing - and on a stored
+    mandate it spends a *consecutive* failure, which is the currency the rail halts you for.
+    """
+    action = engine.next_action(
+        make_view(cause, contacts_sent=1, engaged_at=T0, reauth_requested=False)
+    )
+    assert not action.moves_money
