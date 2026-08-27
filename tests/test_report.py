@@ -93,3 +93,12 @@ def test_a_readme_without_the_marker_is_refused() -> None:
 def test_a_partial_run_set_is_named() -> None:
     assert missing_arms([_arm("control"), _arm("naive")]) == ["rules", "agent"]
     assert missing_arms([_arm(a) for a in ("control", "naive", "rules", "agent")]) == []
+
+
+def test_the_provenance_line_does_not_call_the_tuning_batch_held_out() -> None:
+    """Batch A is tuned on. A table built from it must not claim to be the reported one."""
+    a = render_block([_arm("control")], "A")
+    b = render_block([_arm("control")], "B")
+    assert "held-out" not in a
+    assert "tuning" in a
+    assert "held-out" in b

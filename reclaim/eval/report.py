@@ -121,13 +121,22 @@ def render_block(metrics: list[ArmMetrics], batch: str) -> str:
     n = metrics[0].cases if metrics else 0
     at_risk = metrics[0].at_risk_paise if metrics else 0
 
+    # Batch A is the tuning batch and B is held out. Saying "held out" over a table built
+    # from A would be the single most misleading sentence this file could generate, so the
+    # provenance line follows the batch rather than being written once and assumed.
+    held_out = batch.upper() != "A"
+    provenance = (
+        "the held-out batch — the policy was never tuned against it"
+        if held_out
+        else "the **tuning** batch, shown for working. The reported table is batch B"
+    )
+
     parts = [
         OPEN_MARKER,
         "",
-        f"Batch **{batch.upper()}** — the held-out batch. {n:,} failed payments and "
-        f"mandates, Rs {_rupees(at_risk)} at risk. Tuning happened on batch A; these "
-        "numbers were produced by running the commands under [Run it](#run-it) and were "
-        "not touched by hand.",
+        f"Batch **{batch.upper()}** — {provenance}. {n:,} failed payments and mandates, "
+        f"Rs {_rupees(at_risk)} at risk. Every figure here was produced by running the "
+        "commands under [Run it](#run-it); none of it is typed in by hand.",
         "",
         markdown_table(metrics),
         "",
