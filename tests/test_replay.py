@@ -380,3 +380,47 @@ def test_retrying_a_mandate_to_the_threshold_halts_it(root: Path) -> None:
         halted = halted or result.mandate_halted_now
     assert halted, "a dead instrument on a mandate rail must halt inside the threshold"
     assert world.state[case.id].mandate_halted
+
+
+def test_a_case_sees_the_same_draws_whatever_the_arm_did_to_other_cases(root: Path) -> None:
+    """Common random numbers: the world is *paired* across arms, not merely same-seeded.
+
+    With one generator shared by the whole world, the moment an arm takes a different
+    number of actions than another its draw sequence shifts, and every later case sees
+    different randomness than the same case in the other arm. The arms then differ by their
+    decisions *and* by an accident of ordering, and that lands in the lift estimate as
+    noise it is impossible to attribute.
+
+    Asserted over the whole batch rather than one case on purpose. Many cases sit at a
+    success probability near 0 or 1, where any draw gives the same answer and a shared
+    generator looks paired; the disagreement only shows up on the cases in the middle.
+    """
+    b = feed.load_batch(BATCH, root)
+    truths = load_truths(b.dir)
+
+    def outcomes_after(prefix: list) -> dict[str, tuple[bool, bool]]:
+        world = World(truths, seed=SEED)
+        for c in prefix:
+            at = c.opened_at + timedelta(hours=1)
+            world.attempt_charge(c.id, at, c.rail, c.psp, c.amount_paise)
+            world.send_contact(c.id, at, "sms", with_incentive=False)
+        out = {}
+        for c in b.cases:
+            at = c.opened_at + timedelta(hours=2)
+            r = world.attempt_charge(c.id, at, c.rail, c.psp, c.amount_paise)
+            out[c.id] = (r.succeeded, r.double_charge)
+        return out
+
+    baseline = outcomes_after([])
+    disturbed = outcomes_after(b.cases[:40])
+
+    differing = [cid for cid in baseline if baseline[cid] != disturbed[cid]]
+    # The prefix cases legitimately differ - they were charged twice in the second run.
+    prefix_ids = {c.id for c in b.cases[:40]}
+    leaked = [cid for cid in differing if cid not in prefix_ids]
+
+    assert not leaked, (
+        f"{len(leaked)} untouched cases changed outcome because *other* cases were acted "
+        f"on first (e.g. {leaked[:3]}). The arms are not paired, and every lift estimate "
+        f"carries that noise."
+    )

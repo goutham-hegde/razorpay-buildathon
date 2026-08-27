@@ -1165,39 +1165,84 @@ Neither was visible in any output I was looking at.
    day - assuming a number rather than measuring the thing that actually binds - and both
    times the fix took minutes once the right quantity was on screen.
 
+9. **The arms were never actually paired, and it was hiding two points of recovery.**
+
+   This was on the deferred list since D4 and I had been describing it in `solution.md` as a
+   limitation rather than a bug. Doing it turned out to be fifteen lines.
+
+   Every arm faces a world built with the same calibration and the same seed, which sounds
+   like a controlled comparison. It is not quite one: the world held a **single random
+   generator**. The moment one arm takes a different number of actions than another — which
+   is the entire point of having arms — its draw sequence shifts, and every subsequent case
+   sees different randomness than the same case in another arm. Naive averages 2.5 charge
+   attempts per case against the policy arm's 1.5, so the two were eating that sequence at
+   very different rates.
+
+   Each case now draws from its own stream, seeded from the case id. Common random numbers.
+   It changes nothing about what is being estimated, only the noise the estimate carries:
+
+   | | shared generator | per-case streams |
+   |---|---|---|
+   | policy arm recovery | 51.7% | **53.7%** |
+   | policy arm net lift | +424,427 | **+510,124** |
+   | net-lift range over 20 worlds | 5.24L wide | **4.50L wide** |
+   | double charges over 20 worlds | 3 to 4 | **exactly 4, every world** |
+
+   That last row is what convinced me this is noise removal rather than a lucky draw.
+   Whether a particular ambiguous payment gets double-charged ought to be a property of that
+   payment, not of how many actions the arm happened to take on the 200 cases before it.
+   Under the shared generator it varied between worlds. It no longer does.
+
+   **What broke inside the fix** is a lesson about tests rather than about simulators. My
+   first regression test picked one case, charged it after different amounts of unrelated
+   activity, and asserted the outcome was stable. It passed. It also passed against the
+   *old*, unpaired code — which makes it worthless. Most cases sit at a success probability
+   near 0 or 1, where any draw gives the same answer, and I had picked one of them.
+
+   Rewritten to assert over the whole batch, it fails against the old behaviour exactly as
+   it should: 5 of 120 untouched cases changed outcome purely because other cases had been
+   acted on first. **A regression test that has never been seen to fail is a hypothesis,
+   not a test** — running it against the bug costs a minute and is the only thing that
+   tells the two apart.
+
+   Worth naming the pattern: this is the third correction today that moved numbers in
+   favour of the arm I built. The defence has to be structural rather than rhetorical — the
+   technique is standard and unbiased for the difference between arms, and the test defines
+   the property without reference to which arm benefits.
+
 **Verified**
 
 ```
 .venv/Scripts/python -m pytest
-    298 passed in 8.72s
+    302 passed in 10.15s
 
 .venv/Scripts/python -m reclaim.eval.replay --batch A --arms control,naive,rules --fresh
     arm         recovered   of n     gross Rs    cost Rs  halted   held  double
     control           169    600      515,531          0       0      0       0
-    naive             315    600      925,485      6,235     223      0      20
-    rules             310    600      948,990      9,032       0     62       4
+    naive             310    600      894,590      6,245     230      0      20
+    rules             322    600    1,034,278      8,623       0     62       4
 
 .venv/Scripts/python -m reclaim.eval.metrics --batch A
     arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  halt % double
     control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
-    naive      52.5%    925,485    6,235 6,415,893 -5,496,643 -6,012,174    0.015   59.9%     20
-    rules      51.7%    948,990    9,032         0    939,958   +424,427    0.021    0.0%      4
+    naive      51.7%    894,590    6,245 6,573,330 -5,684,985 -6,200,516    0.016   61.8%     20
+    rules      53.7%  1,034,278    8,623         0  1,025,655   +510,124    0.017    0.0%      4
 
 .venv/Scripts/python -m reclaim.eval.sensitivity --batch A --arms control,naive,rules
     claimed ordering by net lift:  naive < rules < agent
     held in 20/20 trials  (100%)
 
     arm              net lift Rs, median [min .. max]       doubles  worst halt %  worlds w/ halt
-    naive         -5,988,517  [-9,140,939 .. 415,196]   20 [20..20]         73.4%           16/20
-    rules            459,736  [-4,722,083 .. 514,866]      4 [3..4]         39.5%            7/20
+    naive         -6,197,653  [-8,888,408 .. 382,012]   20 [20..20]         71.8%           16/20
+    rules            490,325  [-3,983,433 .. 514,979]      4 [4..4]         35.8%            7/20
 
 .venv/Scripts/python -m reclaim.core.guards --batch A
     A - rules   [baseline: measured, not asserted]
-      R1  VIOLATED  4 double charges of 760 charge attempts
-      R2  HELD  recovered 948,990 of 1,845,200 at risk
-      R3  HELD  624 contacts to 321 customers
-      R4  HELD  624 contacts checked
-      R5  HELD  15 opt-outs recorded
+      R1  VIOLATED  4 double charges of 758 charge attempts
+      R2  HELD  recovered 1,034,278 of 1,845,200 at risk
+      R3  HELD  589 contacts to 303 customers
+      R4  HELD  589 contacts checked
+      R5  HELD  17 opt-outs recorded
       R6  HELD  600/600 cases closed
     1 asserted arm(s): 6/6 held
 ```

@@ -293,20 +293,22 @@ delta turns out to be small, this document will say so.
 arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  halt % double
 --------------------------------------------------------------------------------------------
 control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
-naive      52.5%    925,485    6,235 6,415,893 -5,496,643 -6,012,174    0.015   59.9%     20
-rules      51.7%    948,990    9,032         0    939,958   +424,427    0.021    0.0%      4
+naive      51.7%    894,590    6,245 6,573,330 -5,684,985 -6,200,516    0.016   61.8%     20
+rules      53.7%  1,034,278    8,623         0  1,025,655   +510,124    0.017    0.0%      4
 ```
 
 Read the columns, not the headline:
 
-- **28.2% of cases recover with no help at all.** Naive's 52.5% "recovery rate" is mostly
+- **28.2% of cases recover with no help at all.** Naive's 51.7% "recovery rate" is mostly
   not naive's doing. This is why lift is the headline and rate is not.
-- **Naive has the best recovery rate in the table and by far the worst outcome.** It halts
-  223 of 372 mandates — 59.9% of the recurring book — and the forfeited subscription
-  months turn about Rs 4 lakh of recovered invoices into **−Rs 60 lakh** of destroyed
-  revenue. This is the entire reason `residual` is a column and not a footnote.
-- The policy arm recovers slightly less than naive and is worth **Rs 64 lakh more**.
-- It also makes **one fifth the double charges** (4 vs 20) on identical inputs.
+- **Naive destroys 230 of 372 mandates — 61.8% of the recurring book.** The forfeited
+  subscription months turn about Rs 3.8 lakh of recovered invoices into **−Rs 62 lakh** of
+  destroyed revenue. This is the entire reason `residual` is a column and not a footnote.
+- The policy arm is worth **Rs 67 lakh more** than naive, and makes **one fifth the double
+  charges** (4 vs 20) on identical inputs.
+- It also recovers *more* — 53.7% against 51.7%. That was not true until the arms were
+  properly paired (§10), and the fact that it changed is itself worth knowing: a two-point
+  recovery gap sat inside the noise of how the simulator was drawing random numbers.
 
 **Diagnosis quality**, stratified sample of batch A weighted to the hard confusion pairs:
 
@@ -360,8 +362,8 @@ up to ±20% simultaneously:
 ```
 arm              net lift Rs, median [min .. max]       doubles  worst halt %  worlds w/ halt
 ---------------------------------------------------------------------------------------------
-naive         -5,988,517  [-9,140,939 .. 415,196]   20 [20..20]         73.4%           16/20
-rules            459,736  [-4,722,083 .. 514,866]      4 [3..4]         39.5%            7/20
+naive         -6,197,653  [-8,888,408 .. 382,012]   20 [20..20]         71.8%           16/20
+rules            490,325  [-3,983,433 .. 514,979]      4 [4..4]         35.8%            7/20
 ```
 
 The claimed ordering `naive < rules` held in **20 of 20**.
@@ -369,10 +371,10 @@ The claimed ordering `naive < rules` held in **20 of 20**.
 Two columns in that table are doing more work than the ordering line, and both belong in
 any honest reading of it:
 
-- **Naive is above zero in 4 of 20 worlds.** It halts mandates in 16 of 20, up to 73.4% of
-  the recurring book, and its median outcome is a loss of nearly Rs 60 lakh.
+- **Naive is above zero in 4 of 20 worlds.** It halts mandates in 16 of 20, up to 71.8% of
+  the recurring book, and its median outcome is a loss of over Rs 60 lakh.
 - **The policy arm has a left tail of its own**, and it is reported rather than buried: in
-  7 of 20 worlds it halts up to 39.5% of the book and net lift runs to −Rs 47 lakh. Those
+  7 of 20 worlds it halts up to 35.8% of the book and net lift runs to −Rs 40 lakh. Those
   are the worlds where the jitter pushes the rail's halt threshold to its lowest value.
 - **Naive's median is meaningless** because its outcome is bimodal — it either clears the
   halt threshold in a given world or it does not, and the two branches are separated by
@@ -395,10 +397,10 @@ degree:
 | budget | presentations | halts when threshold is | batch A recovery | ordering holds |
 |---|---|---|---|---|
 | 3 | 4 | 3, 4 — most worlds | — | — |
-| **2** | **3** | **3 — seven of twenty** | **51.7%** | **20/20** |
-| 1 | 2 | never | 47.5% | 16/20 |
+| **2** | **3** | **3 — seven of twenty** | **53.7%** | **20/20** |
+| 1 | 2 | never | ~4 points lower | 16/20 |
 
-A budget of 3 is what the naive arm does, and it is why naive destroys 59.9% of the
+A budget of 3 is what the naive arm does, and it is why naive destroys 61.8% of the
 recurring book. That one was never in question.
 
 Between 1 and 2 there is a real trade, and it is a judgement rather than a derivation.
@@ -410,9 +412,9 @@ where the tail never materialises. It also loses to naive outright in the four w
 the threshold lands on 5 and naive gets away with four presentations, which drops the
 claimed ordering to 16 of 20.
 
-**2** recovers 51.7%, and the claimed ordering holds in 20 of 20. Its exposure is the seven
-worlds where the threshold is 3: there it halts up to 39.5% of the book and net lift runs to
-−Rs 47 lakh.
+**2** recovers 53.7%, and the claimed ordering holds in 20 of 20. Its exposure is the seven
+worlds where the threshold is 3: there it halts up to 35.8% of the book and net lift runs to
+−Rs 40 lakh.
 
 **The budget is 2.** The tail is real and it is *reported* — it is the `worlds w/ halt`
 column of the sensitivity table, sitting in plain sight immediately next to the ordering
@@ -435,12 +437,58 @@ It did not work, and the measurement is more interesting than the idea:
 | blanket budget of 2 | 51.7% | 4 | 7/20 | 39.5% |
 | selective | 51.5% | 4 | 7/20 | 39.5% |
 
-Identical, to within noise. The reason is simple once seen: **a second presentation that
+Identical, to within noise. (Both measured before the pairing change below, which is why the
+levels differ from the table in §9. The comparison is like-for-like and the mechanism does
+not depend on how the simulator draws its random numbers.) The reason is simple once seen: **a second presentation that
 fails is a strike whatever motivated it**, and the halt rate is set by how often the second
 attempt fails, not by why it was made. Selecting better causes raises the success rate of
 those attempts, but the failures that remain are still consecutive failures.
 
 The code was removed. It earned nothing and it was not free to read.
+
+### The arms were not actually paired, and it was hiding two points of recovery
+
+Every arm faces a world built with the same calibration and the same seed. That sounds like
+a controlled comparison and it is not quite one, because the world held a **single random
+generator**. The moment one arm takes a different number of actions than another — and the
+whole point is that they do — its draw sequence shifts, and every *subsequent* case sees
+different randomness than the same case in the other arm.
+
+So the arms differed by their decisions **and** by an accident of ordering, and there was no
+way to tell those apart in the lift estimate. Naive averages 2.5 charge attempts per case
+against the policy arm's 1.5, so the two were consuming the draw sequence at very different
+rates.
+
+Each case now draws from its own stream, seeded from the case id. This is common random
+numbers, and it changes nothing about what is being estimated — only how much noise the
+estimate carries. What it cost was fifteen lines; what it bought:
+
+| | shared generator | per-case streams |
+|---|---|---|
+| policy arm recovery | 51.7% | **53.7%** |
+| policy arm net lift | +424,427 | **+510,124** |
+| net-lift range across 20 worlds | 5.24L wide | **4.50L wide** |
+| double charges across 20 worlds | 3 to 4 | **exactly 4, every world** |
+
+The last row is the clearest evidence that this is noise removal rather than a better draw.
+Whether a specific ambiguous payment gets double-charged should be a property of that case,
+not of how many actions the arm happened to take on the 200 cases before it. Under the
+shared generator it varied. It no longer does.
+
+The recovery figure moving by two points is worth dwelling on, because it means the earlier
+number was not wrong so much as **imprecise in a way nothing on screen disclosed**. A
+two-point gap between the arms was sitting inside the noise of how the simulator drew random
+numbers.
+
+`tests/test_replay.py` asserts the property directly, and — the part that matters for a
+regression test — it was checked against the old behaviour and fails there: 5 of 120
+untouched cases changed outcome purely because other cases had been acted on first.
+
+This is the third correction in a day that moved numbers in the direction of the arm I
+built, which is reason enough to say plainly why it is not a thumb on the scale: the
+technique is standard, it is unbiased for the difference between arms, the test defines the
+property independently of which arm benefits, and the tightened ranges are the signature you
+would predict *before* looking at who won.
 
 ### Stopping early is only half a policy
 
@@ -475,10 +523,13 @@ None would have been caught by a test, and all three were invisible in a single 
 
 - **Escalation is charged but credited with nothing.** The world prices a human review and
   models no recovery from it, so the agent's net is a **lower bound**, not a best case.
-- **Arms share parameters but not a paired RNG stream.** Every arm faces an identically
-  seeded world, but the draw sequence diverges once arms take different numbers of actions.
-  This is a common-parameter comparison, not a fully paired one; pairing each case to its own
-  stream would tighten the lift estimate.
+- **The arms are paired, and this used to be listed here as a limitation.** It is recorded
+  as a correction rather than quietly deleted. Until D5 every arm faced an identically
+  *seeded* world but shared one generator, so the moment an arm took a different number of
+  actions its draw sequence shifted and every later case saw different randomness than the
+  same case in another arm. Each case now draws from its own stream. `tests/test_replay.py`
+  asserts the property, and it fails against the old behaviour — 5 of 120 untouched cases
+  changed outcome purely because other cases had been acted on first.
 - **The world is synthetic.** Its constants are anchors from public data, not measurements.
   The defence is not that they are right — it is that the sensitivity run reports the range
   over which the *ranking of arms* survives having all of them moved at once.

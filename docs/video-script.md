@@ -103,12 +103,10 @@ Four arms, same batch. Control does nothing. Naive retries three times. Rules-on
 agent run the *same policy engine*, differing only in what diagnosed the failure — so the
 gap between those two is worth what the model is worth, and nothing else.
 
-Now look at naive. It has the **best recovery rate in the table**. It is also the worst
-outcome, by a distance.
-
-Retry a subscription too often and the rail **halts the mandate**. Naive destroys ⟦**59.9%**⟧
-of the recurring book — nine months of forfeited revenue each. It recovers ⟦four lakh⟧ rupees
-of invoices and destroys ⟦sixty lakh⟧ of future revenue.
+Now look at naive. Retry a subscription too often and the rail **halts the mandate**. Naive
+destroys ⟦**61.8%**⟧ of the recurring book — nine months of forfeited revenue each. It
+recovers about ⟦four lakh⟧ rupees of invoices and destroys ⟦sixty-two lakh⟧ of future
+revenue. It does not even win on recovery rate, and it loses by ⟦**Rs 67 lakh**⟧ on net.
 
 Invisible if you only report recovery rate. That is the whole reason there is a mandate-halt
 column and a net column.

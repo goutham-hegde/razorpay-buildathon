@@ -285,7 +285,32 @@ class World:
             cid: CaseState(consecutive_mandate_failures=1 if t.monthly_value_paise > 0 else 0)
             for cid, t in truths.items()
         }
-        self._rng = random.Random(seed)
+        self._seed = seed
+        self._streams: dict[str, random.Random] = {}
+
+    def _stream(self, case_id: str) -> random.Random:
+        """The draw sequence for one case. One per case, not one per world.
+
+        This is common random numbers, and it is what makes the arms *paired* rather than
+        merely identically parameterised. With a single shared generator, the moment one
+        arm takes a different number of actions than another its draw sequence shifts, and
+        every subsequent case in that arm sees different randomness than the same case in
+        another arm. The arms then differ by their decisions *and* by an accident of
+        ordering, and the difference lands in the lift estimate as noise.
+
+        Per-case streams remove that. Case 400 gets the same sequence in every arm no
+        matter what the arms did to cases 1 through 399, so a difference between arms on
+        that case is a difference in what they chose to do. It does not change what is
+        being estimated - only how much noise the estimate carries.
+
+        Seeded from the case id rather than a counter for the same reason: a counter would
+        reintroduce order-dependence through the back door.
+        """
+        rng = self._streams.get(case_id)
+        if rng is None:
+            rng = random.Random(f"{self._seed}:{case_id}")
+            self._streams[case_id] = rng
+        return rng
 
     # -- charging ----------------------------------------------------------
 
@@ -318,7 +343,7 @@ class World:
             return ChargeResult(False, False, False, penalty, "risk hard block")
 
         p = self._success_probability(truth, st, at, rail, psp, amount_paise)
-        ok = self._rng.random() < p
+        ok = self._stream(case_id).random() < p
 
         # The trap. The upstream debit already happened; a "successful" charge here is a
         # duplicate, and invariant R1 exists to make sure the agent never gets here.
@@ -452,7 +477,7 @@ class World:
             engagement *= cal.incentive_engagement_lift
         engagement = min(1.0, engagement)
 
-        engaged = self._rng.random() < engagement
+        engaged = self._stream(case_id).random() < engagement
         if engaged:
             st.present_until = at + timedelta(hours=cal.presence_window_hours)
             # Coming back is also when a dead instrument or mandate gets replaced.
@@ -464,7 +489,7 @@ class World:
 
         opted_out_now = False
         if not engaged and st.contacts_sent > 1:
-            if self._rng.random() < prof.opt_out_rate * st.contacts_sent:
+            if self._stream(case_id).random() < prof.opt_out_rate * st.contacts_sent:
                 st.opted_out = True
                 opted_out_now = True
 
