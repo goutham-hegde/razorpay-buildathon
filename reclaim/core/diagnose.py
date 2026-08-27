@@ -418,29 +418,45 @@ class GeminiDiagnoser:
 
 
 
-def _groq_budget(res) -> tuple[int | None, str]:
-    """(requests remaining today, a human note) from Groq's rate-limit headers.
+def _groq_limit(res) -> tuple[str, str]:
+    """(which ceiling was hit, a human note) for a Groq 429.
 
-    Groq publishes two ceilings and they are easy to confuse, which cost a run:
+    Three ceilings apply to a free-tier key, and only two of them are in the headers:
 
-        x-ratelimit-limit-requests   a DAILY budget, despite the reset header sometimes
-                                     reading like minutes
-        x-ratelimit-limit-tokens     tokens per minute
+        x-ratelimit-*-requests   requests per day       (header)
+        x-ratelimit-*-tokens     tokens per minute      (header)
+        TPD                      tokens per DAY         (body text only)
 
-    Only the first one is worth stopping for. The second clears on its own.
+    The third is the one that actually binds a batch of this size - 200,000 tokens a day
+    against roughly 1,560 tokens a call is about 128 diagnoses - and it is reported nowhere
+    except the prose in the error body. A run that reads only the headers sees "714 of 1000
+    requests left, 8000 of 8000 tokens left" alongside a 429 and concludes something
+    impossible is happening. That is exactly what this code did before it parsed the body.
+
+    Returns one of "tpd", "tokens", "requests", "unknown".
     """
+    body = ""
     try:
-        remaining = res.headers.get("x-ratelimit-remaining-requests")
-        note = (
-            f"requests {res.headers.get('x-ratelimit-remaining-requests', '?')}/"
-            f"{res.headers.get('x-ratelimit-limit-requests', '?')} left, resets in "
-            f"{res.headers.get('x-ratelimit-reset-requests', '?')}; "
-            f"tokens {res.headers.get('x-ratelimit-remaining-tokens', '?')}/"
-            f"{res.headers.get('x-ratelimit-limit-tokens', '?')} left"
-        )
-        return (int(remaining) if remaining is not None else None), note
-    except (TypeError, ValueError):
-        return None, res.text[:160]
+        body = str(res.json().get("error", {}).get("message", ""))
+    except (ValueError, TypeError, AttributeError):
+        body = res.text[:200]
+
+    headers = (
+        f"requests {res.headers.get('x-ratelimit-remaining-requests', '?')}/"
+        f"{res.headers.get('x-ratelimit-limit-requests', '?')}, "
+        f"tokens/min {res.headers.get('x-ratelimit-remaining-tokens', '?')}/"
+        f"{res.headers.get('x-ratelimit-limit-tokens', '?')}"
+    )
+    lowered = body.lower()
+    if "tokens per day" in lowered or "tpd" in lowered:
+        kind = "tpd"
+    elif "tokens per minute" in lowered or "tpm" in lowered:
+        kind = "tokens"
+    elif "requests per" in lowered:
+        kind = "requests"
+    else:
+        kind = "unknown"
+    return kind, f"{body[:220]} [{headers}]"
 
 
 class GroqDiagnoser:
@@ -464,11 +480,17 @@ class GroqDiagnoser:
         api_key: str | None = None,
         model: str | None = None,
         timeout: float = 60.0,
-        max_attempts: int = 5,
-        #: Generous, because the binding ceiling here is tokens *per minute* and clearing
-        #: it legitimately takes minutes. The daily budget is detected from the headers
-        #: instead of inferred from how long the server asked us to wait.
+        #: More than the other providers get, because on this one an "attempt" may be a
+        #: long sleep against a daily budget that is refilling rather than a real retry.
+        max_attempts: int = 12,
+        #: Ceiling on a wait caused by the per-minute token limit. Generous, because
+        #: clearing that one legitimately takes minutes.
         max_wait: float = 420.0,
+        #: Ceiling on a wait caused by the tokens-per-DAY limit, which is the one that
+        #: actually binds a batch of this size. It refills continuously, so the sensible
+        #: response is to sleep through it: a 600-case pass is an unattended overnight job
+        #: either way, and stopping means somebody has to restart it by hand.
+        max_wait_daily: float = 3600.0,
         #: See the note on `GeminiDiagnoser.system_prompt`.
         system_prompt: str | None = None,
     ) -> None:
@@ -483,6 +505,7 @@ class GroqDiagnoser:
         self.timeout = timeout
         self.max_attempts = max_attempts
         self.max_wait = max_wait
+        self.max_wait_daily = max_wait_daily
         self.system_prompt = system_prompt or _SYSTEM_PROMPT
         self._client = None
 
@@ -525,25 +548,21 @@ class GroqDiagnoser:
                     json=payload,
                 )
                 if res.status_code == 429 or res.status_code >= 500:
-                    remaining, note = _groq_budget(res)
+                    kind, note = _groq_limit(res)
                     delay = float(res.headers.get("retry-after", 0)) or min(
                         60.0, 2.0 * (2**attempt)
                     )
-                    # Stop only when the DAILY request budget is actually spent. The first
-                    # version of this decided that on the length of the retry delay alone -
-                    # "a wait longer than two minutes means a daily cap" - and that
-                    # heuristic is simply wrong: the per-minute *token* ceiling also
-                    # returns long delays, and it aborted a 600-case run at case 296 with
-                    # seven hundred requests of daily budget still unused. The header says
-                    # which ceiling was hit; guessing from the delay does not.
-                    if remaining is not None and remaining <= 0:
-                        raise QuotaExhausted(
-                            f"HTTP {res.status_code} on {self.model}: daily request budget "
-                            f"is spent ({note}). The cache is written, so resuming after "
-                            f"the reset costs nothing."
-                        )
-                    last = QuotaExhausted(f"HTTP {res.status_code} on {self.model}: {note}")
-                    if delay > self.max_wait:
+                    # The tokens-per-day ceiling refills continuously rather than at a
+                    # fixed hour, so the right response to it is to wait it out, not to
+                    # give up. `retry-after` on a TPD refusal is the time until enough of
+                    # the rolling window has freed up for THIS request - typically minutes.
+                    # Waiting costs nothing but wall-clock, and the alternative is a run
+                    # that dies every few hundred cases and has to be nursed by hand.
+                    ceiling = self.max_wait_daily if kind == "tpd" else self.max_wait
+                    last = QuotaExhausted(
+                        f"HTTP {res.status_code} on {self.model} [{kind}]: {note}"
+                    )
+                    if delay > ceiling:
                         raise last
                     time.sleep(delay)
                     continue
