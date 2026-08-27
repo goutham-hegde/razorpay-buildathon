@@ -275,7 +275,16 @@ class World:
     ) -> None:
         self.truths = truths
         self.cal = calibration or DEFAULT_CALIBRATION
-        self.state: dict[str, CaseState] = {cid: CaseState() for cid in truths}
+        # A recurring case exists *because* a presentation already failed, and the rail
+        # counted that failure. Starting the counter at zero silently gave every arm one
+        # free failure more than reality does, and with `mandate_halt_after` at 4 it meant
+        # no arm retrying three times could ever halt a mandate: the downside metric read
+        # 0.0% for every arm and measured nothing. `monthly_value_paise > 0` is exactly the
+        # recurring set - the generator gives a monthly value to mandate-backed cases only.
+        self.state: dict[str, CaseState] = {
+            cid: CaseState(consecutive_mandate_failures=1 if t.monthly_value_paise > 0 else 0)
+            for cid, t in truths.items()
+        }
         self._rng = random.Random(seed)
 
     # -- charging ----------------------------------------------------------

@@ -287,6 +287,14 @@ class Ledger:
         seed: int | None = None,
         notes: str = "",
     ) -> str:
+        """Open a run.
+
+        Run ids are deterministic (`B-agent`), so replaying a batch into a ledger that
+        already holds that run collides on the primary key - deliberately. The ledger is
+        append-only, triggers and all, and the honest way to redo a run is to start a new
+        audit trail rather than to edit the old one. `replay --fresh` does that by removing
+        the file; there is no code path here that rewrites history.
+        """
         self.db.execute(
             "INSERT INTO runs (run_id, batch, arm, seed, started_at, notes) "
             "VALUES (?, ?, ?, ?, ?, ?)",
@@ -644,6 +652,15 @@ class Ledger:
         return written
 
 
-def open_ledger(batch: str, root: Path | str = "data") -> Ledger:
-    """Open (creating if needed) the ledger for a batch."""
-    return Ledger(Path(root) / batch.upper() / "ledger.db")
+def open_ledger(batch: str, root: Path | str = "data", fresh: bool = False) -> Ledger:
+    """Open (creating if needed) the ledger for a batch.
+
+    `fresh` removes the file first. That is the only supported way to redo a run: the tables
+    are append-only and the triggers mean nothing in here can be edited, so a re-run either
+    starts a new trail or it does not happen. The database is a derived artifact and is
+    gitignored - the batch inputs and the committed diagnoses are what reproduce it.
+    """
+    path = Path(root) / batch.upper() / "ledger.db"
+    if fresh:
+        path.unlink(missing_ok=True)
+    return Ledger(path)

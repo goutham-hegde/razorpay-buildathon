@@ -76,19 +76,32 @@ MAX_CHARGE_ATTEMPTS_PER_CASE = 4
 #: failed presentation is that large, the rational budget is smaller than on a one-time
 #: payment where the only thing at stake is the invoice itself.
 #:
-#: This was 3 until the sensitivity run, and the reason it moved is the useful part. The
-#: rail halts a mandate after some number of consecutive failures that we do not get to
-#: see. Sitting the budget at 3 meant that if that number were also 3 - well inside the
-#: range the jitter explores - every recurring case we worked hard would halt, and the
-#: residual loss swamped everything the policy recovered. The ranking of the arms survived
-#: it; the levels did not. That is a policy fragile to a constant it cannot observe, and
-#: the correct response to a cliff of unknown position is headroom rather than a better
-#: guess at where the cliff is.
+#: This was 3, then 2, and is now 1. The reason it kept moving is the useful part. The rail
+#: halts a mandate after some number of consecutive failures that we do not get to see, and
+#: every step down came from a sensitivity run showing the budget sitting too close to a
+#: cliff whose position the agent cannot observe.
+#:
+#:   3   if the rail's threshold were also 3 - well inside the jittered range - every
+#:       recurring case worked hard would halt. Ranking survived; levels did not.
+#:   2   held while the world was miscounting: it started each case's consecutive-failure
+#:       count at zero, ignoring the failed presentation that opened the case. Once that
+#:       was fixed, a budget of 2 meant three presentations against a threshold that
+#:       jitters down to 3, and the policy arm halted mandates in 7 of 20 worlds - worst
+#:       case 39.5% of the recurring book, net lift running to -Rs 47 lakh.
+#:   1   two presentations, one clear step under the lowest threshold the jitter produces.
+#:       Halts nothing in 20 of 20 worlds; net lift bounded in [+3.38L, +4.14L].
+#:
+#: The correct response to a cliff of unknown position is headroom, not a better guess at
+#: where the cliff is. The purchase is not free and the price is worth stating: on batch A
+#: it gives up 4.2 points of recovery rate against a budget of 2. What it buys is a
+#: distribution with no tail below zero - and, unexpectedly, half the double charges
+#: (4 -> 2), because the attempt it declines to make is disproportionately the one it was
+#: least sure about.
 #:
 #: Stopping early does not mean giving up on the money. `core.policy` falls through to
 #: outreach when the charge budget is spent, because asking the customer to pay cannot
 #: halt a mandate and presenting again can.
-MAX_CHARGE_ATTEMPTS_RECURRING = 2
+MAX_CHARGE_ATTEMPTS_RECURRING = 1
 
 #: Ceiling on outreach per case. Lower than the 7-day customer cap on purpose: one failed
 #: payment does not get to consume a customer's entire contact budget.

@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sqlite3
 import sys
 from dataclasses import dataclass, field
 from functools import partial
@@ -524,8 +525,14 @@ def replay(
     calibration: Calibration | None = None,
     ledger: Ledger | None = None,
     tag: str = "",
+    fresh: bool = False,
 ) -> dict[str, str]:
-    """Run `arms` over `batch`. Returns {arm: run_id}."""
+    """Run `arms` over `batch`. Returns {arm: run_id}.
+
+    `fresh` discards the batch's existing ledger before starting. Run ids are deterministic,
+    so without it a second replay of the same arms collides on the primary key - which is
+    the append-only store refusing to overwrite an audit trail, and is correct.
+    """
     b = feed.load_batch(batch, root)
     truths = load_truths(b.dir)
     seed = int(b.meta.get("seed", 0))
@@ -542,7 +549,7 @@ def replay(
     engine = PolicyEngine(known_psps)
 
     owned = ledger is None
-    ledger = ledger or open_ledger(b.name, root)
+    ledger = ledger or open_ledger(b.name, root, fresh=fresh)
     run_ids: dict[str, str] = {}
     try:
         for name in arms:
@@ -605,6 +612,12 @@ def main() -> int:
     ap.add_argument("--arms", default="all", help="comma-separated, or 'all'")
     ap.add_argument("--root", default="data")
     ap.add_argument("--tag", default="", help="suffix for the run id, to keep runs apart")
+    ap.add_argument(
+        "--fresh",
+        action="store_true",
+        help="discard this batch's ledger and start a new audit trail. Needed to re-run "
+        "arms that are already recorded, because the ledger cannot be overwritten",
+    )
     args = ap.parse_args()
 
     arms = list(ARMS) if args.arms == "all" else [a.strip() for a in args.arms.split(",")]
@@ -616,7 +629,21 @@ def main() -> int:
         print(f"  {n:5d}  {disposition}")
     print()
 
-    run_ids = replay(args.batch, arms, args.root, tag=args.tag)
+    try:
+        run_ids = replay(args.batch, arms, args.root, tag=args.tag, fresh=args.fresh)
+    except sqlite3.IntegrityError as exc:
+        if "runs.run_id" not in str(exc):
+            raise
+        # Worth spelling out rather than letting a UNIQUE violation speak for itself: this
+        # is not corruption, it is the ledger declining to rewrite a run it already holds.
+        print(
+            f"\nbatch {args.batch.upper()} already has a recorded run for one of "
+            f"{', '.join(arms)}. The ledger is append-only and cannot be overwritten.\n"
+            "  re-run it:   --fresh        (discards the batch's ledger, keeps nothing)\n"
+            "  keep both:   --tag <name>   (records alongside, under a suffixed run id)",
+            file=sys.stderr,
+        )
+        return 1
 
     with open_ledger(b.name, args.root) as ledger:
         # `held` and `double` are deliberately separate columns. A case put on reconcile

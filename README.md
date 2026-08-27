@@ -114,6 +114,11 @@ py -3.13 -m venv .venv
 .venv/Scripts/python -m reclaim.eval.sensitivity --batch B   # ranking across 20 worlds
 ```
 
+The ledger is append-only, so replaying a batch that already has a recorded run needs
+`--fresh` — it starts a new audit trail rather than overwriting the old one. The table above
+is not typed in: `python -m reclaim.eval.report --batch B --write` reads the ledger and
+writes it into this file.
+
 A demo console with the per-case audit trail:
 
 ```bash
@@ -146,6 +151,7 @@ reclaim/
     replay.py        the four arms
     metrics.py       lift over control, net of cost and residual
     confusion.py     diagnosis scored against ground truth
+    report.py        the results table, rendered into the README from the ledger
     sensitivity.py   the same comparison across perturbed worlds
   api/               demo console (vanilla JS, no build step)
 ```

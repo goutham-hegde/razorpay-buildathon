@@ -13,6 +13,7 @@ is a driver that works on nothing.
 from __future__ import annotations
 
 import json
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -25,8 +26,9 @@ from reclaim.core.guards import check_run
 from reclaim.core.ledger import Ledger
 from reclaim.domain import RootCause, to_json
 from reclaim.eval.metrics import batch_metrics
-from reclaim.eval.replay import ARM_PROVIDER, load_arm_diagnoses, replay
+from reclaim.eval.replay import ARM_PROVIDER, load_arm_diagnoses, load_truths, replay
 from reclaim.synth.generator import generate
+from reclaim.synth.outcome import World
 
 BATCH = "T"
 N = 120
@@ -327,3 +329,54 @@ def test_the_audit_trail_reproduces_the_reported_outcome(root: Path, ledger: Led
             f"{row['case_id']} is reported as recovered by charge, but no captured "
             f"charge row exists to back it"
         )
+
+
+# ---------------------------------------------------------------------------
+# The mandate-halt cliff
+# ---------------------------------------------------------------------------
+
+
+def test_a_recurring_case_starts_one_failure_into_the_halt_count(root: Path) -> None:
+    """The failure that opened the case counts against the rail's halt threshold.
+
+    This is the regression test for the bug that made `halt %` structurally unable to
+    fire. With the counter starting at zero, `mandate_halt_after` of 4 needed four *fresh*
+    failures, no arm retried that many times, and the downside metric read 0.0% for every
+    arm in every run - which looked like a result. It was not reachable.
+    """
+    b = feed.load_batch(BATCH, root)
+    truths = load_truths(b.dir)
+    world = World(truths, seed=SEED)
+
+    recurring = [cid for cid, t in truths.items() if t.monthly_value_paise > 0]
+    one_time = [cid for cid, t in truths.items() if t.monthly_value_paise == 0]
+    assert recurring and one_time, "the fixture batch needs both kinds of case"
+
+    assert all(world.state[cid].consecutive_mandate_failures == 1 for cid in recurring)
+    assert all(world.state[cid].consecutive_mandate_failures == 0 for cid in one_time)
+
+
+def test_retrying_a_mandate_to_the_threshold_halts_it(root: Path) -> None:
+    """The halt is reachable, and reachable in fewer attempts than the threshold.
+
+    Asserted through the world rather than through an arm so it does not silently start
+    passing because a policy changed its budget.
+    """
+    b = feed.load_batch(BATCH, root)
+    truths = load_truths(b.dir)
+    cases = {c.id: c for c in b.cases}
+    world = World(truths, seed=SEED)
+
+    case = next(
+        cases[cid]
+        for cid, t in truths.items()
+        if t.monthly_value_paise > 0 and t.root_cause is RootCause.INSTRUMENT_INVALID
+    )
+    at = case.opened_at
+    halted = False
+    for _ in range(world.cal.mandate_halt_after - 1):
+        at += timedelta(hours=1)
+        result = world.attempt_charge(case.id, at, case.rail, case.psp, case.amount_paise)
+        halted = halted or result.mandate_halted_now
+    assert halted, "a dead instrument on a mandate rail must halt inside the threshold"
+    assert world.state[case.id].mandate_halted

@@ -293,16 +293,20 @@ delta turns out to be small, this document will say so.
 arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  halt % double
 --------------------------------------------------------------------------------------------
 control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
-naive      52.5%    925,485    6,235         0    919,250   +403,719    0.015    0.0%     20
-rules      51.7%    948,990    9,032         0    939,958   +424,427    0.021    0.0%      4
+naive      52.5%    925,485    6,235 6,415,893 -5,496,643 -6,012,174    0.015   59.9%     20
+rules      47.5%    925,515    9,150         0    916,365   +400,834    0.022    0.0%      2
 ```
 
 Read the columns, not the headline:
 
 - **28.2% of cases recover with no help at all.** Naive's 52.5% "recovery rate" is mostly
   not naive's doing. This is why lift is the headline and rate is not.
-- The two arms look close on recovery, and **that comparison is the trap**. See §10.
-- The policy arm makes **one fifth the double charges** (4 vs 20) on identical inputs.
+- **Naive has the best recovery rate in the table and by far the worst outcome.** It halts
+  223 of 372 mandates — 59.9% of the recurring book — and the forfeited subscription
+  months turn about Rs 4 lakh of recovered invoices into **−Rs 60 lakh** of destroyed
+  revenue. This is the entire reason `residual` is a column and not a footnote.
+- The policy arm recovers **five points less** than naive and is worth **Rs 64 lakh more**.
+- It also makes **one tenth the double charges** (2 vs 20) on identical inputs.
 
 **Diagnosis quality**, stratified sample of batch A weighted to the hard confusion pairs:
 
@@ -318,27 +322,71 @@ Batch B diagnosis is running now; the agent arm and the reported table follow fr
 
 ## 10. The finding that mattered most
 
-The single-run table above says naive and the policy arm are within a couple of points of
-each other. **That table is measuring the wrong thing**, and the sensitivity run is what
-showed it.
+Two versions of this table exist, and the difference between them is the most useful thing
+in this document.
+
+### The version that was wrong, and why it looked fine
+
+Until D5 the `halt %` column read **0.0% for every arm, in every run**. That is a plausible
+number. It is also, in hindsight, the only number that column could ever have printed.
+
+The world halts a mandate after `mandate_halt_after` consecutive failed presentations,
+which is 4. It counted those failures from zero at the start of the run — but **a recurring
+case only exists because a presentation already failed**, and the rail counted that one.
+Starting the count at zero handed every arm one free failure that reality does not give it,
+and no arm retrying three times could ever reach four. The downside metric was
+structurally incapable of firing, and it sat in the results table looking like evidence
+that no arm was destroying subscriptions.
+
+Nothing failed. Every test passed, every invariant held, and the column was wrong.
+
+What found it was not a test but a question: *what would have to be true for this column to
+be non-zero, and is that reachable from here?* It was not. One line in `World.__init__` now
+seeds the counter from the failure that opened the case.
+
+Two things are worth saying about the fix. It changed no generated data — the batches and
+the committed diagnoses are untouched, because the miscount was in the world's runtime
+state and not in what it wrote down. And it flatters the arm I built, which is exactly the
+kind of correction that deserves the most scrutiny: the defence is that the constant it
+turns on is one the sensitivity run moves by ±20% along with everything else, and that the
+earlier jittered runs had already shown the same tail in 7 of 20 worlds. The base world was
+the outlier, not the jittered ones.
+
+### The version that is right
 
 Re-running the whole comparison across 20 worlds, with every calibration constant moved by
-up to ±20% simultaneously — the claimed ordering held in **20 of 20**:
+up to ±20% simultaneously:
 
 ```
 arm              net lift Rs, median [min .. max]       doubles  worst halt %  worlds w/ halt
 ---------------------------------------------------------------------------------------------
-naive            400,251  [-7,555,833 .. 427,775]   20 [20..20]         60.8%            7/20
-rules               474,962  [454,126 .. 538,386]      4 [3..4]          0.0%            0/20
+naive         -5,988,517  [-9,140,939 .. 415,196]   20 [20..20]         73.4%           16/20
+rules            393,769     [338,346 .. 413,784]      4 [2..4]          0.0%            0/20
 ```
 
-The two arms have almost the same *median*. They do not remotely have the same
-**distribution**:
+The claimed ordering `naive < rules` held in **16 of 20**. It is worth being precise about
+the four it did not, because they are not noise:
 
-- Naive's range runs down to **−Rs 75.6 lakh**. In 7 of 20 worlds it halts mandates, up to
-  **60.8% of the recurring book**, and the forfeited future revenue swamps everything it
-  recovered.
-- The policy arm's range is **[+4.54L, +5.38L]** and it halts **nothing, in any world**.
+```
+  seed 9001: naive=415,196  rules=384,515
+  seed 9005: naive=403,352  rules=395,400
+  seed 9016: naive=401,533  rules=389,804
+  seed 9019: naive=389,809  rules=374,814
+```
+
+Those are the four worlds where the jitter pushed the halt threshold high enough that naive
+never hit it. In those worlds naive retries three times, halts nothing, and edges the policy
+arm out by two to eight percent. **In the other sixteen it loses by around Rs 60 lakh.**
+
+That is the honest shape of the comparison, and reporting it as "the ranking held 20/20"
+would have been the more flattering claim and the less true one:
+
+- **Naive is above zero in 4 of 20 worlds.** The policy arm is above zero in **20 of 20**,
+  in a band of [+Rs 3.38L, +Rs 4.14L].
+- **Naive's median is meaningless** because its outcome is bimodal — it either clears the
+  halt threshold in a given world or it does not, and the two branches are separated by
+  roughly Rs 64 lakh.
+- What is being bought is not a higher median. It is the removal of the left tail.
 
 **Naive is not a slightly worse policy. It is a policy whose expected value is dominated by
 a tail you cannot see from its recovery rate.** That is precisely what a mandate-halt metric
@@ -346,19 +394,29 @@ is for, and it is invisible without one.
 
 ### How this changed the design
 
-The recurring retry budget was originally **3**, and the first sensitivity run failed badly:
-the *ranking* held, but the levels collapsed to a median lift of **−Rs 12 lakh**, because a
-budget of 3 sitting against a rail halt threshold that jitters into 3 means every recurring
-case worked hard gets its mandate destroyed.
+The recurring charge budget has now moved twice, both times for the same reason and in the
+same direction.
 
-The agent does not get to see that threshold. The correct response to a cliff of unknown
-position is **headroom, not a better guess at where the cliff is** — so the budget dropped to
-2, with the fall-through described below. Re-running produced the table above.
+It was originally **3**. The first sensitivity run held the ranking but collapsed the
+levels: a budget of 3 against a halt threshold that jitters into 3 destroys the mandate of
+every recurring case worked hard. It dropped to **2**.
 
-This cost something real and it should be stated: in the *base* world, where no mandate ever
-halts, the tighter budget gives up about **Rs 1.5 lakh** of recovery it could have had. That
-is the premium paid to turn a distribution with a −Rs 75 lakh tail into one bounded above
-zero. It is a deliberate purchase, not a free win.
+A budget of 2 survived only while the world was miscounting. With the opening failure
+counted, 2 means three presentations against a threshold that jitters down to 3, and the
+policy arm halted mandates in **7 of 20 worlds**, worst case 39.5% of the recurring book,
+with net lift running to **−Rs 47 lakh**. The same cliff, one step further along.
+
+It is now **1** — two presentations, one clear step under the lowest threshold the jitter
+produces.
+
+> The agent does not get to see the rail's threshold. The correct response to a cliff of
+> unknown position is **headroom, not a better guess at where the cliff is**.
+
+The price is real and belongs in the open: against a budget of 2 in the base world, a budget
+of 1 gives up **4.2 points of recovery rate** — Rs 23,475 of gross recovery on batch A. What
+it buys is a distribution with nothing below zero in it. It also halved the double charges,
+2 against 4, which was not the goal: the attempt a tighter budget declines to make is
+disproportionately the one the policy was least sure about.
 
 ### Stopping early is only half a policy
 
@@ -371,16 +429,18 @@ case:
 
 That outreach is bounded by exactly the same contact caps as every other message.
 
-### Two bugs the sensitivity run found
+### Three bugs the sensitivity run found
 
-Neither would have been caught by a test, and both were invisible in a single run:
+None would have been caught by a test, and all three were invisible in a single run:
 
-1. **`mandate_halt_rate` could only ever print 0% or 100%.** The denominator counted cases
+1. **The mandate-halt counter started from zero**, described above. The metric could not
+   fire, and a column of `0.0%` read as a result rather than as a bug.
+2. **`mandate_halt_rate` could only ever print 0% or 100%.** The denominator counted cases
    with non-zero residual loss — which is only ever true of cases that *already halted*, so
-   numerator and denominator were the same set. It read as a plausible `0.0%` for the entire
-   base run and only became obviously wrong when a perturbed world produced a column of
-   `100.0`s no policy could have earned. The ledger now records `is_recurring` explicitly.
-2. **A stale ledger failed with `no such column` from an unrelated module.** `CREATE TABLE
+   numerator and denominator were the same set. It only became obviously wrong when a
+   perturbed world produced a column of `100.0`s no policy could have earned. The ledger
+   now records `is_recurring` explicitly.
+3. **A stale ledger failed with `no such column` from an unrelated module.** `CREATE TABLE
    IF NOT EXISTS` does exactly what it says and leaves an old table alone; an append-only
    store cannot be migrated in place. The ledger now checks its own columns on open and says
    what to do.
@@ -422,3 +482,9 @@ py -3.13 -m venv .venv
 ```
 
 No API key is required for any of this. The model's output is committed.
+
+Replaying a batch a second time needs `--fresh`, which discards that batch's ledger and
+starts a new one. The ledger is append-only down to the triggers, so a re-run cannot
+overwrite a recorded run — it either opens a new audit trail or it refuses. The table in
+§9 is written into the README by `python -m reclaim.eval.report --batch B --write`, which
+reads the ledger; no figure in this repo is typed in by hand.

@@ -157,3 +157,31 @@ def test_export_writes_every_table(tmp_path, ledger: Ledger) -> None:
     assert written["charge_claims"] == 1
     assert written["case_outcomes"] == 1
     assert (tmp_path / "decisions.jsonl").read_text(encoding="utf-8").count("\n") >= 1
+
+
+# ---------------------------------------------------------------------------
+# Re-running a run
+# ---------------------------------------------------------------------------
+
+
+def test_reopening_a_recorded_run_is_refused(ledger: Ledger) -> None:
+    """Run ids are deterministic, so a second replay collides - on purpose.
+
+    An append-only store has no way to redo a run in place, and quietly appending a second
+    `A-rules` would leave the results table reporting one arm twice. The collision is the
+    ledger declining to rewrite history; `replay --fresh` starts a new trail instead.
+    """
+    with pytest.raises(sqlite3.IntegrityError, match="runs.run_id"):
+        ledger.start_run("t1", "A", "agent", seed=1)
+
+
+def test_a_fresh_ledger_discards_the_old_file(tmp_path) -> None:
+    from reclaim.core.ledger import open_ledger
+
+    with open_ledger("A", tmp_path) as lg:
+        lg.start_run("A-rules", "A", "rules", seed=1)
+    with open_ledger("A", tmp_path) as lg:
+        assert [r["run_id"] for r in lg.runs("A")] == ["A-rules"]
+    with open_ledger("A", tmp_path, fresh=True) as lg:
+        assert lg.runs("A") == []
+        lg.start_run("A-rules", "A", "rules", seed=1)  # the id is free again
