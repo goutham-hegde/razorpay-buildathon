@@ -1128,9 +1128,14 @@ Neither was visible in any output I was looking at.
     1 asserted arm(s): 6/6 held
 ```
 
-Batch B's diagnosis run stands at **307 of 600** and is resumable; the command appends and
-flushes per case. At the corrected token reservation that is roughly three days of free-tier
-budget, against a deadline eight days out.
+Batch B's diagnosis run passed **308 of 600** as this was written, and is still going. It is
+resumable at any point - the command appends and flushes per case, and re-running it skips
+whatever is already cached. At the corrected token reservation the remainder is roughly three
+days of free-tier budget, against a deadline eight days out.
+
+Today's daily allowance is spent, so it is currently drawing about four cases an hour as the
+rolling window frees tokens; it returns to its full rate tomorrow. If the process is gone,
+that is the per-case wait ceiling doing its job rather than a failure - restart it.
 
 ```
 set -a; . ./.env; set +a
