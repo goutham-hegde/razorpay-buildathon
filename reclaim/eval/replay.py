@@ -399,10 +399,6 @@ def play_policy(
                 arm.world.settle_organic(case.id, horizon)
                 arm.close(case, horizon)
                 return
-            if action.with_incentive:
-                arm.extra_cost_paise[case.id] = (
-                    arm.extra_cost_paise.get(case.id, 0) + INCENTIVE_COST_PAISE
-                )
             if action.template == "reauthorise":
                 reauth_requested = True
         else:
@@ -483,6 +479,16 @@ def _contact(
         with_incentive=action.with_incentive,
         cost_paise=0,  # the world bills contact cost into the case's own cost total
     )
+    # Billed here, at the send, rather than after the reaction is known. The incentive is
+    # spent the moment the message goes out; what the customer does next cannot make it
+    # retroactively free. Attaching the cost to the *outcome* meant that the one case where
+    # the outcome ended the run - an opt-out in response to the message - was the one case
+    # where we spent the money and did not record it.
+    if action.with_incentive:
+        arm.extra_cost_paise[case.id] = (
+            arm.extra_cost_paise.get(case.id, 0) + INCENTIVE_COST_PAISE
+        )
+
     if result.opted_out_now:
         # An opt-out is an *inbound* event: the customer received this message and replied
         # STOP. It therefore cannot be effective at the instant the outbound went out, and
