@@ -418,6 +418,31 @@ class GeminiDiagnoser:
 
 
 
+def _groq_budget(res) -> tuple[int | None, str]:
+    """(requests remaining today, a human note) from Groq's rate-limit headers.
+
+    Groq publishes two ceilings and they are easy to confuse, which cost a run:
+
+        x-ratelimit-limit-requests   a DAILY budget, despite the reset header sometimes
+                                     reading like minutes
+        x-ratelimit-limit-tokens     tokens per minute
+
+    Only the first one is worth stopping for. The second clears on its own.
+    """
+    try:
+        remaining = res.headers.get("x-ratelimit-remaining-requests")
+        note = (
+            f"requests {res.headers.get('x-ratelimit-remaining-requests', '?')}/"
+            f"{res.headers.get('x-ratelimit-limit-requests', '?')} left, resets in "
+            f"{res.headers.get('x-ratelimit-reset-requests', '?')}; "
+            f"tokens {res.headers.get('x-ratelimit-remaining-tokens', '?')}/"
+            f"{res.headers.get('x-ratelimit-limit-tokens', '?')} left"
+        )
+        return (int(remaining) if remaining is not None else None), note
+    except (TypeError, ValueError):
+        return None, res.text[:160]
+
+
 class GroqDiagnoser:
     """Groq. Same prompt, same payload, same schema as the Gemini path - only the transport
     differs, so a comparison between providers is a comparison of models and nothing else.
@@ -440,7 +465,10 @@ class GroqDiagnoser:
         model: str | None = None,
         timeout: float = 60.0,
         max_attempts: int = 5,
-        max_wait: float = 120.0,
+        #: Generous, because the binding ceiling here is tokens *per minute* and clearing
+        #: it legitimately takes minutes. The daily budget is detected from the headers
+        #: instead of inferred from how long the server asked us to wait.
+        max_wait: float = 420.0,
         #: See the note on `GeminiDiagnoser.system_prompt`.
         system_prompt: str | None = None,
     ) -> None:
@@ -497,10 +525,24 @@ class GroqDiagnoser:
                     json=payload,
                 )
                 if res.status_code == 429 or res.status_code >= 500:
+                    remaining, note = _groq_budget(res)
                     delay = float(res.headers.get("retry-after", 0)) or min(
                         60.0, 2.0 * (2**attempt)
                     )
-                    last = QuotaExhausted(f"HTTP {res.status_code} on {self.model}")
+                    # Stop only when the DAILY request budget is actually spent. The first
+                    # version of this decided that on the length of the retry delay alone -
+                    # "a wait longer than two minutes means a daily cap" - and that
+                    # heuristic is simply wrong: the per-minute *token* ceiling also
+                    # returns long delays, and it aborted a 600-case run at case 296 with
+                    # seven hundred requests of daily budget still unused. The header says
+                    # which ceiling was hit; guessing from the delay does not.
+                    if remaining is not None and remaining <= 0:
+                        raise QuotaExhausted(
+                            f"HTTP {res.status_code} on {self.model}: daily request budget "
+                            f"is spent ({note}). The cache is written, so resuming after "
+                            f"the reset costs nothing."
+                        )
+                    last = QuotaExhausted(f"HTTP {res.status_code} on {self.model}: {note}")
                     if delay > self.max_wait:
                         raise last
                     time.sleep(delay)
@@ -575,7 +617,7 @@ def run(
     path: Path,
     resume: bool = True,
     progress_every: int = 25,
-    rpm: int | None = None,
+    rpm: float | None = None,
 ) -> dict[str, Diagnosis]:
     """Diagnose `cases`, appending to `path` as it goes.
 
@@ -631,7 +673,14 @@ def main() -> int:
     ap.add_argument("--provider", default="stub", choices=["stub", "gemini", "groq"])
     ap.add_argument("--model", default=None)
     ap.add_argument("--limit", type=int, default=None, help="diagnose only the first N cases")
-    ap.add_argument("--rpm", type=int, default=None, help="pace calls to this rate")
+    ap.add_argument(
+        "--rpm",
+        type=float,
+        default=None,
+        help="pace calls to this rate. Fractional on purpose - the binding free-tier "
+        "ceiling is tokens per minute, and the request rate that fits under it is rarely "
+        "a whole number",
+    )
     ap.add_argument("--no-resume", action="store_true", help="rewrite the cache from scratch")
     args = ap.parse_args()
 
