@@ -867,10 +867,25 @@ Options I considered for going faster, and why none of them helps:
 Resuming wins on arithmetic, so the run keeps going. The deadline is 2026-09-04, which
 leaves room.
 
+**Where this stopped**
+
+297 of 600 batch B diagnoses are cached and committed. The remaining 303 are roughly two and
+a half days of free-tier budget at ~130 a day. The run appends and flushes per case, so it
+picks up exactly where it left off:
+
+```
+.venv/Scripts/python -m reclaim.core.diagnose --batch B --provider groq --rpm 4.2
+```
+
+Nothing else is blocked on it. Batch A carries control, naive and rules; the `agent` arm is
+the only thing waiting, and with it the reported table.
+
 **Next**
 
 When batch B's diagnoses land: the `agent` arm, the reported four-arm table on held-out B,
-guards for control and agent, and a 20-trial sensitivity run on B rather than A.
+guards for control and agent, a 20-trial sensitivity run on B rather than A, and the results
+section of the README, which is deliberately the one part of it left empty rather than filled
+with batch A's tuning figures.
 
 **A change I found and deliberately did not make.** Scoring the partial batch B diagnoses
 showed the model is well calibrated - mean confidence 0.931 when it is right, 0.737 when it
