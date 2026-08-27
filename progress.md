@@ -969,31 +969,58 @@ Neither was visible in any output I was looking at.
    same tail in 7 of 20 perturbed worlds. The base world was the outlier, not the jittered
    ones.
 
-2. **The retry budget of 2 had only been surviving because of the bug above.**
+2. **The retry budget turned out to be a structural choice, not a dial.**
 
-   With the opening failure counted, a recurring budget of 2 means three presentations
-   against a threshold that jitters down to 3. Re-running sensitivity: the policy arm now
-   halted mandates in **7 of 20 worlds**, worst case 39.5% of the recurring book, net lift
-   running to **−Rs 47 lakh**. The same cliff D4 stepped back from, one step further along.
+   Fixing the counter re-opened the recurring charge budget, and working out why took
+   longer than changing it. The jitter perturbs `mandate_halt_after` by exactly one unit,
+   so the rail's threshold is always **3, 4 or 5** — and since a recurring case arrives
+   one failed presentation deep, the budget maps directly onto total presentations. There
+   is no continuum here. There are three options:
 
-   The budget is now **1** — two presentations, one clear step under the lowest threshold
-   the jitter produces. That is the second time the answer has been headroom rather than a
-   better guess at where the cliff is, and the principle is now load-bearing enough to be
-   worth stating as one.
+   | budget | presentations | halts when threshold is | recovery | ordering |
+   |---|---|---|---|---|
+   | 3 | 4 | 3 or 4 — most worlds | — | — |
+   | **2** | **3** | **3 — seven of twenty** | **51.7%** | **20/20** |
+   | 1 | 2 | never | 47.5% | 16/20 |
 
-   The price is stated in the open because it is real: against a budget of 2, a budget of 1
-   gives up **4.2 points of recovery rate** — Rs 23,475 of gross recovery on batch A. What
-   it buys is a distribution with nothing below zero in it. It also halved the double
-   charges, 2 against 4, which was not the goal; the attempt a tighter budget declines to
-   make is disproportionately the one the policy was least sure about.
+   A budget of 3 is what naive does, and it is why naive destroys 59.9% of the book.
 
-   One claim got weaker and belongs on the record. The ordering `naive < rules` now holds
-   in **16 of 20** worlds rather than 20 of 20. The four exceptions are the worlds where
-   the jitter pushed the halt threshold high enough that naive never reached it; there it
-   retries three times, halts nothing, and wins by 2–8%. In the other sixteen it loses by
-   about Rs 60 lakh. Reporting that as "20/20" would have been the more flattering claim
-   and the less true one, and the honest version is the stronger argument anyway: naive is
-   above zero in 4 of 20 worlds, the policy arm in 20 of 20.
+   Between 1 and 2 there is a real trade. A budget of 1 has no left tail at all — nothing
+   halts in any world, net lift stays inside [+3.38L, +4.14L] — but it gives up 4.2 points
+   of recovery in *every* world, including the two-thirds where the tail never appears, and
+   it loses to naive outright in the four worlds where the threshold lands on 5 and naive
+   gets away with four presentations. That is what drops the ordering to 16 of 20.
+
+   I spent most of an afternoon on 1 before settling on **2**. Writing down why, because
+   the reasoning is the part worth keeping: the tail at a budget of 2 is real, but it is
+   *reported* — it is the `worlds w/ halt` column of the sensitivity table, immediately
+   next to the ordering claim, where nobody can miss it. Trading a disclosed risk for a
+   measured gain is a different act from suppressing the risk in order to state the gain,
+   and only the second one is dishonest.
+
+   **The thing I got wrong** was assuming the two could be had together. The obvious idea:
+   allow the second presentation only when the diagnosed cause is one that *clears on its
+   own* — an outage ending, a route recovering, a balance arriving, a cap rolling over —
+   and refuse it for a dead card, a revoked mandate, an absent customer, a risk block. A
+   second attempt that succeeds resets the rail's counter to zero, so targeting them should
+   buy the recovery without the halts.
+
+   It bought nothing:
+
+   | | recovery | doubles | worlds w/ halt | worst halt |
+   |---|---|---|---|---|
+   | blanket 2 | 51.7% | 4 | 7/20 | 39.5% |
+   | selective | 51.5% | 4 | 7/20 | 39.5% |
+
+   Identical to within noise. The reason is obvious once seen and was not obvious before:
+   **a second presentation that fails is a strike whatever motivated it.** The halt rate is
+   set by how often the second attempt fails, not by why it was made. Picking better causes
+   raises the success rate of those attempts, but the failures that remain are still
+   consecutive failures, and they are all the counter can see.
+
+   I deleted the code. It earned nothing and it was not free to read. Keeping a mechanism
+   because it sounds principled, after measuring that it does nothing, is how a codebase
+   fills up with things nobody can safely remove later.
 
 3. **Replaying a batch twice failed with a bare `UNIQUE constraint failed: runs.run_id`.**
 
@@ -1101,29 +1128,29 @@ Neither was visible in any output I was looking at.
     arm         recovered   of n     gross Rs    cost Rs  halted   held  double
     control           169    600      515,531          0       0      0       0
     naive             315    600      925,485      6,235     223      0      20
-    rules             285    600      925,515      9,150       0     62       2
+    rules             310    600      948,990      9,032       0     62       4
 
 .venv/Scripts/python -m reclaim.eval.metrics --batch A
     arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  halt % double
     control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
     naive      52.5%    925,485    6,235 6,415,893 -5,496,643 -6,012,174    0.015   59.9%     20
-    rules      47.5%    925,515    9,150         0    916,365   +400,834    0.022    0.0%      2
+    rules      51.7%    948,990    9,032         0    939,958   +424,427    0.021    0.0%      4
 
 .venv/Scripts/python -m reclaim.eval.sensitivity --batch A --arms control,naive,rules
     claimed ordering by net lift:  naive < rules < agent
-    held in 16/20 trials  (80%)
+    held in 20/20 trials  (100%)
 
     arm              net lift Rs, median [min .. max]       doubles  worst halt %  worlds w/ halt
     naive         -5,988,517  [-9,140,939 .. 415,196]   20 [20..20]         73.4%           16/20
-    rules            393,769     [338,346 .. 413,784]      4 [2..4]          0.0%            0/20
+    rules            459,736  [-4,722,083 .. 514,866]      4 [3..4]         39.5%            7/20
 
 .venv/Scripts/python -m reclaim.core.guards --batch A
     A - rules   [baseline: measured, not asserted]
-      R1  VIOLATED  2 double charges of 572 charge attempts
-      R2  HELD  recovered 925,515 of 1,845,200 at risk
-      R3  HELD  703 contacts to 363 customers
-      R4  HELD  703 contacts checked
-      R5  HELD  24 opt-outs recorded
+      R1  VIOLATED  4 double charges of 760 charge attempts
+      R2  HELD  recovered 948,990 of 1,845,200 at risk
+      R3  HELD  624 contacts to 321 customers
+      R4  HELD  624 contacts checked
+      R5  HELD  15 opt-outs recorded
       R6  HELD  600/600 cases closed
     1 asserted arm(s): 6/6 held
 ```

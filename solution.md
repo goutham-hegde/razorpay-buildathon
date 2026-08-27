@@ -294,7 +294,7 @@ arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  h
 --------------------------------------------------------------------------------------------
 control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
 naive      52.5%    925,485    6,235 6,415,893 -5,496,643 -6,012,174    0.015   59.9%     20
-rules      47.5%    925,515    9,150         0    916,365   +400,834    0.022    0.0%      2
+rules      51.7%    948,990    9,032         0    939,958   +424,427    0.021    0.0%      4
 ```
 
 Read the columns, not the headline:
@@ -305,8 +305,8 @@ Read the columns, not the headline:
   223 of 372 mandates — 59.9% of the recurring book — and the forfeited subscription
   months turn about Rs 4 lakh of recovered invoices into **−Rs 60 lakh** of destroyed
   revenue. This is the entire reason `residual` is a column and not a footnote.
-- The policy arm recovers **five points less** than naive and is worth **Rs 64 lakh more**.
-- It also makes **one tenth the double charges** (2 vs 20) on identical inputs.
+- The policy arm recovers slightly less than naive and is worth **Rs 64 lakh more**.
+- It also makes **one fifth the double charges** (4 vs 20) on identical inputs.
 
 **Diagnosis quality**, stratified sample of batch A weighted to the hard confusion pairs:
 
@@ -361,32 +361,22 @@ up to ±20% simultaneously:
 arm              net lift Rs, median [min .. max]       doubles  worst halt %  worlds w/ halt
 ---------------------------------------------------------------------------------------------
 naive         -5,988,517  [-9,140,939 .. 415,196]   20 [20..20]         73.4%           16/20
-rules            393,769     [338,346 .. 413,784]      4 [2..4]          0.0%            0/20
+rules            459,736  [-4,722,083 .. 514,866]      4 [3..4]         39.5%            7/20
 ```
 
-The claimed ordering `naive < rules` held in **16 of 20**. It is worth being precise about
-the four it did not, because they are not noise:
+The claimed ordering `naive < rules` held in **20 of 20**.
 
-```
-  seed 9001: naive=415,196  rules=384,515
-  seed 9005: naive=403,352  rules=395,400
-  seed 9016: naive=401,533  rules=389,804
-  seed 9019: naive=389,809  rules=374,814
-```
+Two columns in that table are doing more work than the ordering line, and both belong in
+any honest reading of it:
 
-Those are the four worlds where the jitter pushed the halt threshold high enough that naive
-never hit it. In those worlds naive retries three times, halts nothing, and edges the policy
-arm out by two to eight percent. **In the other sixteen it loses by around Rs 60 lakh.**
-
-That is the honest shape of the comparison, and reporting it as "the ranking held 20/20"
-would have been the more flattering claim and the less true one:
-
-- **Naive is above zero in 4 of 20 worlds.** The policy arm is above zero in **20 of 20**,
-  in a band of [+Rs 3.38L, +Rs 4.14L].
+- **Naive is above zero in 4 of 20 worlds.** It halts mandates in 16 of 20, up to 73.4% of
+  the recurring book, and its median outcome is a loss of nearly Rs 60 lakh.
+- **The policy arm has a left tail of its own**, and it is reported rather than buried: in
+  7 of 20 worlds it halts up to 39.5% of the book and net lift runs to −Rs 47 lakh. Those
+  are the worlds where the jitter pushes the rail's halt threshold to its lowest value.
 - **Naive's median is meaningless** because its outcome is bimodal — it either clears the
   halt threshold in a given world or it does not, and the two branches are separated by
   roughly Rs 64 lakh.
-- What is being bought is not a higher median. It is the removal of the left tail.
 
 **Naive is not a slightly worse policy. It is a policy whose expected value is dominated by
 a tail you cannot see from its recovery rate.** That is precisely what a mandate-halt metric
@@ -394,29 +384,63 @@ is for, and it is invisible without one.
 
 ### How this changed the design
 
-The recurring charge budget has now moved twice, both times for the same reason and in the
-same direction.
+The recurring charge budget is the one number this analysis kept forcing me to revisit, and
+the shape of the choice only became clear once the halt counter was fixed.
 
-It was originally **3**. The first sensitivity run held the ranking but collapsed the
-levels: a budget of 3 against a halt threshold that jitters into 3 destroys the mandate of
-every recurring case worked hard. It dropped to **2**.
+The jitter moves the rail's halt threshold by exactly one unit, so it is always **3, 4 or
+5**. And a recurring case arrives already one failed presentation deep. So the budget maps
+straight onto total presentations, and the options are structural rather than a matter of
+degree:
 
-A budget of 2 survived only while the world was miscounting. With the opening failure
-counted, 2 means three presentations against a threshold that jitters down to 3, and the
-policy arm halted mandates in **7 of 20 worlds**, worst case 39.5% of the recurring book,
-with net lift running to **−Rs 47 lakh**. The same cliff, one step further along.
+| budget | presentations | halts when threshold is | batch A recovery | ordering holds |
+|---|---|---|---|---|
+| 3 | 4 | 3, 4 — most worlds | — | — |
+| **2** | **3** | **3 — seven of twenty** | **51.7%** | **20/20** |
+| 1 | 2 | never | 47.5% | 16/20 |
 
-It is now **1** — two presentations, one clear step under the lowest threshold the jitter
-produces.
+A budget of 3 is what the naive arm does, and it is why naive destroys 59.9% of the
+recurring book. That one was never in question.
 
-> The agent does not get to see the rail's threshold. The correct response to a cliff of
-> unknown position is **headroom, not a better guess at where the cliff is**.
+Between 1 and 2 there is a real trade, and it is a judgement rather than a derivation.
 
-The price is real and belongs in the open: against a budget of 2 in the base world, a budget
-of 1 gives up **4.2 points of recovery rate** — Rs 23,475 of gross recovery on batch A. What
-it buys is a distribution with nothing below zero in it. It also halved the double charges,
-2 against 4, which was not the goal: the attempt a tighter budget declines to make is
-disproportionately the one the policy was least sure about.
+**1** buys a distribution with no left tail at all: it halts nothing in any of the twenty
+worlds and its net lift stays inside [+Rs 3.38L, +Rs 4.14L]. What it costs is 4.2 points of
+recovery rate — Rs 23,475 of gross on batch A — in *every* world, including the two-thirds
+where the tail never materialises. It also loses to naive outright in the four worlds where
+the threshold lands on 5 and naive gets away with four presentations, which drops the
+claimed ordering to 16 of 20.
+
+**2** recovers 51.7%, and the claimed ordering holds in 20 of 20. Its exposure is the seven
+worlds where the threshold is 3: there it halts up to 39.5% of the book and net lift runs to
+−Rs 47 lakh.
+
+**The budget is 2.** The tail is real and it is *reported* — it is the `worlds w/ halt`
+column of the sensitivity table, sitting in plain sight immediately next to the ordering
+claim. That is the distinction that matters here: this trades a disclosed risk against a
+measured gain, rather than suppressing one to be able to state the other.
+
+### A version that was built, measured, and deleted
+
+The obvious way to have both was a *selective* second presentation: allow it only when the
+diagnosed cause is one that clears on its own — an outage ending, a route recovering, a
+balance arriving on payday, a cap rolling over — and refuse it for a dead card, a revoked
+mandate, an absent customer or a risk block. The theory was that a second attempt which
+*succeeds* resets the rail's consecutive-failure counter to zero and therefore costs
+nothing, so targeting the attempts should buy the recovery without the halts.
+
+It did not work, and the measurement is more interesting than the idea:
+
+| | recovery | doubles | worlds w/ halt | worst halt |
+|---|---|---|---|---|
+| blanket budget of 2 | 51.7% | 4 | 7/20 | 39.5% |
+| selective | 51.5% | 4 | 7/20 | 39.5% |
+
+Identical, to within noise. The reason is simple once seen: **a second presentation that
+fails is a strike whatever motivated it**, and the halt rate is set by how often the second
+attempt fails, not by why it was made. Selecting better causes raises the success rate of
+those attempts, but the failures that remain are still consecutive failures.
+
+The code was removed. It earned nothing and it was not free to read.
 
 ### Stopping early is only half a policy
 

@@ -3,9 +3,9 @@
 Written to be **read aloud**, not performed. Short sentences, one idea each, no clause
 pileups.
 
-Spoken text only — headings, on-screen cues and this preamble excluded — it runs **802
-words**. That is **5:00 at 160 words per minute**, which is the pace this
-register wants; a deliberately slow read stretches it to 5:20. The
+Spoken text only — headings, on-screen cues and this preamble excluded — it runs **808
+words**. That is **5:03 at 160 words per minute**, which is the pace this
+register wants; a deliberately slow read stretches it to 5:23. The
 timestamps on each section below are derived from its own word count, not guessed, so they
 stay honest if you re-cut it. Re-check after any edit:
 
@@ -60,7 +60,7 @@ action. An empty account needs a different **time**, not more attempts. An aband
 screen needs the *customer* back. A dead card needs a new card. A broken route needs a
 different route, right now.
 
-Nine causes, nine right answers. A retry loop gets one right by accident.
+Nine causes, nine right answers. A retry loop gets one by accident.
 
 Exactly one module calls a language model: it reads the issuer's messy free text and names
 the cause. That is all. Retry timing is a policy, budgets are arithmetic, anything that moves
@@ -71,7 +71,7 @@ Because what a payments reviewer actually asks is what stops this doing somethin
 
 ---
 
-## 1:27 — 2:28 · Why you can believe the number
+## 1:27 — 2:27 · Why you can believe the number
 
 > **On screen:** the `core/` ↛ `synth/` boundary, then the control arm.
 
@@ -95,13 +95,13 @@ never been tuned against.
 
 ---
 
-## 2:28 — 3:37 · The result, and the thing it caught
+## 2:27 — 3:40 · The result, and the thing it caught
 
 > **On screen:** the four-arm table. Hold on the `halt %` and `net` columns.
 
 Four arms, same batch. Control does nothing. Naive retries three times. Rules-only and the
-agent run the *same policy engine* — they differ only in what diagnosed the failure, so the
-gap between those two is worth what the model is worth and nothing else.
+agent run the *same policy engine*, differing only in what diagnosed the failure — so the
+gap between those two is worth what the model is worth, and nothing else.
 
 Now look at naive. It has the **best recovery rate in the table**. It is also the worst
 outcome, by a distance.
@@ -110,17 +110,19 @@ Retry a subscription too often and the rail **halts the mandate**. Naive destroy
 of the recurring book — nine months of forfeited revenue each. It recovers ⟦four lakh⟧ rupees
 of invoices and destroys ⟦sixty lakh⟧ of future revenue.
 
-That is invisible if you only report recovery rate. It is the whole reason there is a
-mandate-halt column and a net column.
+Invisible if you only report recovery rate. That is the whole reason there is a mandate-halt
+column and a net column.
 
-How confident is it? Re-run across twenty worlds, every constant moved by up to twenty
-percent: the ordering holds in ⟦**16 of 20**⟧. Not twenty. In four, naive stays under the
-halt threshold and wins. In the other sixteen it loses badly. "Twenty out of twenty" would
-have been the better sound bite and the false one.
+How confident is it? Re-run across twenty worlds, every constant moved by twenty percent at
+once. The ordering holds in ⟦**20 of 20**⟧.
+
+That table also reports my own arm's worst case, not just naive's — ⟦**7 of 20**⟧ worlds
+where the halt threshold lands low enough to catch the policy too. A robustness check you
+only publish when it flatters you is not a robustness check.
 
 ---
 
-## 3:37 — 4:22 · Bounded, and provable
+## 3:40 — 4:25 · Bounded, and provable
 
 > **On screen:** the six invariants, then a case's audit trail in the console.
 
@@ -139,7 +141,7 @@ confident it was, and why it acted.
 
 ---
 
-## 4:22 — 5:00 · What it does not do
+## 4:25 — 5:03 · What it does not do
 
 > **On screen:** the repo, the README results table.
 

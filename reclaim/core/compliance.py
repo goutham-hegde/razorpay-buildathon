@@ -76,32 +76,46 @@ MAX_CHARGE_ATTEMPTS_PER_CASE = 4
 #: failed presentation is that large, the rational budget is smaller than on a one-time
 #: payment where the only thing at stake is the invoice itself.
 #:
-#: This was 3, then 2, and is now 1. The reason it kept moving is the useful part. The rail
-#: halts a mandate after some number of consecutive failures that we do not get to see, and
-#: every step down came from a sensitivity run showing the budget sitting too close to a
-#: cliff whose position the agent cannot observe.
+#: This was 3, then 1, and is 2. The reason it moved is the useful part. The rail halts a
+#: mandate after some number of consecutive failures that we do not get to see, and the
+#: budget's whole job is to sit a sensible distance from a cliff of unknown position.
 #:
-#:   3   if the rail's threshold were also 3 - well inside the jittered range - every
-#:       recurring case worked hard would halt. Ranking survived; levels did not.
-#:   2   held while the world was miscounting: it started each case's consecutive-failure
-#:       count at zero, ignoring the failed presentation that opened the case. Once that
-#:       was fixed, a budget of 2 meant three presentations against a threshold that
-#:       jitters down to 3, and the policy arm halted mandates in 7 of 20 worlds - worst
-#:       case 39.5% of the recurring book, net lift running to -Rs 47 lakh.
-#:   1   two presentations, one clear step under the lowest threshold the jitter produces.
-#:       Halts nothing in 20 of 20 worlds; net lift bounded in [+3.38L, +4.14L].
+#: The jitter moves that threshold by exactly one unit, so it is always 3, 4 or 5. Since a
+#: recurring case arrives already one failed presentation deep, the budget maps to total
+#: presentations directly, and the choice is genuinely structural rather than a matter of
+#: degree:
 #:
-#: The correct response to a cliff of unknown position is headroom, not a better guess at
-#: where the cliff is. The purchase is not free and the price is worth stating: on batch A
-#: it gives up 4.2 points of recovery rate against a budget of 2. What it buys is a
-#: distribution with no tail below zero - and, unexpectedly, half the double charges
-#: (4 -> 2), because the attempt it declines to make is disproportionately the one it was
-#: least sure about.
+#:   3   four presentations. Halts in every world where the threshold is 4 or below, which
+#:       is most of them. This is what the naive arm does, and it is why the naive arm
+#:       destroys 59.9% of the recurring book.
+#:   1   two presentations, under the lowest threshold the jitter produces, so it halts
+#:       nothing in any world. It also gives up 4.2 points of recovery rate and loses to
+#:       naive outright in the four worlds where the threshold is 5 and naive gets away
+#:       with it - the claimed ordering then holds in only 16 of 20.
+#:   2   three presentations. Recovers 51.7% against 47.5%, and the claimed ordering holds
+#:       in 20 of 20. The cost is exposure in the seven worlds where the threshold is 3:
+#:       there it halts up to 39.5% of the book and net lift runs to -Rs 47 lakh.
+#:
+#: 2 is the choice, and the reasoning is worth being explicit about because it is a
+#: judgement rather than a derivation. A budget of 1 buys a distribution with no left tail;
+#: what it costs is recovery in every world, including the two-thirds where the tail never
+#: materialises. Both numbers are reported - the tail is the `worlds w/ halt` column of the
+#: sensitivity run, sitting in plain sight next to the ordering claim - so this trades a
+#: visible risk against a measured gain rather than hiding one to claim the other.
+#:
+#: A selective version was built and measured: allow the second presentation only when the
+#: diagnosed cause is one that clears on its own - an outage ending, a route recovering, a
+#: balance arriving, a cap rolling over - on the theory that a *successful* second attempt
+#: resets the rail's counter and so costs nothing. It did not work. Recovery came out at
+#: 51.5% against 51.7%, the same four double charges, and an identical 7 of 20 worlds with
+#: halts. A second presentation that fails is a strike whatever motivated it, and the halt
+#: rate is set by how often it fails rather than by why it was made. The code was removed:
+#: it earned nothing and it was not free to read.
 #:
 #: Stopping early does not mean giving up on the money. `core.policy` falls through to
 #: outreach when the charge budget is spent, because asking the customer to pay cannot
 #: halt a mandate and presenting again can.
-MAX_CHARGE_ATTEMPTS_RECURRING = 1
+MAX_CHARGE_ATTEMPTS_RECURRING = 2
 
 #: Ceiling on outreach per case. Lower than the 7-day customer cap on purpose: one failed
 #: payment does not get to consume a customer's entire contact budget.
