@@ -94,11 +94,18 @@ def arm_metrics(ledger: Ledger, run_id: str) -> ArmMetrics:
         (run_id,),
     )
     # Recurring cases are the only ones that can halt a mandate, so the rate is over those.
+    #
+    # Read from `is_recurring`, which the driver records, and NOT from
+    # `residual_loss_paise > 0`. That predicate looks equivalent and is not: residual loss
+    # is only ever non-zero on a case that actually halted, so it makes the denominator
+    # equal to the numerator and the rate can only print 0% or 100%. It did exactly that
+    # until the sensitivity run produced a column of 100.0s that no policy could have
+    # earned.
     recurring = _scalar(
         ledger.db,
-        "SELECT COUNT(*) FROM case_outcomes WHERE run_id = ? AND residual_loss_paise > 0",
+        "SELECT COUNT(*) FROM case_outcomes WHERE run_id = ? AND is_recurring = 1",
         (run_id,),
-    ) or halted
+    )
 
     return ArmMetrics(
         run_id=run_id,
@@ -161,3 +168,89 @@ def batch_metrics(ledger: Ledger, batch: str) -> list[ArmMetrics]:
     """Metrics for every run recorded against a batch, with lift attached."""
     runs = [r["run_id"] for r in ledger.runs(batch.upper())]
     return with_lift([arm_metrics(ledger, r) for r in runs])
+
+
+# ---------------------------------------------------------------------------
+# The results table
+# ---------------------------------------------------------------------------
+
+#: Column order for the reported table. `net lift` is the headline and sits where the eye
+#: lands; `recovery rate` is first only because it is the number everyone asks for, and
+#: putting the control arm's own rate directly under it is the fastest way to show why the
+#: rate on its own is not a claim about anything.
+def render(metrics: list[ArmMetrics]) -> str:
+    lines: list[str] = []
+    order = {"control": 0, "naive": 1, "rules": 2, "agent": 3}
+    metrics = sorted(metrics, key=lambda m: (order.get(m.arm, 9), m.run_id))
+
+    head = (
+        f"{'arm':<9}{'rec %':>7}{'gross Rs':>11}{'cost Rs':>9}{'residual':>10}"
+        f"{'net Rs':>11}{'net lift':>11}{'cost/Re':>9}{'halt %':>8}{'double':>7}"
+    )
+    lines.append(head)
+    lines.append("-" * len(head))
+    for m in metrics:
+        cpr = f"{m.cost_per_rupee_lifted:.3f}" if m.cost_per_rupee_lifted is not None else "-"
+        lift = "-" if m.arm == "control" else f"{m.lift_net_paise / 100:>+,.0f}"
+        lines.append(
+            f"{m.arm:<9}{m.recovery_rate * 100:>6.1f}%{m.gross_paise / 100:>11,.0f}"
+            f"{m.cost_paise / 100:>9,.0f}{m.residual_loss_paise / 100:>10,.0f}"
+            f"{m.net_paise / 100:>11,.0f}{lift:>11}{cpr:>9}"
+            f"{m.mandate_halt_rate * 100:>7.1f}%{m.double_charges:>7}"
+        )
+    lines.append("")
+    lines.append(
+        "net = gross recovered - cost (retry fees, comms, incentives, double-charge "
+        "unwinds) - residual"
+    )
+    lines.append(
+        "net lift = this arm's net minus the control arm's. The control recovers money "
+        "with no help at all;"
+    )
+    lines.append(
+        "           an arm's gross figure silently contains all of it, and lift is what "
+        "removes it."
+    )
+    lines.append(
+        "cost/Re  = paise spent per rupee of *incremental* gross recovery, not per rupee "
+        "recovered."
+    )
+    lines.append(
+        "halt %   = share of recurring cases whose mandate this arm destroyed. An arm can "
+        "win on gross"
+    )
+    lines.append(
+        "           and lose here, which is why residual is a column rather than a "
+        "footnote."
+    )
+    return "\n".join(lines)
+
+
+def main() -> int:
+    import argparse
+
+    from reclaim.core.ledger import open_ledger
+
+    ap = argparse.ArgumentParser(description="The per-arm results table for a batch.")
+    ap.add_argument("--batch", default="B")
+    ap.add_argument("--root", default="data")
+    ap.add_argument("--json", action="store_true")
+    args = ap.parse_args()
+
+    with open_ledger(args.batch, args.root) as ledger:
+        metrics = batch_metrics(ledger, args.batch)
+    if not metrics:
+        print(f"no runs recorded for batch {args.batch.upper()} - run reclaim.eval.replay first")
+        return 1
+    if args.json:
+        import json
+
+        print(json.dumps([m.as_dict() for m in metrics], indent=2))
+        return 0
+    print(f"batch {args.batch.upper()}   n={metrics[0].cases}\n")
+    print(render(metrics))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

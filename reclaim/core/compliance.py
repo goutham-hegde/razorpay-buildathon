@@ -67,6 +67,29 @@ MIN_CONTACT_GAP = timedelta(hours=20)
 #: agent does not know that number and must not be tuned to sit exactly under it.
 MAX_CHARGE_ATTEMPTS_PER_CASE = 4
 
+#: Tighter ceiling on rails that fire against a stored mandate.
+#:
+#: Not a second guess at the rail's halt threshold - the agent does not know that number,
+#: and the whole point is that it must not need to. It falls out of the agent's own
+#: arithmetic: a halted mandate forfeits ASSUMED_MANDATE_RESIDUAL_MONTHS of revenue, which
+#: on a subscription is several times this month's ticket. When the downside of one more
+#: failed presentation is that large, the rational budget is smaller than on a one-time
+#: payment where the only thing at stake is the invoice itself.
+#:
+#: This was 3 until the sensitivity run, and the reason it moved is the useful part. The
+#: rail halts a mandate after some number of consecutive failures that we do not get to
+#: see. Sitting the budget at 3 meant that if that number were also 3 - well inside the
+#: range the jitter explores - every recurring case we worked hard would halt, and the
+#: residual loss swamped everything the policy recovered. The ranking of the arms survived
+#: it; the levels did not. That is a policy fragile to a constant it cannot observe, and
+#: the correct response to a cliff of unknown position is headroom rather than a better
+#: guess at where the cliff is.
+#:
+#: Stopping early does not mean giving up on the money. `core.policy` falls through to
+#: outreach when the charge budget is spent, because asking the customer to pay cannot
+#: halt a mandate and presenting again can.
+MAX_CHARGE_ATTEMPTS_RECURRING = 2
+
 #: Ceiling on outreach per case. Lower than the 7-day customer cap on purpose: one failed
 #: payment does not get to consume a customer's entire contact budget.
 MAX_CONTACTS_PER_CASE = 2
@@ -91,6 +114,29 @@ MIN_ECONOMIC_AMOUNT_PAISE = 2000
 #: uses a conservative in-house estimate. If these matched, a reviewer would be right to
 #: ask whether the policy had been handed the answer.
 ASSUMED_MANDATE_RESIDUAL_MONTHS = 6
+
+#: What the agent assumes it costs to put a case in front of a human. Again deliberately
+#: not the world's figure (`synth.Calibration.cost_per_human_escalation_paise`), and
+#: deliberately on the high side: an estimate that flatters escalation would let the policy
+#: escalate its way out of every hard decision.
+ASSUMED_ESCALATION_COST_PAISE = 12000
+
+#: What an incentive attached to an outreach message costs us.
+#:
+#: The simulated world raises engagement when an incentive is attached and charges nothing
+#: for it. Left alone that makes incentives free, and a free lever is not a decision. The
+#: eval harness therefore bills this figure - the agent's own declared cost - against any
+#: case where the policy attached one, so that "was the incentive worth it" is a question
+#: the results table can actually answer.
+INCENTIVE_COST_PAISE = 2500
+
+#: Below this at-risk amount an incentive is a fifth of the invoice and the unit economics
+#: stop working, whatever it does to engagement.
+INCENTIVE_MIN_AMOUNT_PAISE = 25000
+
+#: Channels in descending order of how reliably this business sees customers act on them.
+#: A stated belief about our own audience, not something learned from the simulator.
+CHANNEL_PREFERENCE = ("whatsapp", "sms", "email")
 
 
 # ---------------------------------------------------------------------------

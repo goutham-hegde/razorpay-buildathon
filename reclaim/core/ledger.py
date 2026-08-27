@@ -171,6 +171,12 @@ CREATE TABLE IF NOT EXISTS case_outcomes (
     cost_paise          INTEGER NOT NULL DEFAULT 0,
     mandate_halted      INTEGER NOT NULL DEFAULT 0,
     residual_loss_paise INTEGER NOT NULL DEFAULT 0,
+    -- Whether this case ran against a stored mandate, and could therefore have had one
+    -- halted. The denominator of the mandate-halt rate, and it has to be recorded rather
+    -- than inferred: `residual_loss_paise > 0` looks like the same set and is not - it is
+    -- only ever non-zero for cases that DID halt, so using it makes the rate 0% or 100%
+    -- and nothing else. That is how it read until D4.
+    is_recurring        INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (run_id, case_id)
 );
 """
@@ -185,6 +191,17 @@ BEGIN SELECT RAISE(ABORT, 'ledger is append-only: DELETE on {t} is not permitted
 """
     for t in _TABLES
 )
+
+
+#: Columns added after the first version of the schema. Only the ones a stale file could
+#: plausibly be missing need listing - this is a tripwire, not a migration system.
+_EXPECTED_COLUMNS: dict[str, frozenset[str]] = {
+    "case_outcomes": frozenset({"is_recurring", "residual_loss_paise", "mandate_halted"}),
+}
+
+
+class StaleLedger(RuntimeError):
+    """An existing ledger file predates the current schema and must be rebuilt."""
 
 
 class DuplicateAttempt(Exception):
@@ -225,6 +242,31 @@ class Ledger:
         self.db.row_factory = sqlite3.Row
         self.db.executescript(_SCHEMA)
         self.db.executescript(_TRIGGERS)
+        self._check_schema()
+
+    def _check_schema(self) -> None:
+        """Fail loudly when an existing file predates the current schema.
+
+        `CREATE TABLE IF NOT EXISTS` does exactly what it says: it leaves an older table
+        alone. A ledger is append-only and cannot be migrated in place, so a schema change
+        means an existing working file is simply stale - and without this check the symptom
+        is `no such column` raised from whichever query happens to touch the new column
+        first, several modules away from the cause.
+
+        The database is a gitignored working artifact rebuilt by `eval.replay`, so the
+        remedy really is to delete it, and the message says so.
+        """
+        for table, expected in _EXPECTED_COLUMNS.items():
+            actual = {
+                r["name"] for r in self.db.execute(f"PRAGMA table_info({table})")  # noqa: S608
+            }
+            if missing := expected - actual:
+                raise StaleLedger(
+                    f"{self.path}: table {table} is missing {sorted(missing)}. This ledger "
+                    f"was written by an older schema and an append-only store cannot be "
+                    f"migrated in place. It is a working artifact - delete it and re-run "
+                    f"`python -m reclaim.eval.replay` to rebuild it."
+                )
 
     def close(self) -> None:
         self.db.close()
@@ -520,11 +562,13 @@ class Ledger:
         cost_paise: int = 0,
         mandate_halted: bool = False,
         residual_loss_paise: int = 0,
+        is_recurring: bool = False,
     ) -> None:
         self.db.execute(
             "INSERT INTO case_outcomes (run_id, case_id, closed_at, status, recovered_paise, "
-            "recovered_by, at_risk_paise, cost_paise, mandate_halted, residual_loss_paise) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "recovered_by, at_risk_paise, cost_paise, mandate_halted, residual_loss_paise, "
+            "is_recurring) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 run_id,
                 case_id,
@@ -536,6 +580,7 @@ class Ledger:
                 cost_paise,
                 int(mandate_halted),
                 residual_loss_paise,
+                int(is_recurring),
             ),
         )
 

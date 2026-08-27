@@ -317,6 +317,10 @@ class GeminiDiagnoser:
         #: A wait longer than this means a daily cap rather than a burst limit. Stop and
         #: say so; the cache makes resuming after the reset free.
         max_wait: float = 120.0,
+        #: Overrides `_SYSTEM_PROMPT`. Exists so a prompt candidate can be scored against
+        #: batch A without editing the module - the committed default is what ships, and a
+        #: candidate that does not beat it never reaches this file.
+        system_prompt: str | None = None,
     ) -> None:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
         if not self.api_key:
@@ -329,6 +333,7 @@ class GeminiDiagnoser:
         self.timeout = timeout
         self.max_attempts = max_attempts
         self.max_wait = max_wait
+        self.system_prompt = system_prompt or _SYSTEM_PROMPT
         self._client = None
 
     def _http(self):
@@ -342,7 +347,7 @@ class GeminiDiagnoser:
         import httpx
 
         payload = {
-            "systemInstruction": {"parts": [{"text": _SYSTEM_PROMPT}]},
+            "systemInstruction": {"parts": [{"text": self.system_prompt}]},
             "contents": [
                 {
                     "role": "user",
@@ -436,6 +441,8 @@ class GroqDiagnoser:
         timeout: float = 60.0,
         max_attempts: int = 5,
         max_wait: float = 120.0,
+        #: See the note on `GeminiDiagnoser.system_prompt`.
+        system_prompt: str | None = None,
     ) -> None:
         self.api_key = api_key or os.environ.get("GROQ_API_KEY", "")
         if not self.api_key:
@@ -448,6 +455,7 @@ class GroqDiagnoser:
         self.timeout = timeout
         self.max_attempts = max_attempts
         self.max_wait = max_wait
+        self.system_prompt = system_prompt or _SYSTEM_PROMPT
         self._client = None
 
     def _http(self):
@@ -465,7 +473,7 @@ class GroqDiagnoser:
             "temperature": 0.0,  # classification, not generation - determinism is wanted
             "max_completion_tokens": 4096,
             "messages": [
-                {"role": "system", "content": _SYSTEM_PROMPT},
+                {"role": "system", "content": self.system_prompt},
                 {
                     "role": "user",
                     "content": json.dumps(observable(case), separators=(",", ":")),
@@ -600,13 +608,15 @@ def run(
     return done
 
 
-def build(provider: str, model: str | None = None) -> Diagnoser:
+def build(
+    provider: str, model: str | None = None, system_prompt: str | None = None
+) -> Diagnoser:
     if provider == "stub":
         return StubDiagnoser()
     if provider == "gemini":
-        return GeminiDiagnoser(model=model)
+        return GeminiDiagnoser(model=model, system_prompt=system_prompt)
     if provider == "groq":
-        return GroqDiagnoser(model=model)
+        return GroqDiagnoser(model=model, system_prompt=system_prompt)
     raise ValueError(f"unknown provider {provider!r}; known: stub, gemini, groq")
 
 
