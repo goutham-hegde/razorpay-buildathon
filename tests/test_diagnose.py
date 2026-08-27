@@ -16,6 +16,8 @@ import pytest
 from reclaim.core.diagnose import (
     Diagnosis,
     GeminiDiagnoser,
+    GroqDiagnoser,
+    QuotaExhausted,
     StubDiagnoser,
     build,
     cache_path,
@@ -285,3 +287,121 @@ def test_gemini_clamps_a_confidence_outside_zero_to_one() -> None:
         ]
     }
     assert g._parse(make_case(), body).confidence == 1.0
+
+
+# ---------------------------------------------------------------------------
+# Waiting out a rate limit
+# ---------------------------------------------------------------------------
+
+
+class _FakeResponse:
+    """Just enough of an httpx response for the retry loop."""
+
+    def __init__(self, status_code: int, headers: dict, body: dict | None = None) -> None:
+        self.status_code = status_code
+        self.headers = headers
+        self._body = body or {}
+
+    def json(self) -> dict:
+        return self._body
+
+    def raise_for_status(self) -> None:
+        return None
+
+
+def test_a_rate_limit_wait_is_broken_into_bounded_naps(monkeypatch) -> None:
+    """`retry-after` is an estimate against a rolling window, and it overshoots.
+
+    Sleeping for the whole of it once left a run idle for 25 minutes on a limit that had
+    cleared in two. The loop naps instead, so the run resumes when the quota does.
+    """
+    import reclaim.core.diagnose as mod
+
+    naps: list[float] = []
+    monkeypatch.setattr(mod.time, "sleep", lambda s: naps.append(s))
+    ok = _FakeResponse(
+        200,
+        {},
+        {
+            "choices": [
+                {
+                    "message": {
+                        "content": json.dumps(
+                            {"root_cause": "risk_declined", "confidence": 0.9}
+                        )
+                    }
+                }
+            ]
+        },
+    )
+    limited = _FakeResponse(429, {"retry-after": "1800", "x-ratelimit-limit-tokens": "8000"})
+
+    g = GroqDiagnoser(api_key="test-key", max_sleep=180.0)
+
+    class _Client:
+        def __init__(self) -> None:
+            self.queue = [limited, limited, ok]
+
+        def post(self, *a, **kw):
+            return self.queue.pop(0)
+
+    g._client = _Client()
+    d = g.diagnose(make_case())
+
+    assert d.root_cause is RootCause.RISK_DECLINED
+    assert naps == [180.0, 180.0], "each wait is capped, not slept in full"
+
+
+def test_waiting_for_quota_does_not_consume_the_retry_budget(monkeypatch) -> None:
+    """A 429 is the API working correctly. Only a broken call should spend an attempt."""
+    import reclaim.core.diagnose as mod
+
+    monkeypatch.setattr(mod.time, "sleep", lambda s: None)
+    limited = _FakeResponse(429, {"retry-after": "10", "x-ratelimit-limit-tokens": "8000"})
+    ok = _FakeResponse(
+        200,
+        {},
+        {
+            "choices": [
+                {
+                    "message": {
+                        "content": json.dumps(
+                            {"root_cause": "insufficient_funds", "confidence": 0.8}
+                        )
+                    }
+                }
+            ]
+        },
+    )
+
+    g = GroqDiagnoser(api_key="test-key", max_attempts=2, max_sleep=10.0)
+
+    class _Client:
+        def __init__(self) -> None:
+            self.queue = [limited] * 20 + [ok]
+
+        def post(self, *a, **kw):
+            return self.queue.pop(0)
+
+    g._client = _Client()
+    # Twenty 429s is far past `max_attempts`; the call still succeeds because none of them
+    # was an attempt in the sense the budget means.
+    assert g.diagnose(make_case()).root_cause is RootCause.INSUFFICIENT_FUNDS
+
+
+def test_a_quota_wait_gives_up_once_the_ceiling_is_spent(monkeypatch) -> None:
+    """Bounded naps must not become an unbounded loop."""
+    import reclaim.core.diagnose as mod
+
+    monkeypatch.setattr(mod.time, "sleep", lambda s: None)
+    limited = _FakeResponse(429, {"retry-after": "60", "x-ratelimit-limit-tokens": "8000"})
+
+    g = GroqDiagnoser(api_key="test-key", max_wait=120.0, max_sleep=60.0)
+
+    class _Client:
+        def post(self, *a, **kw):
+            return limited
+
+    g._client = _Client()
+    with pytest.raises(QuotaExhausted):
+        g.diagnose(make_case())

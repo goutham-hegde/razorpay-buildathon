@@ -491,6 +491,14 @@ class GroqDiagnoser:
         #: response is to sleep through it: a 600-case pass is an unattended overnight job
         #: either way, and stopping means somebody has to restart it by hand.
         max_wait_daily: float = 3600.0,
+        #: How long any single sleep may last before waking up to ask again. `retry-after`
+        #: against a rolling daily budget is an estimate and it overshoots: a run here once
+        #: sat idle for 25 minutes on a limit that had actually cleared within two, and a
+        #: probe request went straight through while the run was still asleep. Waking early
+        #: costs one request out of a thousand-a-day allowance and buys back the difference.
+        #: The ceilings above still decide whether to wait at all; this only decides how
+        #: long to wait between asking.
+        max_sleep: float = 180.0,
         #: See the note on `GeminiDiagnoser.system_prompt`.
         system_prompt: str | None = None,
     ) -> None:
@@ -506,6 +514,7 @@ class GroqDiagnoser:
         self.max_attempts = max_attempts
         self.max_wait = max_wait
         self.max_wait_daily = max_wait_daily
+        self.max_sleep = max_sleep
         self.system_prompt = system_prompt or _SYSTEM_PROMPT
         self._client = None
 
@@ -540,7 +549,12 @@ class GroqDiagnoser:
         }
 
         last: Exception | None = None
-        for attempt in range(self.max_attempts):
+        # Two budgets, because waiting for quota and retrying a broken call are different
+        # failures. A quota wait is the API working correctly and saying "not yet", and it
+        # must not consume the attempts reserved for calls that actually went wrong.
+        attempt = 0
+        waited = 0.0
+        while attempt < self.max_attempts:
             try:
                 res = self._http().post(
                     self.ENDPOINT,
@@ -554,23 +568,28 @@ class GroqDiagnoser:
                     )
                     # The tokens-per-day ceiling refills continuously rather than at a
                     # fixed hour, so the right response to it is to wait it out, not to
-                    # give up. `retry-after` on a TPD refusal is the time until enough of
-                    # the rolling window has freed up for THIS request - typically minutes.
-                    # Waiting costs nothing but wall-clock, and the alternative is a run
-                    # that dies every few hundred cases and has to be nursed by hand.
+                    # give up. Waiting costs nothing but wall-clock, and the alternative is
+                    # a run that dies every few hundred cases and has to be nursed by hand.
                     ceiling = self.max_wait_daily if kind == "tpd" else self.max_wait
                     last = QuotaExhausted(
                         f"HTTP {res.status_code} on {self.model} [{kind}]: {note}"
                     )
-                    if delay > ceiling:
+                    if waited >= ceiling:
                         raise last
-                    time.sleep(delay)
+                    # Sleep in bounded naps rather than for the whole of `retry-after`.
+                    # That header is an estimate against a rolling window and it overshoots
+                    # badly; waking early to ask again is one request against a
+                    # thousand-a-day allowance.
+                    nap = min(delay, self.max_sleep, ceiling - waited)
+                    time.sleep(nap)
+                    waited += nap
                     continue
                 res.raise_for_status()
                 return self._parse(case, res.json())
             except httpx.HTTPError as exc:
                 last = exc
                 time.sleep(min(30.0, 2.0 * (2**attempt)))
+            attempt += 1
 
         raise RuntimeError(f"{case.id}: giving up after {self.max_attempts} attempts") from last
 
