@@ -915,7 +915,7 @@ to its own RNG stream would tighten every lift estimate here. It needs a change 
 
 ---
 
-### D5 — A metric that could not fire, and the budget it was hiding · 2026-08-27
+### D5 — Two numbers I had not measured · 2026-08-27
 
 **Built**
 
@@ -931,8 +931,11 @@ reclaim/core/diagnose.py      bounded naps while waiting out a rate limit, and a
 tests/test_report.py          the splice, the refusals, the ordering
 ```
 
-The day was meant to be the agent arm and the reported table. It became one line in the
-simulator, and the line was worth more than the table would have been.
+The day was meant to be the agent arm and the reported table. It became two numbers I had
+been carrying without ever checking: a mandate-halt counter that started in the wrong place,
+and a token reservation eight times larger than the reply it was reserving for. The first
+made the downside metric unable to fire. The second put the submission past its deadline.
+Neither was visible in any output I was looking at.
 
 **What broke**
 
@@ -1031,7 +1034,58 @@ simulator, and the line was worth more than the table would have been.
    different kind of failure from a call that broke, and the two were sharing a budget.
    Total quota waiting is bounded by the per-limit ceiling instead.
 
-6. **A Windows console cannot print an em dash.** `reclaim.eval.report` renders markdown,
+6. **The batch was paying four thousand tokens a case for output it never used, and the
+   timeline built on that was wrong by a factor of four.**
+
+   The run had gone quiet again — nothing written for fourteen minutes — while a hand probe
+   of the same API went straight through. Rate limiting and a hung process look identical
+   from outside, so the first fix was to make the run say which one it is: every quota wait
+   now prints the limit that was hit and what the API said about it.
+
+   What it said was the finding:
+
+   ```
+   [tpd] Rate limit reached ... on tokens per day (TPD):
+         Limit 200000, Used 198805, Requested 5222
+   ```
+
+   Two numbers neither of which I had. The daily ceiling is **200,000 tokens**, and a single
+   case was costing **5,222** of them. My working figure had been ~1,560, so the estimate of
+   130 cases a day was really **38**, and the 600-case pass was a **7.7-day** job against an
+   8-day deadline. It would have finished on the deadline with nothing left for the table,
+   the README or the video.
+
+   The cost is not the prompt. It is `max_completion_tokens`, which was 4096 — the free tier
+   bills what a request **reserves**, not what it uses. Measured against a live `usage`
+   reading rather than guessed at: prompt 1,126, completion **527**. The reservation was
+   nearly eight times the reply.
+
+   | reserved | billed/case | cases/day | days for the remaining 293 |
+   |---|---|---|---|
+   | 4096 | 5,222 | 38 | 7.7 |
+   | **1024** | **2,150** | **93** | **3.2** |
+
+   Worth noting what the 527 is made of: the visible JSON is at most 139 tokens across 306
+   cached diagnoses, so **388 tokens per case are hidden reasoning**. That is what makes the
+   cap dangerous to tighten by eye — the part that needs the headroom is the part you cannot
+   see in the output file.
+
+   Which is why the cap did not move on its own. A reply cut off at the ceiling comes back
+   as valid JSON that stops mid-object, and `_parse` turns anything unreadable into a
+   zero-confidence prediction *by design*, so that hard cases are never silently dropped
+   from the accuracy. A truncation would have entered the committed artifact wearing exactly
+   the same clothes as a genuine hard case. `finish_reason == "length"` is the only thing
+   that distinguishes them, and it is now refused outright rather than recorded.
+
+   1024 is 1.9x the measured completion, with the guard behind it. The request went from
+   5,222 tokens to 1,647 and the retry wait from 29 minutes to 11.
+
+   The general lesson is the one from item 1 in a different costume: a number I had not
+   measured was load-bearing, and nothing was going to tell me until I asked the right
+   question of it. Here the question was *what is one call actually costing?* — and the
+   answer only existed inside an error message the run was swallowing.
+
+7. **A Windows console cannot print an em dash.** `reclaim.eval.report` renders markdown,
    markdown here uses `—` and `−`, and printing it raised `UnicodeEncodeError: 'charmap'
    codec can't encode character '−'`. Writing the README was already explicitly UTF-8;
    only the preview to the terminal broke. `sys.stdout.reconfigure(encoding="utf-8")` in the
@@ -1074,8 +1128,9 @@ simulator, and the line was worth more than the table would have been.
     1 asserted arm(s): 6/6 held
 ```
 
-Batch B's diagnosis run stands at **305 of 600** and is resumable; the command appends and
-flushes per case.
+Batch B's diagnosis run stands at **307 of 600** and is resumable; the command appends and
+flushes per case. At the corrected token reservation that is roughly three days of free-tier
+budget, against a deadline eight days out.
 
 ```
 set -a; . ./.env; set +a

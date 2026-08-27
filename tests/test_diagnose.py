@@ -405,3 +405,50 @@ def test_a_quota_wait_gives_up_once_the_ceiling_is_spent(monkeypatch) -> None:
     g._client = _Client()
     with pytest.raises(QuotaExhausted):
         g.diagnose(make_case())
+
+
+def test_a_truncated_reply_is_refused_rather_than_recorded(monkeypatch) -> None:
+    """The one failure mode of a low token ceiling that does not announce itself.
+
+    `_parse` turns anything unreadable into a zero-confidence prediction on purpose, so a
+    reply cut off mid-JSON would be committed to `diagnoses.jsonl` looking exactly like a
+    genuine hard case. `finish_reason == "length"` is the only thing that tells them apart.
+    """
+    import reclaim.core.diagnose as mod
+
+    monkeypatch.setattr(mod.time, "sleep", lambda s: None)
+    cut_off = _FakeResponse(
+        200,
+        {},
+        {
+            "choices": [{"finish_reason": "length", "message": {"content": '{"root_ca'}}],
+            "usage": {"prompt_tokens": 1126, "completion_tokens": 64},
+        },
+    )
+
+    g = GroqDiagnoser(api_key="test-key", max_attempts=1, max_completion_tokens=64)
+
+    class _Client:
+        def post(self, *a, **kw):
+            return cut_off
+
+    g._client = _Client()
+    with pytest.raises(RuntimeError, match="ceiling"):
+        g.diagnose(make_case())
+
+
+def test_a_complete_reply_at_the_ceiling_is_still_accepted() -> None:
+    """`finish_reason == "stop"` is the model finishing, however close to the cap it got."""
+    g = GroqDiagnoser(api_key="test-key", max_completion_tokens=64)
+    body = {
+        "choices": [
+            {
+                "finish_reason": "stop",
+                "message": {
+                    "content": json.dumps({"root_cause": "auth_abandoned", "confidence": 0.7})
+                },
+            }
+        ]
+    }
+    assert not g._truncated(body)
+    assert g._parse(make_case(), body).root_cause is RootCause.AUTH_ABANDONED

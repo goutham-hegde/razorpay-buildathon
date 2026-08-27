@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import re
 import time
 from dataclasses import asdict, dataclass
@@ -499,6 +500,24 @@ class GroqDiagnoser:
         #: The ceilings above still decide whether to wait at all; this only decides how
         #: long to wait between asking.
         max_sleep: float = 180.0,
+        #: Ceiling on the model's reply, and the most expensive number in this file.
+        #:
+        #: The free tier bills what a request *reserves*, not what it uses. This value is
+        #: the reservation. At 4096 - the original, chosen as "comfortably large" - each
+        #: case billed ~5,222 tokens against a 200,000/day ceiling, which is 38 cases a day
+        #: and would have put a 600-case pass past the deadline. The visible reply is a
+        #: small JSON object; across 306 cached diagnoses the largest was 139 tokens.
+        #:
+        #: The headroom above that is not padding. `gpt-oss-120b` is a reasoning model and
+        #: its hidden reasoning counts against this cap, so a value too low does not error -
+        #: it truncates, and a truncated reply is recorded as an unparseable case with zero
+        #: confidence. That fails quietly, so it is now refused outright: a reply whose
+        #: `finish_reason` is `length` raises instead of being recorded.
+        #:
+        #: 1024 is seven times the largest reply observed across 306 cached diagnoses,
+        #: which is headroom for the reasoning and none for waste. It bills ~2,150 per case
+        #: - about 93 cases a day instead of 38.
+        max_completion_tokens: int = 1024,
         #: See the note on `GeminiDiagnoser.system_prompt`.
         system_prompt: str | None = None,
     ) -> None:
@@ -515,6 +534,8 @@ class GroqDiagnoser:
         self.max_wait = max_wait
         self.max_wait_daily = max_wait_daily
         self.max_sleep = max_sleep
+        self.max_completion_tokens = max_completion_tokens
+        self._logged_usage = False
         self.system_prompt = system_prompt or _SYSTEM_PROMPT
         self._client = None
 
@@ -531,7 +552,7 @@ class GroqDiagnoser:
         payload = {
             "model": self.model,
             "temperature": 0.0,  # classification, not generation - determinism is wanted
-            "max_completion_tokens": 4096,
+            "max_completion_tokens": self.max_completion_tokens,
             "messages": [
                 {"role": "system", "content": self.system_prompt},
                 {
@@ -581,17 +602,74 @@ class GroqDiagnoser:
                     # badly; waking early to ask again is one request against a
                     # thousand-a-day allowance.
                     nap = min(delay, self.max_sleep, ceiling - waited)
+                    # Say so. An unattended run that goes quiet is indistinguishable from
+                    # one that has hung, and the difference matters at 3am: this line is
+                    # what tells you the limit is real rather than the process being stuck.
+                    print(
+                        f"    [{kind}] waiting {nap:.0f}s ({waited + nap:.0f}s of "
+                        f"{ceiling:.0f}s budget) - {note}",
+                        file=sys.stderr,
+                        flush=True,
+                    )
                     time.sleep(nap)
                     waited += nap
                     continue
                 res.raise_for_status()
-                return self._parse(case, res.json())
+                body = res.json()
+                self._note_usage(body)
+                # A reply cut off at the token ceiling is not a diagnosis, and it must not
+                # be allowed to look like one. `_parse` records anything it cannot read as
+                # a zero-confidence prediction - deliberately, so that hard cases are not
+                # silently dropped from the accuracy - which means a truncation would enter
+                # the committed artifact wearing the same clothes as a genuine one. This is
+                # the failure mode of setting the ceiling too low, and it is the only one
+                # that fails quietly, so it is caught here rather than downstream.
+                if self._truncated(body):
+                    raise RuntimeError(
+                        f"{case.id}: reply hit the {self.max_completion_tokens}-token "
+                        f"ceiling and was cut off. Raise max_completion_tokens; do not "
+                        f"record this case."
+                    )
+                return self._parse(case, body)
             except httpx.HTTPError as exc:
                 last = exc
                 time.sleep(min(30.0, 2.0 * (2**attempt)))
             attempt += 1
 
         raise RuntimeError(f"{case.id}: giving up after {self.max_attempts} attempts") from last
+
+    def _note_usage(self, body: dict) -> None:
+        """Report what one call actually cost, once per run.
+
+        The free tier bills the tokens a request *reserves*, not the tokens it uses, and
+        the reservation is `max_completion_tokens`. That makes the gap between the two the
+        single biggest lever on how long a 600-case pass takes, and it is invisible unless
+        something prints it. Once per run is enough to size the cap and cheap enough to
+        leave in.
+        """
+        if self._logged_usage:
+            return
+        usage = body.get("usage") or {}
+        if not usage:
+            return
+        self._logged_usage = True
+        prompt = usage.get("prompt_tokens", 0)
+        completion = usage.get("completion_tokens", 0)
+        reserved = self.max_completion_tokens
+        print(
+            f"    usage: prompt {prompt}, completion {completion}, "
+            f"reserved {reserved} -> billed ~{prompt + reserved} per case "
+            f"({200_000 // max(1, prompt + reserved)} cases/day at a 200k TPD ceiling)",
+            file=sys.stderr,
+            flush=True,
+        )
+
+    @staticmethod
+    def _truncated(body: dict) -> bool:
+        try:
+            return body["choices"][0].get("finish_reason") == "length"
+        except (KeyError, IndexError, TypeError):
+            return False
 
     def _parse(self, case: Case, body: dict) -> Diagnosis:
         try:
@@ -654,7 +732,7 @@ def run(
     diagnoser: Diagnoser,
     path: Path,
     resume: bool = True,
-    progress_every: int = 25,
+    progress_every: int = 10,
     rpm: float | None = None,
 ) -> dict[str, Diagnosis]:
     """Diagnose `cases`, appending to `path` as it goes.
