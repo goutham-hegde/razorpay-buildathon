@@ -154,6 +154,9 @@ reclaim/
     report.py        the results table, rendered into the README from the ledger
     sensitivity.py   the same comparison across perturbed worlds
   api/               demo console (vanilla JS, no build step)
+docs/
+  video-script.md    the explainer, written to be read aloud
+  wordcount.py       what it actually runs to, per section
 ```
 
 ---
@@ -164,3 +167,5 @@ reclaim/
   the sensitivity finding, and an explicit list of what this does *not* do.
 - [`progress.md`](progress.md) — the engineering log, including a "what broke" section per
   day. The most useful part of the repo if you want to know how it was actually built.
+- [`docs/video-script.md`](docs/video-script.md) — the explainer script, with each section's
+  timestamp derived from its own word count by `docs/wordcount.py`.
