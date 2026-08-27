@@ -12,11 +12,11 @@ what broke along the way. Newest entries at the bottom.
 | D1 | Sealed world — domain model, personas, outcome engine, batch generator | ✅ **done** |
 | D2 | Detection, append-only ledger, invariants R1–R6 | ✅ **done** |
 | D3 | Root-cause diagnosis + labelled evaluation and confusion matrix | 🟡 **batch B run in flight** |
-| D4 | Policy engine, budgets, retry scheduler | ⬅ next |
-| D5 | Executor + Razorpay test-mode integration | ⬜ |
-| D6 | Evaluation harness, four arms, metrics, charts | ⬜ |
+| D4 | Policy engine, budgets, retry scheduler | ✅ **done** |
+| D5 | Evaluation harness, four arms, metrics, sensitivity | ✅ **done** — reported table waits on D3 |
+| D6 | Executor + Razorpay test-mode integration | ⬜ (cut before the sensitivity work if time runs short) |
 | D7 | Console polish + one injected failure handled gracefully | ⬜ (shell built early, D2) |
-| D8 | README, ADRs, results writeup | ⬜ |
+| D8 | README, ADRs, results writeup | 🟡 everything but the results section |
 | D9 | Video | ⬜ |
 
 ---
@@ -912,3 +912,186 @@ seeded world, but the draw sequence diverges as soon as arms take different numb
 actions, so this is a common-parameter comparison rather than a paired one. Pairing each case
 to its own RNG stream would tighten every lift estimate here. It needs a change inside
 `synth/outcome.py`, frozen since D1.
+
+---
+
+### D5 — A metric that could not fire, and the budget it was hiding · 2026-08-27
+
+**Built**
+
+```
+reclaim/eval/report.py        the results table rendered into the README from the ledger,
+                              between markers, so no figure in it is typed by hand
+reclaim/synth/outcome.py      the mandate-halt counter now starts from the failure that
+                              opened the case
+reclaim/core/ledger.py        open_ledger(fresh=True); re-running a recorded run is refused
+                              with an explanation instead of a UNIQUE violation
+reclaim/core/diagnose.py      bounded naps while waiting out a rate limit, and a quota wait
+                              no longer spends a retry attempt
+tests/test_report.py          the splice, the refusals, the ordering
+```
+
+The day was meant to be the agent arm and the reported table. It became one line in the
+simulator, and the line was worth more than the table would have been.
+
+**What broke**
+
+1. **The downside metric was structurally incapable of firing, and read as a result.**
+
+   `halt %` had printed `0.0%` for every arm in every un-jittered run since D2. That is a
+   plausible number — it says no arm is destroying subscriptions — and it is also the only
+   number that column could ever have printed.
+
+   The world halts a mandate after `mandate_halt_after` consecutive failed presentations,
+   which is 4, and it counted them from zero at the start of the run. But a recurring case
+   only exists *because* a presentation already failed, and the rail counted that one.
+   Starting from zero handed every arm one free failure that reality does not give it, so
+   no arm retrying three times could ever reach four.
+
+   Nothing failed. Every test passed. Every invariant held. The column was wrong.
+
+   What found it was not a test but a question asked of a suspiciously round number: *what
+   would have to be true for this column to be non-zero, and is that reachable from here?*
+   It was not reachable. That question is now the one I ask of any metric that looks stable.
+
+   The fix changed no generated data — the miscount was in the world's runtime state, not
+   in anything the generator wrote — so the batches and the committed diagnoses survived it
+   untouched. What it changed was the table. Naive's net lift on batch A went from
+   **+403,719 to −6,012,174**: it halts 223 of 372 mandates, 59.9% of the recurring book,
+   and nine months of forfeited subscription revenue swamp everything it recovered.
+
+   It also flatters the arm I built, which is the reason to be most suspicious of it. The
+   defence I would offer a reviewer is that the constant it turns on is jittered ±20% along
+   with every other one, and that the earlier sensitivity runs had already produced this
+   same tail in 7 of 20 perturbed worlds. The base world was the outlier, not the jittered
+   ones.
+
+2. **The retry budget of 2 had only been surviving because of the bug above.**
+
+   With the opening failure counted, a recurring budget of 2 means three presentations
+   against a threshold that jitters down to 3. Re-running sensitivity: the policy arm now
+   halted mandates in **7 of 20 worlds**, worst case 39.5% of the recurring book, net lift
+   running to **−Rs 47 lakh**. The same cliff D4 stepped back from, one step further along.
+
+   The budget is now **1** — two presentations, one clear step under the lowest threshold
+   the jitter produces. That is the second time the answer has been headroom rather than a
+   better guess at where the cliff is, and the principle is now load-bearing enough to be
+   worth stating as one.
+
+   The price is stated in the open because it is real: against a budget of 2, a budget of 1
+   gives up **4.2 points of recovery rate** — Rs 23,475 of gross recovery on batch A. What
+   it buys is a distribution with nothing below zero in it. It also halved the double
+   charges, 2 against 4, which was not the goal; the attempt a tighter budget declines to
+   make is disproportionately the one the policy was least sure about.
+
+   One claim got weaker and belongs on the record. The ordering `naive < rules` now holds
+   in **16 of 20** worlds rather than 20 of 20. The four exceptions are the worlds where
+   the jitter pushed the halt threshold high enough that naive never reached it; there it
+   retries three times, halts nothing, and wins by 2–8%. In the other sixteen it loses by
+   about Rs 60 lakh. Reporting that as "20/20" would have been the more flattering claim
+   and the less true one, and the honest version is the stronger argument anyway: naive is
+   above zero in 4 of 20 worlds, the policy arm in 20 of 20.
+
+3. **Replaying a batch twice failed with a bare `UNIQUE constraint failed: runs.run_id`.**
+
+   Run ids are deterministic, which is what makes a replay reproducible, and it means the
+   second replay of the same arms collides. That is the append-only store refusing to
+   rewrite an audit trail, and it is correct — but a raw integrity error three frames deep
+   does not say so, and the tempting reading is that the ledger is corrupt.
+
+   The first fix I wrote was wrong and is worth recording: `start_run(replace=True)`,
+   deleting the old run's rows. The triggers caught it immediately — `ledger is
+   append-only: DELETE on decisions is not permitted`. The schema was defending itself
+   against me, which is the entire reason it is enforced by triggers and not by a code
+   review convention. A ledger that a bug fix under deadline can quietly edit is not an
+   audit trail.
+
+   So `replay --fresh` discards the batch's ledger file and starts a new trail, and the
+   collision now prints what happened and both ways out. Nothing rewrites history.
+
+4. **The API key sat in `.env` and nothing loaded it.** The run died on
+   `RuntimeError: no Groq API key` with the key sitting in a file one directory up. Nothing
+   in the repo reads `.env`; it has to be exported into the shell first, and that is exactly
+   the kind of step that lives in one shell's history and nowhere else. It is one line —
+   `set -a; . ./.env; set +a` — and it is now written down beside the command it belongs to
+   rather than remembered.
+
+5. **The run slept for 25 minutes on a rate limit that had cleared in two.** A 600-case
+   pass is an unattended job, so a 429 is waited out rather than treated as fatal, honouring
+   `retry-after`. Against a *rolling* daily budget that header is an estimate, and it
+   overshoots badly. What made it visible was probing the API by hand while the run was
+   asleep on it: the probe went straight through.
+
+   Sleeps are now capped and repeated — wake up, ask again, sleep again — so the run
+   resumes when the quota does rather than when a stale estimate says it might. Waking early
+   costs one request out of a thousand-a-day allowance.
+
+   The second half of the same fix: a quota wait no longer consumes an attempt from
+   `max_attempts`. A 429 is the API working correctly and saying "not yet", which is a
+   different kind of failure from a call that broke, and the two were sharing a budget.
+   Total quota waiting is bounded by the per-limit ceiling instead.
+
+6. **A Windows console cannot print an em dash.** `reclaim.eval.report` renders markdown,
+   markdown here uses `—` and `−`, and printing it raised `UnicodeEncodeError: 'charmap'
+   codec can't encode character '−'`. Writing the README was already explicitly UTF-8;
+   only the preview to the terminal broke. `sys.stdout.reconfigure(encoding="utf-8")` in the
+   entry point.
+
+**Verified**
+
+```
+.venv/Scripts/python -m pytest
+    298 passed in 8.72s
+
+.venv/Scripts/python -m reclaim.eval.replay --batch A --arms control,naive,rules --fresh
+    arm         recovered   of n     gross Rs    cost Rs  halted   held  double
+    control           169    600      515,531          0       0      0       0
+    naive             315    600      925,485      6,235     223      0      20
+    rules             285    600      925,515      9,150       0     62       2
+
+.venv/Scripts/python -m reclaim.eval.metrics --batch A
+    arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  halt % double
+    control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
+    naive      52.5%    925,485    6,235 6,415,893 -5,496,643 -6,012,174    0.015   59.9%     20
+    rules      47.5%    925,515    9,150         0    916,365   +400,834    0.022    0.0%      2
+
+.venv/Scripts/python -m reclaim.eval.sensitivity --batch A --arms control,naive,rules
+    claimed ordering by net lift:  naive < rules < agent
+    held in 16/20 trials  (80%)
+
+    arm              net lift Rs, median [min .. max]       doubles  worst halt %  worlds w/ halt
+    naive         -5,988,517  [-9,140,939 .. 415,196]   20 [20..20]         73.4%           16/20
+    rules            393,769     [338,346 .. 413,784]      4 [2..4]          0.0%            0/20
+
+.venv/Scripts/python -m reclaim.core.guards --batch A
+    A - rules   [baseline: measured, not asserted]
+      R1  VIOLATED  2 double charges of 572 charge attempts
+      R2  HELD  recovered 925,515 of 1,845,200 at risk
+      R3  HELD  703 contacts to 363 customers
+      R4  HELD  703 contacts checked
+      R5  HELD  24 opt-outs recorded
+      R6  HELD  600/600 cases closed
+    1 asserted arm(s): 6/6 held
+```
+
+Batch B's diagnosis run stands at **305 of 600** and is resumable; the command appends and
+flushes per case.
+
+```
+set -a; . ./.env; set +a
+.venv/Scripts/python -u -m reclaim.core.diagnose --batch B --provider groq --rpm 4.2
+```
+
+**Next**
+
+The reported table still needs batch B's diagnoses, and nothing else is blocked on them.
+When they land: the `agent` arm, the four-arm table on held-out B written into the README by
+`reclaim.eval.report --write`, guards for control and agent, and a 20-trial sensitivity run
+on B rather than A.
+
+Two things deliberately left open. The ambiguity gate's second condition — validated on A,
+reported on a batch that has not been looked at. And the paired-RNG question from D4: every
+arm faces an identically seeded world, but the draw sequence diverges as soon as arms take
+different numbers of actions, so this is a common-parameter comparison rather than a paired
+one. Pairing each case to its own stream would tighten every lift estimate here. It needs a
+change inside `synth/outcome.py`, and today already spent one of those.
