@@ -271,3 +271,59 @@ def test_detection_is_identical_across_arms(root: Path, ledger: Ledger) -> None:
     expected = sum(d.eligible for d in detect(batch.cases, batch.customers, batch.mandates))
     assert eligible.pop() == expected
     assert len(run_ids) == 3
+
+
+# ---------------------------------------------------------------------------
+# Reproducibility
+# ---------------------------------------------------------------------------
+
+
+def test_a_replay_is_deterministic(root: Path) -> None:
+    """The same batch, twice, must produce the same numbers.
+
+    The README claims every figure reproduces on a clean checkout. That claim rests on this
+    and on nothing else, so it is asserted rather than assumed. Nondeterminism here would
+    not fail loudly - it would just mean the number in the report was never quite the number
+    a reader gets, and there would be no way to tell which run was wrong.
+    """
+    runs = []
+    for _ in range(2):
+        with Ledger(":memory:") as lg:
+            replay(BATCH, ["control", "naive", "rules"], root, ledger=lg)
+            runs.append(
+                {
+                    m.arm: (
+                        m.recovered,
+                        m.gross_paise,
+                        m.cost_paise,
+                        m.net_paise,
+                        m.double_charges,
+                        m.charge_attempts,
+                        m.contacts,
+                    )
+                    for m in batch_metrics(lg, BATCH)
+                }
+            )
+    assert runs[0] == runs[1]
+
+
+def test_the_audit_trail_reproduces_the_reported_outcome(root: Path, ledger: Ledger) -> None:
+    """Every rupee in the results table has to be reconstructible from the raw rows.
+
+    Metrics read `case_outcomes`. If those rows disagree with the charge and contact rows
+    they were derived from, the ledger is a summary wearing an audit trail's clothes.
+    """
+    run_ids = run(root, ledger, "rules")
+    run_id = run_ids["rules"]
+    for row in ledger.outcomes(run_id):
+        if row["status"] != "recovered" or row["recovered_by"] != "charge":
+            continue
+        captured = [
+            c
+            for c in ledger.charges(run_id, row["case_id"])
+            if c["outcome"] == "captured" and not c["double_charge"]
+        ]
+        assert captured, (
+            f"{row['case_id']} is reported as recovered by charge, but no captured "
+            f"charge row exists to back it"
+        )
