@@ -294,7 +294,7 @@ arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  h
 --------------------------------------------------------------------------------------------
 control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
 naive      52.5%    925,485    6,235         0    919,250   +403,719    0.015    0.0%     20
-rules      51.7%    948,990    8,757         0    940,233   +424,702    0.020    0.0%      4
+rules      51.7%    948,990    9,032         0    939,958   +424,427    0.021    0.0%      4
 ```
 
 Read the columns, not the headline:
@@ -322,23 +322,23 @@ The single-run table above says naive and the policy arm are within a couple of 
 each other. **That table is measuring the wrong thing**, and the sensitivity run is what
 showed it.
 
-Re-running the whole comparison across 12 worlds, with every calibration constant moved by
-up to ±20% simultaneously:
+Re-running the whole comparison across 20 worlds, with every calibration constant moved by
+up to ±20% simultaneously — the claimed ordering held in **20 of 20**:
 
 ```
 arm              net lift Rs, median [min .. max]       doubles  worst halt %  worlds w/ halt
 ---------------------------------------------------------------------------------------------
-naive            401,160  [-7,555,833 .. 427,770]   20 [20..20]         60.8%            5/12
-rules               478,787  [458,228 .. 538,736]      4 [3..4]          0.0%            0/12
+naive            400,251  [-7,555,833 .. 427,775]   20 [20..20]         60.8%            7/20
+rules               474,962  [454,126 .. 538,386]      4 [3..4]          0.0%            0/20
 ```
 
 The two arms have almost the same *median*. They do not remotely have the same
 **distribution**:
 
-- Naive's range runs down to **−Rs 75.6 lakh**. In 5 of 12 worlds it halts mandates, up to
+- Naive's range runs down to **−Rs 75.6 lakh**. In 7 of 20 worlds it halts mandates, up to
   **60.8% of the recurring book**, and the forfeited future revenue swamps everything it
   recovered.
-- The policy arm's range is **[+4.58L, +5.39L]** and it halts **nothing, in every world**.
+- The policy arm's range is **[+4.54L, +5.38L]** and it halts **nothing, in any world**.
 
 **Naive is not a slightly worse policy. It is a policy whose expected value is dominated by
 a tail you cannot see from its recovery rate.** That is precisely what a mandate-halt metric

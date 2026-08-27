@@ -741,7 +741,7 @@ when the policy has not thought of something more interesting to do is not a bou
 
 This is the part I would not have got to by reasoning.
 
-Perturbing every calibration constant by up to ±20% at once, twelve worlds, all arms. With
+Perturbing every calibration constant by up to ±20% at once, all arms. With
 the recurring charge budget at 3, the ranking of the arms held in 12/12 - and the levels
 collapsed. Median net lift for the policy arm was **−Rs 12.1 lakh**, ranging to −Rs 23.1
 lakh, because the rail halts a mandate after some number of consecutive failed presentations
@@ -756,13 +756,16 @@ recurring budget went to 2:
 ```
 arm              net lift Rs, median [min .. max]       doubles  worst halt %  worlds w/ halt
 ---------------------------------------------------------------------------------------------
-naive            401,160  [-7,555,833 .. 427,770]   20 [20..20]         60.8%            5/12
-rules               478,787  [458,228 .. 538,736]      4 [3..4]          0.0%            0/12
+naive            400,251  [-7,555,833 .. 427,775]   20 [20..20]         60.8%            7/20
+rules               474,962  [454,126 .. 538,386]      4 [3..4]          0.0%            0/20
 ```
 
 The two arms have almost the same median and nothing like the same distribution. Naive runs
-down to **−Rs 75.6 lakh** and destroys up to 60.8% of the recurring book in five worlds of
-twelve; the policy arm is bounded in **[+4.58L, +5.39L]** and halts nothing, anywhere.
+down to **−Rs 75.6 lakh** and destroys up to 60.8% of the recurring book in seven worlds of
+twenty; the policy arm is bounded in **[+4.54L, +5.38L]** and halts nothing, anywhere.
+
+(The design decision was taken on a twelve-trial run; the table above is the twenty-trial
+confirmation, which moved the medians by under a percent and changed nothing qualitative.)
 
 **Naive is not a slightly worse policy. Its expected value is dominated by a tail you cannot
 see from its recovery rate.** That is exactly what the mandate-halt metric is for, and I
@@ -791,7 +794,7 @@ arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  h
 --------------------------------------------------------------------------------------------
 control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
 naive      52.5%    925,485    6,235         0    919,250   +403,719    0.015    0.0%     20
-rules      51.7%    948,990    8,757         0    940,233   +424,702    0.020    0.0%      4
+rules      51.7%    948,990    9,032         0    939,958   +424,427    0.021    0.0%      4
 
 $ .venv/Scripts/python -m reclaim.core.guards --batch A
 A - control    A-control                                     6/6 held
