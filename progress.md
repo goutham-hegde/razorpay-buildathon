@@ -634,3 +634,189 @@ report.
 
 Before that: fix the precision problem above, now that testing a prompt change costs five
 minutes rather than a day of quota.
+
+---
+
+### D4 — The policy engine, and what the sensitivity run cost me · 2026-08-27
+
+**Built**
+
+```
+reclaim/core/policy.py        the cause table, the stopping rules, the ambiguity gate.
+                              A pure function: CaseView in, one Action out.
+reclaim/eval/sensitivity.py   replays every arm against N worlds with all calibration
+                              constants jittered at once
+reclaim/eval/replay.py        the policy executor, plus the `rules` and `agent` arms
+reclaim/eval/metrics.py       the results table as a CLI
+tests/test_policy.py          74 tests, no simulator and no network in any of them
+```
+
+Three design decisions worth the space.
+
+**`next_action` returns one action, not a plan.** A plan computed up front has to guess at
+the outcome of its own first step, and the interesting cases are precisely the ones where
+step two depends on step one: outreach that lands makes a charge worth attempting, and
+outreach that does not makes the same charge worthless. Being a pure function is also why
+the test file needs neither the world nor a ledger - construct a situation, assert on the
+decision. A failing test names the decision that broke rather than the run that exposed it.
+
+**`rules` and `agent` are the same engine.** They differ only in which `Diagnoser` produced
+their input. Whatever gap the results table eventually shows between them is attributable to
+diagnosis quality and to nothing else, because there is nothing else different. That is the
+entire reason for keeping a rules-only arm, and it is worth the extra plumbing.
+
+**Stopping rules are evaluated before the cause is looked at.** A bound that only applies
+when the policy has not thought of something more interesting to do is not a bound.
+
+**What broke**
+
+1. **The threshold was phrased backwards, and it cost twelve cases by a hundredth of a
+   point.** The ambiguity gate refuses to charge over a bank reference on an unconfident
+   diagnosis. I first wrote it as "below 0.55, treat the diagnosis as a guess". The keyword
+   diagnoser emits *exactly* 0.55 on the rule those cases land on - because `GATEWAY_ERROR`
+   in the error *code* matches its routing pattern - so a strict `<` let all twelve through
+   and the arm double-charged them.
+
+   The fix is not a different number. Both 0.55 and 0.60 are arbitrary at the margin; what
+   was wrong was the direction. Rewritten as a bar to clear - `CHARGE_OVER_REFERENCE_
+   CONFIDENCE = 0.75`, *"to charge over a bank reference you must be confident"* - the
+   arbitrariness lands on the safe side, which is the side where a missed recovery costs an
+   invoice rather than a duplicate debit costing a refund and a customer. Double charges on
+   batch A went 16 → 4.
+
+2. **A metric that could only ever print 0% or 100%.** `mandate_halt_rate` divided halted
+   cases by "cases with non-zero residual loss". Residual loss is only ever non-zero on a
+   case that halted, so the numerator and denominator were the same set. It read as a
+   perfectly plausible `0.0%` through the entire base run. It only became obviously wrong
+   when a perturbed world produced a column of `100.0`s that no policy could have earned.
+
+   The lesson is not the bug, it is where it was caught: a headline downside metric was
+   structurally incapable of reporting anything, and the single-run report showed no sign of
+   it. `is_recurring` is now recorded on the outcome row rather than inferred.
+
+3. **`CREATE TABLE IF NOT EXISTS` does exactly what it says.** Adding a column meant every
+   existing ledger file kept the old schema, and the symptom was `sqlite3.OperationalError:
+   no such column: is_recurring` raised from `eval/metrics.py` - three modules from the
+   cause, in a test about the API not leaking ground truth. An append-only store cannot be
+   migrated in place, so the ledger now checks its own columns on open and raises
+   `StaleLedger` telling you to delete the file. Cheap, and it turns ten minutes of confusion
+   into one line.
+
+4. **R5 fired on the message that caused the opt-out.** The contact and the opt-out were
+   recorded at the same instant, and the invariant reads "no action at or after an opt-out",
+   so the triggering message looked like a violation of a rule it had itself created. The
+   temptation was to relax the check to `>`. That is backwards: an opt-out is an *inbound*
+   event and cannot be effective before the outbound that provoked it, so recording it at the
+   send time was the actual bug - it claimed we knew before we could have. Recorded one second
+   later, and the guard is untouched.
+
+5. **The frequency cap has to look forward as well as back.** Cases are worked in *value*
+   order, not clock order, so a message already in the ledger can sit later on the simulated
+   clock than the one being proposed. A backward-looking count does not see it, sends anyway,
+   and leaves a violation for the guard to find after the money has moved. The policy now
+   inserts the proposed time into the customer's history and slides a window over the result -
+   the same computation the guard performs, written independently, because two agreeing copies
+   of one implementation prove nothing.
+
+6. **I had the wrong explanation for the D3 precision problem, and it was cheap to check.**
+   D3 recorded `ambiguous_debited` precision of 0.306 and concluded "this is a prompt problem,
+   not a model problem". It was the opposite. Running the *unchanged* prompt through Groq on a
+   67-case stratified slice of batch A, weighted to the hard pairs:
+
+   ```
+   accuracy            0.985   (66/67)
+   cost-weighted error 0.015
+   ambiguous_debited   precision 1.000  recall 1.000   (14 predicted, 14 real)
+   errors:
+       1  instrument_invalid -> mandate_revoked
+   ```
+
+   0.306 was a Gemini result and the conclusion drawn from it was about the wrong component.
+   I had a rewritten prompt ready and did not ship it - there was no measurable gap left to
+   close, and changing a prompt on the strength of an assumption is how you end up unable to
+   say what any number means. Twelve minutes of quota bought a like-for-like baseline and
+   deleted a day of work.
+
+**The sensitivity run changed the design**
+
+This is the part I would not have got to by reasoning.
+
+Perturbing every calibration constant by up to ±20% at once, twelve worlds, all arms. With
+the recurring charge budget at 3, the ranking of the arms held in 12/12 - and the levels
+collapsed. Median net lift for the policy arm was **−Rs 12.1 lakh**, ranging to −Rs 23.1
+lakh, because the rail halts a mandate after some number of consecutive failed presentations
+that the agent does not get to see, and a budget of 3 sits directly on a threshold that
+jitters into 3. Every recurring case worked hard lost its mandate, and the forfeited months
+swamped everything recovered.
+
+A policy fragile to a constant it cannot observe is not a policy. The right response to a
+cliff of unknown position is **headroom, not a better guess at where the cliff is**, so the
+recurring budget went to 2:
+
+```
+arm              net lift Rs, median [min .. max]       doubles  worst halt %  worlds w/ halt
+---------------------------------------------------------------------------------------------
+naive            401,160  [-7,555,833 .. 427,770]   20 [20..20]         60.8%            5/12
+rules               478,787  [458,228 .. 538,736]      4 [3..4]          0.0%            0/12
+```
+
+The two arms have almost the same median and nothing like the same distribution. Naive runs
+down to **−Rs 75.6 lakh** and destroys up to 60.8% of the recurring book in five worlds of
+twelve; the policy arm is bounded in **[+4.58L, +5.39L]** and halts nothing, anywhere.
+
+**Naive is not a slightly worse policy. Its expected value is dominated by a tail you cannot
+see from its recovery rate.** That is exactly what the mandate-halt metric is for, and I
+would have reported a near-tie without it.
+
+The premium is real and belongs in the writeup: in the base world, where nothing ever halts,
+the tighter budget gives up about **Rs 1.5 lakh** of recovery it could have had (batch A
+gross fell 11.0L → 9.5L). That is what a bounded tail costs. It is a purchase, not a free win.
+
+Stopping early is only half a policy, though - it stops the harm and also stops pursuing the
+money. So a spent charge budget now falls through to outreach instead of closing the case:
+**a message cannot halt a mandate and a presentation can**, so once presenting is off the
+table the remaining ask is made of the customer rather than of the rail. Bounded by the same
+contact caps as everything else.
+
+**Verified**
+
+```
+$ .venv/Scripts/python -m pytest
+267 passed in 4.25s
+
+$ .venv/Scripts/python -m reclaim.eval.metrics --batch A
+batch A   n=600
+
+arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  halt % double
+--------------------------------------------------------------------------------------------
+control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
+naive      52.5%    925,485    6,235         0    919,250   +403,719    0.015    0.0%     20
+rules      51.7%    948,990    8,757         0    940,233   +424,702    0.020    0.0%      4
+
+$ .venv/Scripts/python -m reclaim.core.guards --batch A
+A - control    A-control                                     6/6 held
+A - naive      A-naive     [baseline: measured, not asserted] 5/6 held
+A - rules      A-rules     [baseline: measured, not asserted] 5/6 held
+1 asserted arm(s): 6/6 held
+```
+
+`rules` moved out of the asserted set, and the reason is the result rather than an excuse.
+The keyword diagnoser cannot name `ambiguous_debited` at all, so the policy it feeds retries
+payments that already went through. The gate catches sixteen of twenty; the other four carry
+no bank reference and nothing observable separates them from an ordinary timeout. No gate
+bolted on afterwards can recover them - only reading the description can. Asserting an
+invariant on an arm designed to fail it would have meant deleting the finding or weakening
+the check.
+
+**Next**
+
+Batch B diagnosis is mid-run (Groq, ~5 calls/minute against an 8,000 token-per-minute free
+tier, about two hours for 600 cases). When it lands: the `agent` arm, the reported four-arm
+table on held-out B, guards at 6/6 for control and agent, and a 20-trial sensitivity run on
+B rather than A.
+
+Open question for D5, deliberately not settled under deadline: every arm faces an identically
+seeded world, but the draw sequence diverges as soon as arms take different numbers of
+actions, so this is a common-parameter comparison rather than a paired one. Pairing each case
+to its own RNG stream would tighten every lift estimate here. It needs a change inside
+`synth/outcome.py`, frozen since D1.
