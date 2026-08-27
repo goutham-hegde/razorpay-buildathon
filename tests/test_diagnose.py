@@ -309,11 +309,13 @@ class _FakeResponse:
         return None
 
 
-def test_a_rate_limit_wait_is_broken_into_bounded_naps(monkeypatch) -> None:
-    """`retry-after` is an estimate against a rolling window, and it overshoots.
+def test_a_rate_limit_wait_honours_retry_after_rather_than_probing(monkeypatch) -> None:
+    """Against a token budget, waking early to re-ask burns the tokens being waited for.
 
-    Sleeping for the whole of it once left a run idle for 25 minutes on a limit that had
-    cleared in two. The loop naps instead, so the run resumes when the quota does.
+    A refused request still debits the daily allowance. Measured on the real API: each
+    early probe cost ~1,200-1,750 tokens while the nap it replaced earned back 418, so a
+    run that woke every 180s stayed pinned at the ceiling and managed one case in four and
+    a half hours. `retry-after` is the API computing when this request will fit; sleep it.
     """
     import reclaim.core.diagnose as mod
 
@@ -334,9 +336,15 @@ def test_a_rate_limit_wait_is_broken_into_bounded_naps(monkeypatch) -> None:
             ]
         },
     )
-    limited = _FakeResponse(429, {"retry-after": "1800", "x-ratelimit-limit-tokens": "8000"})
+    limited = _FakeResponse(
+        429,
+        {"retry-after": "1800", "x-ratelimit-limit-tokens": "8000"},
+        # The daily-token ceiling is reported only in the prose, never in the headers.
+        {"error": {"message": "Rate limit reached ... on tokens per day (TPD): "
+                              "Limit 200000, Used 199999, Requested 2144."}},
+    )
 
-    g = GroqDiagnoser(api_key="test-key", max_sleep=180.0)
+    g = GroqDiagnoser(api_key="test-key", max_sleep=1800.0)
 
     class _Client:
         def __init__(self) -> None:
@@ -349,7 +357,10 @@ def test_a_rate_limit_wait_is_broken_into_bounded_naps(monkeypatch) -> None:
     d = g.diagnose(make_case())
 
     assert d.root_cause is RootCause.RISK_DECLINED
-    assert naps == [180.0, 180.0], "each wait is capped, not slept in full"
+    assert naps == [1800.0, 1800.0], (
+        "retry-after of 1800s must be slept, not broken into probes that each cost a "
+        "full request's worth of the token budget being waited for"
+    )
 
 
 def test_waiting_for_quota_does_not_consume_the_retry_budget(monkeypatch) -> None:

@@ -429,7 +429,7 @@ def _groq_limit(res) -> tuple[str, str]:
         TPD                      tokens per DAY         (body text only)
 
     The third is the one that actually binds a batch of this size - 200,000 tokens a day
-    against roughly 1,560 tokens a call is about 128 diagnoses - and it is reported nowhere
+    against ~2,150 billed per call is 93 diagnoses - and it is reported nowhere
     except the prose in the error body. A run that reads only the headers sees "714 of 1000
     requests left, 8000 of 8000 tokens left" alongside a 429 and concludes something
     impossible is happening. That is exactly what this code did before it parsed the body.
@@ -487,19 +487,32 @@ class GroqDiagnoser:
         #: Ceiling on a wait caused by the per-minute token limit. Generous, because
         #: clearing that one legitimately takes minutes.
         max_wait: float = 420.0,
-        #: Ceiling on a wait caused by the tokens-per-DAY limit, which is the one that
-        #: actually binds a batch of this size. It refills continuously, so the sensible
-        #: response is to sleep through it: a 600-case pass is an unattended overnight job
-        #: either way, and stopping means somebody has to restart it by hand.
-        max_wait_daily: float = 3600.0,
-        #: How long any single sleep may last before waking up to ask again. `retry-after`
-        #: against a rolling daily budget is an estimate and it overshoots: a run here once
-        #: sat idle for 25 minutes on a limit that had actually cleared within two, and a
-        #: probe request went straight through while the run was still asleep. Waking early
-        #: costs one request out of a thousand-a-day allowance and buys back the difference.
-        #: The ceilings above still decide whether to wait at all; this only decides how
-        #: long to wait between asking.
-        max_sleep: float = 180.0,
+        #: Ceiling on total waiting for one case against the tokens-per-DAY limit, which
+        #: is the one that actually binds a batch of this size. Six hours, because the
+        #: honest arithmetic is that one case costs ~2,150 tokens and the window refills at
+        #: ~139 a minute, so a saturated budget legitimately owes a single case a quarter of
+        #: an hour and several of those can queue up behind each other. An unattended pass
+        #: that gives up after an hour just means somebody restarts it by hand in the
+        #: morning, having lost the night.
+        max_wait_daily: float = 21600.0,
+        #: Ceiling on a single sleep. Deliberately large, and the reason is the least
+        #: obvious thing in this file.
+        #:
+        #: This was 180s for one afternoon, on the theory that `retry-after` overshoots and
+        #: that waking early to ask again costs only one request out of a thousand-a-day
+        #: allowance. That is true of a *request* quota and false of a *token* one, which
+        #: is what actually binds here. **A refused request still debits the daily token
+        #: budget.** Measured from the run's own log: each probe pushed `Used` up by
+        #: 1,200-1,750 tokens, while a 180s nap earned back only 418 at the 139 tokens/min
+        #: refill rate. Waking early spends five times what waiting recovers, so the budget
+        #: stays pinned at the ceiling and the run starves - it managed one case in four
+        #: and a half hours.
+        #:
+        #: `retry-after` is the API computing when enough of the rolling window will have
+        #: freed for *this* request. It is not a guess to be second-guessed; it is the
+        #: answer. Sleep it. The cap exists only so a malformed header cannot hang the run
+        #: forever.
+        max_sleep: float = 1800.0,
         #: Ceiling on the model's reply, and the most expensive number in this file.
         #:
         #: The free tier bills what a request *reserves*, not what it uses. This value is
@@ -597,10 +610,9 @@ class GroqDiagnoser:
                     )
                     if waited >= ceiling:
                         raise last
-                    # Sleep in bounded naps rather than for the whole of `retry-after`.
-                    # That header is an estimate against a rolling window and it overshoots
-                    # badly; waking early to ask again is one request against a
-                    # thousand-a-day allowance.
+                    # Sleep what the API asked for. Against a token budget, a probe that
+                    # gets refused still spends the tokens it asked for, so waking early to
+                    # check burns the very thing being waited on. See `max_sleep`.
                     nap = min(delay, self.max_sleep, ceiling - waited)
                     # Say so. An unattended run that goes quiet is indistinguishable from
                     # one that has hung, and the difference matters at 3am: this line is

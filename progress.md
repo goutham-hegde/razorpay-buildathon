@@ -1118,6 +1118,53 @@ Neither was visible in any output I was looking at.
    only the preview to the terminal broke. `sys.stdout.reconfigure(encoding="utf-8")` in the
    entry point.
 
+8. **The fix in item 5 was wrong, and it cost most of an evening.** This is the one I would
+   most want a reviewer to read, because the mistake was in the reasoning rather than in
+   the code.
+
+   Item 5 replaced a single long sleep with 180-second naps, on the argument that
+   `retry-after` overshoots and that waking early to re-ask "costs one request out of a
+   thousand-a-day allowance". Checking on the run five hours later: **one case completed in
+   four and a half hours.** The burst before that had done 32 in 43 minutes.
+
+   The log said why, once I lined up `Used` across consecutive waits:
+
+   ```
+       Used    delta   what moved it
+     198277
+     199997    +1720   our own probe won
+     197977    -2020   refill won
+     199189    +1212   our own probe won
+     198707     -482   refill won
+     ...
+   ```
+
+   **A refused request still debits the daily token budget.** The refill returns about 418
+   tokens per 180-second nap, at 139 a minute; each probe that comes back 429 spends
+   1,200-1,750. Waking early costs roughly five times what the wait recovers, so the budget
+   stays pinned against its ceiling and the run starves itself. It was not waiting for
+   quota — it was eating the quota it was waiting for.
+
+   That argument is sound for a *request* quota and false for a *token* one, and the
+   binding limit here is tokens. `retry-after` is not an estimate to be second-guessed: it
+   is the API computing when enough of the rolling window will have freed for this exact
+   request. Sleep it. `max_sleep` went 180s → 1800s, and the per-case ceiling 1h → 6h,
+   because a saturated budget legitimately owes one case a quarter of an hour and several
+   can queue behind each other.
+
+   The evidence I originally reasoned from was real but not comparable. The 25-minute idle
+   in item 5 happened at the 4096-token reservation, where `retry-after` for a 5,222-token
+   request genuinely was ~29 minutes. And the probe that "went straight through while the
+   run was still asleep" was a `max_tokens=1` request — a few hundred tokens against a
+   budget with a few hundred to spare. It did not show that the limit had cleared. It
+   showed that a much smaller request fitted through a much smaller gap, and I read it as
+   the former.
+
+   **The lesson worth keeping: a probe that is cheaper than the workload cannot tell you
+   whether the workload will fit.** I have now made the same class of error twice in one
+   day - assuming a number rather than measuring the thing that actually binds - and both
+   times the fix took minutes once the right quantity was on screen.
+
 **Verified**
 
 ```
