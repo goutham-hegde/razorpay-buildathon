@@ -818,6 +818,26 @@ tier, about two hours for 600 cases). When it lands: the `agent` arm, the report
 table on held-out B, guards at 6/6 for control and agent, and a 20-trial sensitivity run on
 B rather than A.
 
+**A change I found and deliberately did not make.** Scoring the partial batch B diagnoses
+showed the model is well calibrated - mean confidence 0.931 when it is right, 0.737 when it
+is wrong, with three of its four errors falling below the 0.75 bar. The one ambiguous debit
+it missed sits at 0.70 confidence and carries no bank reference, so the gate's second
+condition rejects it and the case goes on to be charged. Dropping that condition - gating on
+confidence alone - would hold three cases: the dangerous one plus two ordinary declines. One
+prevented duplicate debit for two held invoices is a trade I would take.
+
+I did not take it. That measurement is on batch B, and batch B is the batch the report
+quotes. Changing a threshold because of what it does to the held-out set is precisely the
+thing the A/B split exists to prevent, and a number tuned that way cannot be defended by the
+person quoting it. The two conditions also do genuinely different work for different
+diagnosers: confidence carries no information at all from the keyword matcher, which emits
+0.25-0.55 on nearly everything, so for that arm the bank reference is the only signal there
+is. A gate that is right for a calibrated model may simply be the wrong gate for an
+uncalibrated one.
+
+So it goes on the D5 list: validate it on batch A, and if it holds, it needs a fresh batch to
+report against rather than a re-scored B.
+
 Open question for D5, deliberately not settled under deadline: every arm faces an identically
 seeded world, but the draw sequence diverges as soon as arms take different numbers of
 actions, so this is a common-parameter comparison rather than a paired one. Pairing each case
