@@ -17,7 +17,7 @@ what broke along the way. Newest entries at the bottom.
 | D6 | Executor + Razorpay test-mode integration | ⬜ (cut before the sensitivity work if time runs short) |
 | D7 | Console polish + one injected failure handled gracefully | ⬜ (shell built early, D2) |
 | D8 | README, ADRs, results writeup | 🟡 everything but the results section |
-| D9 | Video | ⬜ |
+| D9 | Video | 🟡 script drafted, figures pending batch B |
 
 ---
 
@@ -1136,6 +1136,20 @@ budget, against a deadline eight days out.
 set -a; . ./.env; set +a
 .venv/Scripts/python -u -m reclaim.core.diagnose --batch B --provider groq --rpm 4.2
 ```
+
+**Also built, because it was the only thing not waiting on batch B:** the explainer script,
+in `docs/video-script.md`.
+
+Worth recording why it needed a tool. A five-minute cap is a word budget, not an intention —
+at a natural pace it is about 800 words — and prose overshoots that without ever looking long
+on the page. The first draft ran **980 words**, nearly seven minutes, and read fine. So
+`docs/wordcount.py` counts only what is actually spoken, per section, and each section's
+timestamp is computed from its own word count rather than guessed. That turns "this feels
+about right" into "this section is 45 words over", which is the difference between trimming
+everything evenly and cutting the one place that can afford it. It lands at 5:00 at 160 wpm.
+
+Every figure in it sits in a marked slot next to the command that prints it, and the
+preamble says outright that today's batch A stand-ins must be replaced before recording.
 
 **Next**
 
