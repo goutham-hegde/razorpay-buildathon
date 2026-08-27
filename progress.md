@@ -811,12 +811,66 @@ bolted on afterwards can recover them - only reading the description can. Assert
 invariant on an arm designed to fail it would have meant deleting the finding or weakening
 the check.
 
+**The rate limit I was measuring was not the rate limit I was hitting**
+
+Batch B's diagnosis run died twice, and both times I had the wrong model of why.
+
+D3 recorded the binding constraint as 8,000 tokens per minute, which works out to about 5.5
+calls a minute and a two-hour pass over 600 cases. That number is real and it is in the
+response headers. It is also not what stops the run.
+
+The first failure was mine rather than the provider's. The abort rule was *"a wait longer
+than two minutes means a daily cap rather than a burst limit, so stop"* - a heuristic that
+reads the length of the delay instead of asking which ceiling was hit. A per-minute token
+limit also returns long delays, so the run aborted at case 296 of 600 with seven hundred
+requests of daily budget unused. Replaced with a check of the actual headers.
+
+The second failure was more interesting, because the headers said the request should have
+succeeded:
+
+```
+requests 714/1000 left, tokens/min 8000/8000 left      ...alongside an HTTP 429
+```
+
+Both published budgets full, and still refused. The answer was in the response *body*, in
+prose, in a field nothing was parsing:
+
+```
+Rate limit reached for model `openai/gpt-oss-120b` ... service tier `on_demand`
+on tokens per day (TPD): Limit 200000, Used 199660, Requested 1560
+```
+
+**Tokens per day.** Not in any header, not in the SDK's rate-limit surface, and the only one
+of the three ceilings that actually binds a batch this size: 200,000 tokens a day against
+roughly 1,560 a call is about **128 diagnoses a day**. The whole 600-case pass is a
+four-and-a-half day job, and the 304 still outstanding are about two and a half.
+
+The lesson is not "read the body". It is that I had spent D3 carefully measuring and
+documenting a limit - and building the pacing, the resume logic and the abort rule around it
+- without ever confirming it was the one that would stop me. The headers were easy to read,
+so I read those, and the fact that they were consistent with my model of the problem was
+mistaken for evidence.
+
+TPD refills continuously rather than at a fixed hour, so the client now sleeps through it
+instead of giving up. A 600-case pass is an unattended job either way; dying every few
+hundred cases only means somebody has to restart it by hand.
+
+Options I considered for going faster, and why none of them helps:
+
+| option | arithmetic | verdict |
+|---|---|---|
+| trim the system prompt | halves tokens/call, but mixes two prompts in one batch, so all 600 must be redone: 600 x ~800 = 480k | no faster, and costs the accuracy the prompt buys |
+| switch to a larger-TPD model | 600 x 1,560 = 936k from scratch | marginal, and drops the model that won the pilot on the hard pair |
+| switch to Gemini | 500 requests/day, and 0.878 accuracy against 0.976 | slower *and* worse |
+| resume on the current prompt | 304 x 1,560 = 474k | ~2.4 days, and the cache already holds 296 |
+
+Resuming wins on arithmetic, so the run keeps going. The deadline is 2026-09-04, which
+leaves room.
+
 **Next**
 
-Batch B diagnosis is mid-run (Groq, ~5 calls/minute against an 8,000 token-per-minute free
-tier, about two hours for 600 cases). When it lands: the `agent` arm, the reported four-arm
-table on held-out B, guards at 6/6 for control and agent, and a 20-trial sensitivity run on
-B rather than A.
+When batch B's diagnoses land: the `agent` arm, the reported four-arm table on held-out B,
+guards for control and agent, and a 20-trial sensitivity run on B rather than A.
 
 **A change I found and deliberately did not make.** Scoring the partial batch B diagnoses
 showed the model is well calibrated - mean confidence 0.931 when it is right, 0.737 when it
