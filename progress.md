@@ -1642,3 +1642,71 @@ Two items, in order.
    stub, and it would turn "the benefit side is an upper bound" into a measurement. It costs
    a day of free-tier quota on a batch nothing is reported from, so it is the right thing to
    cut and the wrong thing to cut silently.
+
+---
+
+### D8b — Deep links, because a fumbled click is a retaken take · 2026-08-29
+
+**Built**
+
+`docs/recording-runsheet.md`, and the console change that makes it possible.
+
+The script has six `> **On screen:**` cues and every one of them was a description rather
+than an address. Two of them — `case_B00072` under `naive`, `case_B00106` under `agent` — are
+single cases inside a 600-case decision stream with no way to reach them but scrolling. That
+is a shot you fumble on camera and then re-record the whole section for.
+
+So the console now reads `?batch=`, `?run=` (arm name *or* full run id), `?case=` and `?view=`
+from the query string, and rewrites the address bar as you click, so any shot found by hand
+is a link that can be pasted back into the runsheet. `history.replaceState`, not `pushState`
+— this is a bookmark, not navigation, and filling the back button with every case clicked
+during a demo makes the console worse to operate, not better.
+
+The deep link is consumed once, on load. A parameter that kept re-asserting itself would drag
+the console back to that case every time the operator changed arm mid-demo.
+
+The runsheet itself is per section: which window, which URL, what should be legible on screen,
+and what *not* to cut to. The most useful line in it is probably the negative one — do not cut
+to a terminal running `sensitivity`, because it takes minutes and the silence costs the take.
+
+**What broke**
+
+*The case-detail endpoint takes `run`, not `arm`, and quietly defaults when it does not
+recognise a parameter.* I called `/api/case/case_B00072?batch=B&arm=naive`, got a trail back
+with no error, and read it as naive's — but `arm` is not a parameter that endpoint has, so it
+had silently served the default run, which is `agent`. The tell was that the reason text was
+the policy's `_ambiguous` handler, which naive does not have. Caught it, and the runsheet's
+description of the shot changed as a result: under `agent` that case is an `escalate` closed
+as `reconcile_hold`, not the `hold` I had first written down.
+
+Worth recording because FastAPI does exactly what it should here — an unknown query parameter
+is not an error — and the failure mode is a plausible-looking answer to a question you did not
+ask. The fix in the runsheet is to write links with `run=`, and the general lesson is that an
+API which defaults rather than 400s needs its parameter names read from the signature, not
+guessed from the noun in the UI.
+
+*The control arm's timeline is genuinely empty, and that turned out to be the best shot in
+the video.* `/api/timeline?run=B-control` returns 0 events against 1,800 ledger rows, and the
+console already had a hand-written empty state for it: *"no actions recorded — which for the
+control arm is the entire point."* That is a better answer to "why should I believe your
+recovery number" than any slide, and it was sitting in the UI unused because nothing pointed
+at it. It is now shot three.
+
+**Verified**
+
+```
+node --check reclaim/api/static/app.js                        ok
+python -m pytest tests/test_api.py                            71 passed
+python -m pytest                                              310 passed
+python docs/wordcount.py --wpm 160                            842 words, 5:15
+
+uvicorn on :8000, then
+  /?batch=B&run=naive&case=case_B00072   200, trail row 2 = DOUBLE CHARGE
+  /?batch=B&run=agent&case=case_B00106   200, single hold, reason legible in full
+  /?batch=B&run=control                  200, "no actions recorded"
+  /?batch=B&view=results                 200, four arms, invariants 6/6
+```
+
+**Next**
+
+Recording. Nothing in the repo blocks it.

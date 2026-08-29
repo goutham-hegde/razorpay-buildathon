@@ -230,8 +230,9 @@ reclaim/
     ablation.py      one rule at a time, on the tuning batch: off vs on
   api/               demo console (vanilla JS, no build step)
 docs/
-  video-script.md    the explainer, written to be read aloud
-  wordcount.py       what it actually runs to, per section
+  video-script.md      the explainer, written to be read aloud
+  recording-runsheet.md what to have on screen, per section, as deep links
+  wordcount.py         what it actually runs to, per section
 ```
 
 ---
@@ -243,4 +244,6 @@ docs/
 - [`progress.md`](progress.md) — the engineering log, including a "what broke" section per
   day. The most useful part of the repo if you want to know how it was actually built.
 - [`docs/video-script.md`](docs/video-script.md) — the explainer script, with each section's
-  timestamp derived from its own word count by `docs/wordcount.py`.
+  timestamp derived from its own word count by `docs/wordcount.py`, and
+  [`docs/recording-runsheet.md`](docs/recording-runsheet.md) — every shot in it as a console
+  deep link.

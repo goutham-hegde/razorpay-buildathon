@@ -15,7 +15,24 @@ const state = {
   cursor: 0,
   playing: false,
   timer: null,
+  caseId: null,
   totals: { worked: new Set(), charges: 0, contacts: 0, recovered: 0, double: 0, rows: 0 },
+};
+
+/* Deep links. Every shot in `docs/recording-runsheet.md` is a URL rather than a sequence of
+   clicks, because a fumbled click is a retaken take - and "find case_B00106 in a 600-case
+   stream, on camera" is exactly the shot that gets fumbled. Recognised query parameters:
+
+     ?batch=B&run=agent&case=case_B00106&view=live
+
+   `run` accepts either an arm name or a full run id. The URL is kept in sync as you click,
+   so a shot you find by hand is a link you can paste into the runsheet afterwards. */
+const link = new URLSearchParams(location.search);
+const wanted = {
+  batch: link.get("batch"),
+  arm: link.get("run") || link.get("arm"),
+  case: link.get("case"),
+  view: link.get("view"),
 };
 
 /* ---------------- helpers ---------------- */
@@ -54,6 +71,31 @@ function clearToast() { $("#toast").hidden = true; }
 
 /* ---------------- boot ---------------- */
 
+function showView(name) {
+  $$(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.view === name));
+  $$(".view").forEach((v) => v.classList.toggle("is-active", v.id === "view-" + name));
+  syncLink();
+}
+
+function currentView() {
+  const t = $(".tab.is-active");
+  return t ? t.dataset.view : "live";
+}
+
+/* Rewrite the address bar without navigating, so the current shot is always copy-pasteable.
+   `replaceState` rather than `pushState` on purpose: this is a bookmark, not history, and
+   filling the back button with every case you clicked would make the console annoying to
+   use during a demo. */
+function syncLink() {
+  if (!state.batch) return;
+  const q = new URLSearchParams({ batch: state.batch });
+  if (state.run) q.set("run", state.run.replace(/^[AB]-/, ""));
+  if (state.caseId) q.set("case", state.caseId);
+  const view = currentView();
+  if (view !== "live") q.set("view", view);
+  history.replaceState(null, "", location.pathname + "?" + q.toString());
+}
+
 async function boot() {
   let data;
   try {
@@ -70,19 +112,20 @@ async function boot() {
     .map((b) => `<option value="${b.name}">${b.name} — ${b.cases} cases, ${b.role}</option>`)
     .join("");
 
-  const withLedger = data.batches.find((b) => b.has_ledger) || data.batches[0];
+  const asked = wanted.batch && data.batches.find((b) => b.name === wanted.batch.toUpperCase());
+  const withLedger = asked || data.batches.find((b) => b.has_ledger) || data.batches[0];
   sel.value = withLedger.name;
   state.batch = withLedger.name;
 
-  sel.addEventListener("change", () => { state.batch = sel.value; loadBatch(); });
-  $("#run").addEventListener("change", () => { state.run = $("#run").value; loadRun(); });
+  sel.addEventListener("change", () => { state.batch = sel.value; state.caseId = null; loadBatch(); });
+  $("#run").addEventListener("change", () => {
+    state.run = $("#run").value;
+    state.caseId = null;
+    syncLink();
+    loadRun();
+  });
 
-  $$(".tab").forEach((t) =>
-    t.addEventListener("click", () => {
-      $$(".tab").forEach((x) => x.classList.toggle("is-active", x === t));
-      $$(".view").forEach((v) => v.classList.toggle("is-active", v.id === "view-" + t.dataset.view));
-    })
-  );
+  $$(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
 
   $("#play").addEventListener("click", togglePlay);
   $("#restart").addEventListener("click", restart);
@@ -113,12 +156,22 @@ async function loadBatch() {
   sel.innerHTML = arms
     .map((a) => `<option value="${a.run_id}">${a.arm}</option>`)
     .join("");
+  const askedArm =
+    wanted.arm && arms.find((a) => a.arm === wanted.arm || a.run_id === wanted.arm);
+  if (askedArm) sel.value = askedArm.run_id;
   state.run = sel.value;
 
   renderResults(results);
   api(`/api/invariants?batch=${state.batch}`).then(renderInvariants).catch(() => {});
   api(`/api/detection?batch=${state.batch}`).then(renderDetection).catch(() => {});
   await loadRun();
+
+  // Consumed once. A deep link sets the opening shot; it must not keep dragging the console
+  // back to that case every time the operator changes arm mid-demo.
+  if (wanted.view) showView(wanted.view);
+  if (wanted.case) await showCase(wanted.case);
+  wanted.case = wanted.view = wanted.arm = wanted.batch = null;
+  syncLink();
 }
 
 async function loadRun() {
@@ -135,6 +188,8 @@ async function loadRun() {
 function restart() {
   stop();
   state.cursor = 0;
+  state.caseId = null;
+  syncLink();
   state.totals = { worked: new Set(), charges: 0, contacts: 0, recovered: 0, double: 0, rows: state.totals.rows };
   $("#stream").innerHTML = "";
   $("#detail").innerHTML = `<p class="empty">Press <b>Play</b>, or pick a case from the stream.</p>`;
@@ -268,6 +323,8 @@ function renderEvent(ev) {
 /* ---------------- case detail ---------------- */
 
 async function showCase(caseId) {
+  state.caseId = caseId;
+  syncLink();
   const el = $("#detail");
   el.innerHTML = `<p class="empty">loading ${caseId}…</p>`;
   let d;

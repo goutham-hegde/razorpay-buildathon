@@ -13,6 +13,9 @@ any edit:
 python docs/wordcount.py --wpm 160
 ```
 
+Every shot is a URL rather than a sequence of clicks: see
+[`recording-runsheet.md`](recording-runsheet.md).
+
 It is 42 words over a strict five minutes. If the take has to land under 5:00, the notes at
 the bottom say which paragraph to drop; do not trim evenly, and do not cut the R1 paragraph
 to make room — a project whose headline is honest measurement does not cut the part where
@@ -42,7 +45,8 @@ it were the reported one is the single worst thing this video could do.
 
 ## 0:00 — 0:33 · The trap
 
-> **On screen:** a failed payment, then the same payment retried, then a duplicate charge.
+> **On screen:** `case_B00072` in the console under the **naive** arm — one failed payment,
+> retried, and a trail row that reads `DOUBLE CHARGE`. Then the same case under **agent**.
 
 A payment fails. Most of that money is not lost — it is stuck. Getting it back depends on
 whether your next action matches the *reason* it failed.
