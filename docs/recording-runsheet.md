@@ -26,22 +26,22 @@ Then open two browser windows and leave them on these:
 
 | Window | URL |
 |---|---|
-| **A — live** | <http://127.0.0.1:8000/?batch=B&run=naive&case=case_B00072&zoom=present> |
-| **B — results** | <http://127.0.0.1:8000/?batch=B&view=results&zoom=present> |
+| **A — case book** | <http://127.0.0.1:8000/?batch=B&run=naive&case=case_B00072&zoom=present> |
+| **B — statement** | <http://127.0.0.1:8000/?batch=B&view=statement&zoom=present> |
 
 And one terminal, cleared, sitting in the repo root.
 
-Console URLs take `batch`, `run` (arm name or run id), `case`, `view` (`live` or `results`)
-and `zoom`. The address bar rewrites itself as you click, so any shot you find by hand is a
+Console URLs take `batch`, `run` (arm name or run id), `case`, `view` (`statement`, `book`
+or `assurance`) and `zoom`. A link naming a `case` opens the case book on it. The address bar rewrites itself as you click, so any shot you find by hand is a
 link you can paste back into this file.
 
-**Record at 1920x1080 or wider, and leave the console in `Present`.** Every link here carries
-`zoom=present`, which scales the whole interface — type, padding and controls together — to
+**Record at 1920x1080 or wider, and leave the console on `Large`.** Every link here carries
+`zoom=present`, which scales the whole page — type, padding and controls together — to
 something legible when a 1080p capture is played back in a browser tab. `Normal` is the desk
 size and is too small on camera; it is what the first version of this console only had. The
 setting sticks across reloads, so you set it once.
 
-Below about 1800px wide in `Present`, the live view stacks into one column and puts the case
+Below about 62rem wide, the live view stacks into one column and puts the case
 panel above the feed. That is deliberate and it still records fine — but two columns is the
 better shot, so give the window the full width.
 
@@ -87,7 +87,7 @@ Six green lines, and the name of the test is the argument:
 
 Then **Window A**, arm picker to **control**:
 
-> <http://127.0.0.1:8000/?batch=B&run=control&zoom=present>
+> <http://127.0.0.1:8000/?batch=B&run=control&view=book&zoom=present>
 
 The stream says *"no actions recorded — which for the control arm is the entire point."* That
 is the shot for "a control arm that does **nothing at all**", and it is better than any
@@ -95,7 +95,10 @@ diagram of one.
 
 ### 2:19 — 3:27 · The result, and the thing it caught
 
-**Window B**. The four-arm table, whole, no scrolling.
+**Window B**, the Statement tab. Open on the claim sentence and the derivation beside it —
+the headline figure worked line by line, ending in a double-ruled total. Let a viewer read
+down it once before you say anything; it is the shot that makes the number checkable rather
+than assertable. Then scroll to the four-arm table.
 
 The two columns to point at are `halt %` and `net Rs` — naive at **66.1%** and
 **−5,188,982** against a gross figure that looks like a win. If you can highlight, highlight
@@ -107,10 +110,13 @@ you the take. The numbers are in `README.md` if a still is wanted instead.
 
 ### 3:27 — 4:37 · Bounded, and provable
 
-**Window B**, scroll down to the invariants panel. Six green ticks per arm, and both asserted
-arms reading `6/6 held`. Naive is on the same panel showing `5/6` with its twenty-six
-double-charged cases listed underneath in red — that contrast is worth a beat, because it is
-the same six checks run against the strawman.
+**Window B**, the **Assurance** tab:
+
+> <http://127.0.0.1:8000/?batch=B&view=assurance&zoom=present>
+
+Four arms side by side, six checks each. Both asserted arms read `6 of 6 held`. Naive reads
+`5 of 6` with `R1 FAILED` in red and its twenty-six double-charged cases listed underneath —
+that contrast is worth a beat, because it is the same six checks run against the strawman.
 
 Then **Window A**, and this is the payoff shot of the whole video:
 

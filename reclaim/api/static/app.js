@@ -1,9 +1,18 @@
 /* reclaim console.
- *
- * The Live view replays a run that already happened, at an accelerated clock. Every line
- * it renders is a row that exists in the ledger - nothing here is invented for the screen,
- * and the same rows produce the numbers on the Results view.
- */
+
+   The page is a statement of account, and this file's job is to fill it in from the ledger.
+   Nothing here computes a figure: every number comes from `/api/results`, which reads the
+   append-only ledger through `eval.metrics`. If a number on screen is wrong, it is wrong in
+   the ledger, which is the property the whole project is built on.
+
+   Deep links. Every shot in `docs/recording-runsheet.md` is a URL rather than a sequence of
+   clicks, because a fumbled click is a retaken take:
+
+     ?batch=B&run=agent&case=case_B00106&view=book&zoom=present
+
+   `run` takes an arm name or a full run id. `view` takes the current names (statement, book,
+   assurance) and the old ones (results, live) so links written before the redesign still
+   land. The address bar is kept in sync as you click, so a shot found by hand is a link. */
 
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -11,40 +20,94 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const state = {
   batch: null,
   run: null,
+  caseId: null,
   events: [],
   cursor: 0,
   playing: false,
   timer: null,
-  caseId: null,
   totals: { worked: new Set(), charges: 0, contacts: 0, recovered: 0, double: 0, rows: 0 },
 };
 
-/* Deep links. Every shot in `docs/recording-runsheet.md` is a URL rather than a sequence of
-   clicks, because a fumbled click is a retaken take - and "find case_B00106 in a 600-case
-   stream, on camera" is exactly the shot that gets fumbled. Recognised query parameters:
+const VIEWS = ["statement", "book", "assurance"];
+const VIEW_ALIAS = { results: "statement", live: "book", invariants: "assurance" };
 
-     ?batch=B&run=agent&case=case_B00106&view=live
-
-   `run` accepts either an arm name or a full run id. The URL is kept in sync as you click,
-   so a shot you find by hand is a link you can paste into the runsheet afterwards. */
 const link = new URLSearchParams(location.search);
 const wanted = {
   batch: link.get("batch"),
-  arm: link.get("run") || link.get("arm"),
-  case: link.get("case"),
-  view: link.get("view"),
-  zoom: link.get("zoom"),
+  arm:   link.get("run") || link.get("arm"),
+  case:  link.get("case"),
+  view:  link.get("view"),
+  zoom:  link.get("zoom"),
 };
 
-/* Display size. `present` scales the root font size, and because every length in style.css
-   is in `rem`, that scales the whole interface rather than just the words - which is the
-   difference between "bigger text in the same small boxes" and something legible in a
-   screen recording. Sticky, because reaching for it again after a reload mid-take is
-   exactly the fumble the deep links exist to prevent. */
+/* ---------------- formatting ----------------
+   Indian grouping throughout - these are rupees, and 5,74,947 is how a rupee figure is
+   written. A loss is shown in parentheses rather than with a minus sign, which is the
+   convention on every statement of account and is far harder to misread at a glance than a
+   hyphen that can be mistaken for a dash or lost at the start of a column. */
+
+const inr = (n) => Math.round(n).toLocaleString("en-IN");
+
+/** Bare figure for a statement column: 10,06,151 or (10,547). */
+function fig(paise, opts = {}) {
+  if (paise === null || paise === undefined) return "—";
+  const v = paise / 100;
+  if (v === 0 && opts.dashZero !== false) return "—";
+  return v < 0 ? `(${inr(-v)})` : inr(v);
+}
+
+/** Figure with the currency mark, for prose and for anywhere outside a rupee column. */
+function rs(paise) {
+  if (paise === null || paise === undefined) return "—";
+  const v = paise / 100;
+  return v < 0 ? `(₹${inr(-v)})` : `₹${inr(v)}`;
+}
+
+const pct = (x) => (x * 100).toFixed(1) + "%";
+const clock = (iso) => (iso || "").slice(11, 16);
+const day = (iso) => (iso || "").slice(5, 10);
+const dirClass = (v) => (v > 0 ? "up" : v < 0 ? "down" : "nil");
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+async function api(path) {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`${res.status} on ${path}`);
+  return res.json();
+}
+
+function toast(msg) {
+  const t = $("#toast");
+  t.innerHTML = msg;
+  t.hidden = false;
+}
+function clearToast() { $("#toast").hidden = true; }
+
+/* ---------------- view, size, address bar ---------------- */
+
+function showView(name) {
+  const v = VIEW_ALIAS[name] || (VIEWS.includes(name) ? name : "statement");
+  $$(".tab").forEach((t) => t.classList.toggle("is-on", t.dataset.view === v));
+  $$(".view").forEach((s) => s.classList.toggle("is-on", s.id === "view-" + v));
+  syncLink();
+}
+
+function currentView() {
+  const t = $(".tab.is-on");
+  return t ? t.dataset.view : "statement";
+}
+
+/* `Large` scales the root font size, and because every length in style.css is in rem that
+   scales the whole page - type, rules, padding and hit targets - rather than only the words.
+   Sticky, because reaching for it again after a reload mid-take is the fumble the deep links
+   exist to prevent. */
 function setZoom(mode, persist = true) {
   const m = mode === "present" ? "present" : "normal";
   document.documentElement.dataset.zoom = m;
-  $$(".zoom button").forEach((b) => b.classList.toggle("is-active", b.dataset.zoom === m));
+  $$(".sizer button").forEach((b) => b.classList.toggle("is-on", b.dataset.zoom === m));
   if (persist) { try { localStorage.setItem("reclaim.zoom", m); } catch (e) { /* private mode */ } }
   syncLink();
 }
@@ -53,75 +116,27 @@ function storedZoom() {
   try { return localStorage.getItem("reclaim.zoom"); } catch (e) { return null; }
 }
 
-/* ---------------- helpers ---------------- */
-
-const rupees = (paise, opts = {}) => {
-  if (paise === null || paise === undefined) return "--";
-  const v = paise / 100;
-  const sign = opts.signed && v > 0 ? "+" : "";
-  return sign + "₹" + v.toLocaleString("en-IN", { maximumFractionDigits: 0 });
-};
-
-const pct = (x) => (x * 100).toFixed(1) + "%";
-const clock = (iso) => (iso || "").slice(11, 16);
-const day = (iso) => (iso || "").slice(5, 10);
-
-function signClass(v) {
-  return v > 0 ? "pos" : v < 0 ? "neg" : "nil";
-}
-
-async function api(path) {
-  const res = await fetch(path);
-  if (!res.ok) {
-    let detail = res.statusText;
-    try { detail = (await res.json()).detail || detail; } catch { /* keep statusText */ }
-    throw new Error(detail);
-  }
-  return res.json();
-}
-
-function toast(msg) {
-  const el = $("#toast");
-  el.innerHTML = msg;
-  el.hidden = false;
-}
-function clearToast() { $("#toast").hidden = true; }
-
-/* ---------------- boot ---------------- */
-
-function showView(name) {
-  $$(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.view === name));
-  $$(".view").forEach((v) => v.classList.toggle("is-active", v.id === "view-" + name));
-  syncLink();
-}
-
-function currentView() {
-  const t = $(".tab.is-active");
-  return t ? t.dataset.view : "live";
-}
-
-/* Rewrite the address bar without navigating, so the current shot is always copy-pasteable.
-   `replaceState` rather than `pushState` on purpose: this is a bookmark, not history, and
-   filling the back button with every case you clicked would make the console annoying to
-   use during a demo. */
+/* replaceState, not pushState: this is a bookmark, not history. Filling the back button
+   with every case clicked during a demo makes the console worse to drive, not better. */
 function syncLink() {
   if (!state.batch) return;
   const q = new URLSearchParams({ batch: state.batch });
   if (state.run) q.set("run", state.run.replace(/^[AB]-/, ""));
   if (state.caseId) q.set("case", state.caseId);
-  const view = currentView();
-  if (view !== "live") q.set("view", view);
-  const zoom = document.documentElement.dataset.zoom;
-  if (zoom === "present") q.set("zoom", zoom);
+  const v = currentView();
+  if (v !== "statement") q.set("view", v);
+  if (document.documentElement.dataset.zoom === "present") q.set("zoom", "present");
   history.replaceState(null, "", location.pathname + "?" + q.toString());
 }
+
+/* ---------------- boot ---------------- */
 
 async function boot() {
   let data;
   try {
     data = await api("/api/batches");
   } catch (e) {
-    return toast("Could not reach the API: " + e.message);
+    return toast("Could not reach the API: " + escapeHtml(e.message));
   }
   if (!data.batches.length) {
     return toast("No batches on disk. Run <code>python -m reclaim.synth.generator --batch B</code>");
@@ -129,24 +144,22 @@ async function boot() {
 
   const sel = $("#batch");
   sel.innerHTML = data.batches
-    .map((b) => `<option value="${b.name}">${b.name} — ${b.cases} cases, ${b.role}</option>`)
-    .join("");
+    .map((b) => `<option value="${b.name}">${b.name}</option>`).join("");
 
   const asked = wanted.batch && data.batches.find((b) => b.name === wanted.batch.toUpperCase());
-  const withLedger = asked || data.batches.find((b) => b.has_ledger) || data.batches[0];
-  sel.value = withLedger.name;
-  state.batch = withLedger.name;
+  const chosen = asked || data.batches.find((b) => b.has_ledger) || data.batches[0];
+  sel.value = chosen.name;
+  state.batch = chosen.name;
+  state.meta = Object.fromEntries(data.batches.map((b) => [b.name, b]));
 
-  sel.addEventListener("change", () => { state.batch = sel.value; state.caseId = null; loadBatch(); });
-  $("#run").addEventListener("change", () => {
-    state.run = $("#run").value;
-    state.caseId = null;
-    syncLink();
-    loadRun();
+  sel.addEventListener("change", () => {
+    state.batch = sel.value; state.caseId = null; loadBatch();
   });
-
+  $("#run").addEventListener("change", () => {
+    state.run = $("#run").value; state.caseId = null; syncLink(); loadRun();
+  });
   $$(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
-  $$(".zoom button").forEach((b) => b.addEventListener("click", () => setZoom(b.dataset.zoom)));
+  $$(".sizer button").forEach((b) => b.addEventListener("click", () => setZoom(b.dataset.zoom)));
   setZoom(wanted.zoom || storedZoom() || "normal", !wanted.zoom);
 
   $("#play").addEventListener("click", togglePlay);
@@ -157,40 +170,44 @@ async function boot() {
 
 async function loadBatch() {
   clearToast();
+  const meta = state.meta[state.batch];
+  $("#m-batch").textContent = state.batch;
+  $("#m-basis").textContent = meta && meta.role ? meta.role : "—";
+  $("#m-cases").textContent = meta ? inr(meta.cases) : "—";
+  $("#m-risk").textContent = meta ? rs(meta.at_risk_paise) : "—";
+
   let results;
   try {
     results = await api(`/api/results?batch=${state.batch}`);
   } catch (e) {
-    renderPending();
+    renderNoLedger();
     return toast(
-      `No ledger for batch ${state.batch}. Run ` +
-      `<code>python -m reclaim.eval.replay --batch ${state.batch} --arms all</code>`
-    );
+      `No ledger for batch ${escapeHtml(state.batch)}. Run ` +
+      `<code>python -m reclaim.eval.replay --batch ${escapeHtml(state.batch)} --arms all</code>`);
   }
 
-  // Order the picker by capability, and default to the most capable arm built so far.
-  // Landing on `control` would open the console on an arm that by definition does
-  // nothing, which reads as a broken page rather than as the point it is making.
+  // Most capable arm first, and default to it. Landing on `control` opens the console on an
+  // arm that by definition does nothing, which reads as a broken page rather than the point.
   const rank = { agent: 0, rules: 1, naive: 2, control: 3 };
   const arms = [...results.arms].sort((a, b) => (rank[a.arm] ?? 9) - (rank[b.arm] ?? 9));
 
-  const sel = $("#run");
-  sel.innerHTML = arms
-    .map((a) => `<option value="${a.run_id}">${a.arm}</option>`)
-    .join("");
-  const askedArm =
-    wanted.arm && arms.find((a) => a.arm === wanted.arm || a.run_id === wanted.arm);
-  if (askedArm) sel.value = askedArm.run_id;
-  state.run = sel.value;
+  const runSel = $("#run");
+  runSel.innerHTML = arms.map((a) => `<option value="${a.run_id}">${a.arm}</option>`).join("");
+  const askedArm = wanted.arm && arms.find((a) => a.arm === wanted.arm || a.run_id === wanted.arm);
+  if (askedArm) runSel.value = askedArm.run_id;
+  state.run = runSel.value;
 
-  renderResults(results);
-  api(`/api/invariants?batch=${state.batch}`).then(renderInvariants).catch(() => {});
+  renderStatement(results);
+  api(`/api/invariants?batch=${state.batch}`).then(renderAssurance).catch(() => {});
   api(`/api/detection?batch=${state.batch}`).then(renderDetection).catch(() => {});
   await loadRun();
 
   // Consumed once. A deep link sets the opening shot; it must not keep dragging the console
   // back to that case every time the operator changes arm mid-demo.
+  // A link that names a case means to show that case. Without this it would set the case
+  // and leave the reader on the statement, which is the tab that cannot display it.
   if (wanted.view) showView(wanted.view);
+  else if (wanted.case) showView("book");
   if (wanted.case) await showCase(wanted.case);
   wanted.case = wanted.view = wanted.arm = wanted.batch = null;
   syncLink();
@@ -201,11 +218,197 @@ async function loadRun() {
   const data = await api(`/api/timeline?batch=${state.batch}&run=${state.run}&limit=3000`);
   state.events = data.events;
   state.totals.rows = data.ledger_rows;
-  $("#stream-hint").textContent = `replaying ${data.run_id}`;
   restart();
 }
 
-/* ---------------- live replay ---------------- */
+/* ---------------- the statement ---------------- */
+
+const ARM_BLURB = {
+  control: "no intervention at all",
+  naive:   "retry immediately, three times, fixed interval",
+  rules:   "policy engine, keyword diagnosis, no model",
+  agent:   "policy engine, model diagnosis",
+};
+const ARM_ORDER = { control: 0, naive: 1, rules: 2, agent: 3 };
+
+function renderNoLedger() {
+  $("#claim-line").textContent =
+    "No run recorded for this batch yet. Replay it and reload.";
+  $("#derivation").innerHTML = "";
+  $("#ledger-notes").innerHTML = "";
+  $("#arms tbody").innerHTML = "";
+  $("#working tbody").innerHTML = "";
+}
+
+function renderStatement(data) {
+  const arms = [...data.arms].sort((a, b) => (ARM_ORDER[a.arm] ?? 9) - (ARM_ORDER[b.arm] ?? 9));
+  const by = Object.fromEntries(arms.map((a) => [a.arm, a]));
+  const control = by.control;
+  const subject = by.agent || by.rules || arms[arms.length - 1];
+
+  renderClaim(data, subject, control);
+  renderDerivation(subject, control);
+  renderNotes(by, subject, control);
+
+  $("#arms tbody").innerHTML = arms.map((a) => {
+    const isSubject = subject && a.arm === subject.arm;
+    const lift = a.arm === "control"
+      ? `<span class="nil">the baseline</span>`
+      : `<span class="${dirClass(a.lift_net_paise)}">${fig(a.lift_net_paise)}</span>`;
+    return `<tr class="${isSubject ? "is-subject" : ""}">
+      <td class="arm">${escapeHtml(a.arm)}<small>${escapeHtml(ARM_BLURB[a.arm] || "")}</small></td>
+      <td class="fig">${pct(a.recovery_rate)}</td>
+      <td class="fig">${fig(a.net_paise)}</td>
+      <td class="fig">${lift}</td>
+      <td class="fig ${a.mandates_halted ? "down" : "nil"}">${
+        a.mandates_halted ? `${inr(a.mandates_halted)} · ${pct(a.mandate_halt_rate)}` : "none"}</td>
+      <td class="fig ${a.double_charges ? "down" : "nil"}">${
+        a.double_charges ? inr(a.double_charges) : "none"}</td>
+    </tr>`;
+  }).join("");
+
+  $("#working tbody").innerHTML = arms.map((a) => `
+    <tr class="${subject && a.arm === subject.arm ? "is-subject" : ""}">
+      <td class="arm">${escapeHtml(a.arm)}</td>
+      <td class="fig">${inr(a.recovered)}</td>
+      <td class="fig">${inr(a.recovered_organic)}</td>
+      <td class="fig">${fig(a.gross_paise)}</td>
+      <td class="fig">${fig(-a.cost_paise)}</td>
+      <td class="fig ${a.residual_loss_paise ? "down" : ""}">${fig(-a.residual_loss_paise)}</td>
+      <td class="fig ${dirClass(a.net_paise)}">${fig(a.net_paise)}</td>
+    </tr>`).join("");
+}
+
+/* One sentence, in the register of the statement: what is being claimed, and against what.
+   It leads because an eleven-column table is a correct artifact and a bad first three
+   seconds - a reader who does not yet know what they are looking at cannot check it. */
+function renderClaim(data, subject, control) {
+  if (!subject || !control) {
+    $("#claim-line").textContent = "Replay the control arm to put these figures in context.";
+    return;
+  }
+  const lift = subject.lift_net_paise;
+  $("#claim-line").innerHTML =
+    `Over <b>${inr(data.cases)} failed payments and mandates</b>, the ` +
+    `<b>${escapeHtml(subject.arm)}</b> arm recovered <span class="n">${pct(subject.recovery_rate)}</span>. ` +
+    `Doing nothing at all recovers <span class="n">${pct(control.recovery_rate)}</span>, so what the ` +
+    `agent is worth is the difference — <span class="n ${dirClass(lift)}">${rs(lift)}</span>, ` +
+    `after every fee, message, incentive and refund it caused.`;
+}
+
+/* The signature. The headline figure is worked, not asserted: a reader who doubts it can
+   run down the column and name the line they disagree with. The rules are the accounting
+   convention - one above a subtotal, two above a final total - and they carry meaning:
+   this line is derived from the ones above it. */
+function renderDerivation(subject, control) {
+  if (!subject || !control) { $("#derivation").innerHTML = ""; return; }
+
+  const row = (cls, op, label, value, opts = {}) => `
+    <tr class="${cls}">
+      <td class="op">${op}</td>
+      <td class="lbl">${label}</td>
+      <td class="fig">${fig(value, opts)}</td>
+    </tr>`;
+
+  const html = [
+    row("", "", "Recovered by the agent", subject.gross_paise, { dashZero: false }),
+    row("", "less", "Cost of recovering it — retry fees, messages, incentives, refunds", -subject.cost_paise),
+    row("", "less", "Subscription revenue forfeited by halting a mandate", -subject.residual_loss_paise),
+    row("sub", "", "Net retained", subject.net_paise, { dashZero: false }),
+    `<tr class="spacer"><td colspan="3"></td></tr>`,
+    row("", "less", "Recovered without any help — what the control arm collected", -control.net_paise),
+    row(`total ${dirClass(subject.lift_net_paise)}`, "", "Net lift over doing nothing",
+        subject.lift_net_paise, { dashZero: false }),
+  ].join("");
+
+  const tb = $("#derivation").querySelector("tbody") || $("#derivation");
+  tb.innerHTML = html;
+}
+
+function renderNotes(by, subject, control) {
+  if (!subject) { $("#ledger-notes").innerHTML = ""; return; }
+  const naive = by.naive;
+
+  const items = [
+    {
+      dir: subject.double_charges ? "down" : "up",
+      figure: subject.double_charges ? inr(subject.double_charges) : "None",
+      label: "payments charged twice",
+      sub: "A retry against a payment that may already have been debited succeeds, and the " +
+           "success is a refund, an unwind and a customer who stops trusting the payment page." +
+           (naive ? ` Retrying blindly did it ${inr(naive.double_charges)} times.` : ""),
+    },
+    {
+      dir: subject.mandates_halted ? "down" : "up",
+      figure: subject.mandates_halted ? inr(subject.mandates_halted) : "None",
+      label: "mandates destroyed",
+      sub: "Presenting too often against a recurring rail halts the mandate and forfeits " +
+           "months of future revenue." +
+           (naive ? ` Retrying blindly destroyed ${inr(naive.mandates_halted)} of them.` : ""),
+    },
+    {
+      dir: "",
+      figure: control ? pct(control.recovery_rate) : "—",
+      label: "came back on their own",
+      sub: "Failed payments recover unaided all the time. Every arm's headline rate contains " +
+           "all of them, which is why the figure opposite is lift and not gross recovery.",
+    },
+  ];
+
+  $("#ledger-notes").innerHTML = items.map((i) => `
+    <div class="n-item ${i.dir}">
+      <div class="n-fig">${i.figure}</div>
+      <div class="n-lbl">${i.label}</div>
+      <div class="n-sub">${i.sub}</div>
+    </div>`).join("");
+}
+
+/* ---------------- assurance ---------------- */
+
+function renderAssurance(data) {
+  $("#assurance").innerHTML = data.reports.map((r) => {
+    const ok = r.held === r.total;
+    const broken = r.results.filter((g) => !g.held);
+    return `
+    <section class="a-arm">
+      <div class="a-head">
+        <h3>${escapeHtml(r.arm)}</h3>
+        <span class="a-score ${ok ? "ok" : "no"}">${r.held} of ${r.total} held</span>
+      </div>
+      <p class="a-note">${r.must_hold
+        ? "Asserted. A failure here is a defect."
+        : "Baseline — measured, not asserted. Its failures are the finding."}</p>
+      <ul class="a-list">
+        ${r.results.map((g) => `
+          <li class="${g.held ? "" : "broke"}">
+            <span class="id">${g.id}</span>
+            <span>${escapeHtml(g.title)}<span class="det">${escapeHtml(g.note || "")}</span></span>
+            <span class="verdict">${g.held ? "held" : "FAILED"}</span>
+          </li>`).join("")}
+      </ul>
+      ${broken.map((g) => `
+        <div class="a-breach">
+          <b>${g.id} failed on ${inr(g.violation_count)} ${g.violation_count === 1 ? "case" : "cases"}</b>
+          ${g.violations.slice(0, 4).map((v) =>
+            `<code>${escapeHtml(v.subject)}</code> ${escapeHtml(v.detail)}`).join("<br>")}
+          ${g.violation_count > 4 ? `<br>and ${inr(g.violation_count - 4)} more` : ""}
+        </div>`).join("")}
+    </section>`;
+  }).join("");
+}
+
+function renderDetection(data) {
+  const entries = Object.entries(data.by_disposition).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(...entries.map((e) => e[1]), 1);
+  $("#detection").innerHTML = entries.map(([k, v]) => `
+    <div class="d-row">
+      <span class="lbl">${escapeHtml(k)}</span>
+      <span class="track"><span class="fill" style="width:${(v / max) * 100}%"></span></span>
+      <span class="val">${inr(v)}</span>
+    </div>`).join("");
+}
+
+/* ---------------- replay ---------------- */
 
 function restart() {
   stop();
@@ -213,27 +416,20 @@ function restart() {
   state.caseId = null;
   syncLink();
   state.totals = { worked: new Set(), charges: 0, contacts: 0, recovered: 0, double: 0, rows: state.totals.rows };
-  $("#stream").innerHTML = "";
-  $("#detail").innerHTML = `<p class="empty">Press <b>Play</b>, or pick a case from the stream.</p>`;
+  $("#detail").innerHTML =
+    `<p class="vacant">Select <b>Play</b>, or choose an entry from the decision list.</p>`;
   paint();
 
-  if (!state.events.length) {
-    $("#stream").innerHTML =
-      `<li class="idle"><p><b>No actions recorded.</b> This arm did nothing at all — which ` +
-      `for the control arm is the entire point, and is what every other arm's recovery ` +
-      `number is measured against. Switch arms to watch one work.</p></li>`;
-  } else {
-    $("#stream").innerHTML =
-      `<li class="idle"><p>Press <b>Play</b> to replay all ` +
-      `${state.events.length.toLocaleString()} recorded decisions in order, or open a case ` +
-      `directly from a link. Nothing here is generated live — it is read back off the ` +
-      `append-only ledger.</p></li>`;
-  }
+  $("#stream").innerHTML = !state.events.length
+    ? `<li class="idle"><p><b>No actions recorded.</b> This arm did nothing at all — which for
+       the control arm is the entire point, and is what every other arm's recovery figure is
+       measured against. Change arm to watch one work.</p></li>`
+    : `<li class="idle"><p>Select <b>Play</b> to replay all ${inr(state.events.length)} recorded
+       decisions in order, or open a case directly from a link. Nothing here is generated
+       live — it is read back off the append-only ledger.</p></li>`;
 }
 
-function togglePlay() {
-  state.playing ? stop() : play();
-}
+function togglePlay() { state.playing ? stop() : play(); }
 
 function play() {
   if (state.cursor >= state.events.length) restart();
@@ -250,27 +446,22 @@ function stop() {
 
 function tick() {
   if (!state.playing) return;
-  if (state.cursor >= state.events.length) {
-    stop();
-    $("#play").textContent = "Play";
-    return;
-  }
+  if (state.cursor >= state.events.length) { stop(); return; }
   step();
-  const speed = Number($("#speed").value);
-  state.timer = setTimeout(tick, Math.max(8, 900 / speed));
+  state.timer = setTimeout(tick, Math.max(8, 900 / Number($("#speed").value)));
 }
 
 function step() {
   const ev = state.events[state.cursor++];
-  const li = renderEvent(ev);
   const stream = $("#stream");
   const idle = stream.querySelector(".idle");
   if (idle) idle.remove();
-  stream.prepend(li);
+
+  stream.prepend(renderEvent(ev));
   while (stream.children.length > 120) stream.lastElementChild.remove();
-  // Newest-first feeds must stay pinned to the top. Prepending into a container that has
-  // been scrolled (which clicking an entry does) keeps scrollTop where it was, so the
-  // viewport drifts past the tail and the panel goes blank while events keep arriving.
+  // Newest-first feeds must stay pinned. Prepending into a container that has been scrolled
+  // (which selecting an entry does) keeps scrollTop where it was, so the viewport drifts
+  // past the tail and the panel goes blank while entries keep arriving.
   stream.scrollTop = 0;
 
   state.totals.worked.add(ev.case_id);
@@ -284,13 +475,14 @@ function step() {
 }
 
 function paint() {
-  $("#s-worked").textContent = state.totals.worked.size.toLocaleString();
-  $("#s-charges").textContent = state.totals.charges.toLocaleString();
-  $("#s-contacts").textContent = state.totals.contacts.toLocaleString();
-  $("#s-recovered").textContent = state.totals.recovered.toLocaleString();
-  $("#s-double").textContent = state.totals.double.toLocaleString();
-  $("#s-rows").textContent = state.totals.rows.toLocaleString();
-  $("#stream-progress").textContent = `${state.cursor} / ${state.events.length} events`;
+  $("#s-worked").textContent = inr(state.totals.worked.size);
+  $("#s-charges").textContent = inr(state.totals.charges);
+  $("#s-contacts").textContent = inr(state.totals.contacts);
+  $("#s-recovered").textContent = inr(state.totals.recovered);
+  $("#s-double").textContent = inr(state.totals.double);
+  $("#s-rows").textContent = inr(state.totals.rows);
+  $("#stream-progress").textContent =
+    `${inr(state.cursor)} of ${inr(state.events.length)} entries`;
 }
 
 function renderEvent(ev) {
@@ -302,11 +494,11 @@ function renderEvent(ev) {
   if (ev.kind === "charge") {
     if (ev.double_charge) {
       kind = "k-double";
-      head = `DOUBLE CHARGE · ${ev.case_id}`;
+      head = `charged twice · ${ev.case_id}`;
       why = "the charge succeeded on a payment that had already been debited — this is a liability, not revenue";
     } else if (ev.outcome === "captured") {
       kind = "k-capture";
-      head = `captured · ${ev.case_id}`;
+      head = `recovered · ${ev.case_id}`;
       why = `attempt ${ev.attempt_no} on ${ev.rail}`;
     } else if (ev.outcome === "unresolved") {
       kind = "k-double";
@@ -326,7 +518,7 @@ function renderEvent(ev) {
     why = ev.reason || "";
     if (ev.diagnosis) {
       why = `diagnosed ${ev.diagnosis}` +
-        (ev.confidence != null ? ` (${ev.confidence.toFixed(2)})` : "") + " — " + why;
+        (ev.confidence != null ? ` at ${ev.confidence.toFixed(2)}` : "") + " — " + why;
     }
   }
 
@@ -336,11 +528,11 @@ function renderEvent(ev) {
     `<span class="dot"></span>` +
     `<div class="body"><div class="head">${escapeHtml(head)}</div>` +
     `<div class="why">${escapeHtml(why)}</div></div>` +
-    `<span class="amt">${ev.amount_paise != null ? rupees(ev.amount_paise) : ""}</span>`;
+    `<span class="amt">${ev.amount_paise != null ? rs(ev.amount_paise) : ""}</span>`;
 
   li.addEventListener("click", () => {
-    // Pause on inspect. Reading a case while the feed keeps moving underneath it is
-    // exactly the frustration this panel exists to remove.
+    // Pause on inspect. Reading a case while the feed moves underneath it is exactly the
+    // frustration this panel exists to remove.
     stop();
     $$(".ev").forEach((e) => e.classList.remove("is-sel"));
     li.classList.add("is-sel");
@@ -349,320 +541,83 @@ function renderEvent(ev) {
   return li;
 }
 
-/* ---------------- case detail ---------------- */
+/* ---------------- one case ---------------- */
 
 async function showCase(caseId) {
   state.caseId = caseId;
   syncLink();
   const el = $("#detail");
-  el.innerHTML = `<p class="empty">loading ${caseId}…</p>`;
+  el.innerHTML = `<p class="vacant">Opening ${escapeHtml(caseId)}…</p>`;
+
   let d;
   try {
-    d = await api(`/api/case/${caseId}?batch=${state.batch}&run=${state.run}`);
+    d = await api(`/api/case/${encodeURIComponent(caseId)}?batch=${state.batch}&run=${state.run}`);
   } catch (e) {
-    el.innerHTML = `<p class="empty">${escapeHtml(e.message)}</p>`;
+    el.innerHTML = `<p class="vacant">${escapeHtml(e.message)}</p>`;
     return;
   }
 
-  const c = d.case;
-  const err = d.observed_error;
-  const det = d.detection;
+  const c = d.case, err = d.observed_error, det = d.detection;
 
   el.innerHTML = `
-    <h3>${c.id}</h3>
-    <p class="sub">${c.rail} · ${c.issuer} · ${c.psp} · ${c.kind}</p>
+    <h3>${escapeHtml(c.id)}</h3>
+    <p class="sub">${escapeHtml(c.rail)} · ${escapeHtml(c.issuer)} · ${escapeHtml(c.psp)} · ${escapeHtml(c.kind)}</p>
 
     <dl class="kv">
-      <dt>at risk</dt><dd>${rupees(c.amount_paise)}</dd>
-      <dt>customer</dt><dd>${c.customer_id}</dd>
-      <dt>opened</dt><dd>${c.opened_at.replace("T", " ").slice(0, 16)}</dd>
-      ${c.mandate_id ? `<dt>mandate</dt><dd>${c.mandate_id}</dd>` : ""}
-      <dt>channels</dt><dd>${d.customer ? d.customer.channels.join(", ") : "--"}</dd>
+      <dt>At risk</dt><dd>${rs(c.amount_paise)}</dd>
+      <dt>Customer</dt><dd>${escapeHtml(c.customer_id)}</dd>
+      <dt>Opened</dt><dd>${escapeHtml(c.opened_at.replace("T", " ").slice(0, 16))}</dd>
+      ${c.mandate_id ? `<dt>Mandate</dt><dd>${escapeHtml(c.mandate_id)}</dd>` : ""}
+      <dt>Channels</dt><dd>${d.customer ? escapeHtml(d.customer.channels.join(", ")) : "—"}</dd>
     </dl>
 
     ${err ? `
-    <div class="block">
       <h4>What the agent was given</h4>
       <div class="quote">
         “${escapeHtml(err.description)}”
         <div class="meta">
-          ${err.code} · ${err.source} · ${err.step} · ${err.reason}<br>
-          bank reference: ${err.bank_reference || "— none returned"}
+          ${escapeHtml(err.code)} · ${escapeHtml(err.source)} · ${escapeHtml(err.step)} · ${escapeHtml(err.reason)}<br>
+          Bank reference: ${err.bank_reference ? escapeHtml(err.bank_reference) : "none returned"}
         </div>
-      </div>
-    </div>` : ""}
+      </div>` : ""}
 
-    <div class="block">
-      <h4>Detection</h4>
-      <div>
-        <span class="tag ${det.disposition === "eligible" ? "good" : "warn"}">${det.disposition}</span>
-        ${det.flags.map((f) => `<span class="tag">${escapeHtml(f)}</span>`).join(" ")}
-      </div>
-      <div class="why" style="margin-top:0.5rem;color:var(--ink-dim)">
-        ${escapeHtml(det.reason)}
-      </div>
+    <h4>Detection</h4>
+    <div>
+      <span class="mark ${det.disposition === "eligible" ? "ok" : "no"}">${escapeHtml(det.disposition)}</span>
+      ${det.flags.map((f) => `<span class="mark">${escapeHtml(f)}</span>`).join("")}
     </div>
+    <p class="n-sub" style="margin:0.5rem 0 0">${escapeHtml(det.reason)}</p>
 
-    <div class="block">
-      <h4>Audit trail — ${d.trail.length} entries</h4>
-      <ol class="trail">
-        ${d.trail.map(trailRow).join("")}
-      </ol>
-    </div>
-  `;
+    <h4>Every action taken — ${inr(d.trail.length)} ${d.trail.length === 1 ? "entry" : "entries"}</h4>
+    <ol class="trail">${d.trail.map(trailRow).join("")}</ol>`;
 }
 
 function trailRow(r) {
-  let what = "";
-  let why = "";
+  let what = "", why = "";
   if (r.kind === "decision") {
     what = r.action;
     why = r.reason || "";
   } else if (r.kind === "charge") {
-    what = r.double_charge ? "DOUBLE CHARGE" : (r.outcome || "unresolved");
-    why = `attempt ${r.attempt_no} · ${r.rail} · ${r.psp} · ${rupees(r.amount_paise)}` +
+    what = r.double_charge ? "charged twice" : (r.outcome || "unresolved");
+    why = `attempt ${r.attempt_no} · ${r.rail} · ${r.psp} · ${rs(r.amount_paise)}` +
           (r.note ? ` — ${r.note}` : "");
   } else if (r.kind === "contact") {
     what = r.channel;
     why = `${r.template} · ${r.engaged ? "engaged" : "ignored"}`;
   } else if (r.kind === "closed") {
     what = "closed";
-    why = `${r.status}` +
-      (r.recovered_paise ? ` · ${rupees(r.recovered_paise)} via ${r.recovered_by}` : "");
+    why = r.status + (r.recovered_paise ? ` · ${rs(r.recovered_paise)} via ${r.recovered_by}` : "");
   }
   // Two rows in this list are the ones a reader is meant to stop on: a duplicate debit, and
-  // the policy refusing to cause one. Both get a class rather than an inline colour.
+  // the policy refusing to cause one.
   const cls = [
     r.double_charge ? "is-double" : "",
     r.kind === "decision" && (r.action === "hold" || r.action === "escalate") ? "is-hold" : "",
   ].filter(Boolean).join(" ");
-  return `<li class="${cls}"><time>${(r.at || "").replace("T", " ").slice(0, 16)}</time>` +
+
+  return `<li class="${cls}"><time>${escapeHtml((r.at || "").replace("T", " ").slice(0, 16))}</time>` +
          `<div><div class="what">${escapeHtml(what)}</div>` +
          `<div class="why">${escapeHtml(why)}</div></div></li>`;
-}
-
-/* ---------------- results ---------------- */
-
-/* What each arm actually is. The table used to print the word `agent` and leave the reader
-   to work out that it is the same engine as `rules` with a different diagnoser - which is
-   the single most important fact on the page. */
-const ARM_BLURB = {
-  control: "no intervention at all",
-  naive:   "retry immediately, 3x, fixed interval",
-  rules:   "policy engine, keyword diagnosis, no model",
-  agent:   "policy engine, model diagnosis",
-};
-
-const ARM_ORDER = { control: 0, naive: 1, rules: 2, agent: 3 };
-
-/* A two-sided bar, zero in the middle, on a SQUARE-ROOT scale - and the column caption says
-   so, because an undisclosed non-linear axis is a lie told with a picture.
- 
-   Linear was tried first and it does not work here. Naive's net lift is around -56 lakh and
-   the two arms the reader is actually comparing are +3.3 and +5.7 lakh, so on a linear axis
-   naive fills the row and the comparison that matters renders as two identical specks. The
-   numbers next to the bar are exact and unscaled; the bar's job is only to make the sign and
-   the order of magnitude legible from across a room. */
-function liftBar(paise, scale) {
-  if (!scale) return "";
-  const frac = Math.min(Math.sqrt(Math.abs(paise)) / Math.sqrt(scale), 1);
-  const w = paise === 0 ? 0 : Math.max(frac * 50, 1.5);
-  const side = paise >= 0 ? `left:50%;width:${w}%` : `right:50%;width:${w}%`;
-  return `<div class="track"><span class="zero" style="left:50%"></span>` +
-         `<span class="fill ${paise >= 0 ? "pos" : "neg"}" style="${side}"></span></div>`;
-}
-
-function renderResults(data) {
-  $("#results-hint").textContent =
-    `batch ${data.batch} · ${data.cases} cases · ${rupees(data.at_risk_paise)} at risk`;
-
-  const arms = [...data.arms].sort(
-    (a, b) => (ARM_ORDER[a.arm] ?? 9) - (ARM_ORDER[b.arm] ?? 9)
-  );
-  const by = Object.fromEntries(arms.map((a) => [a.arm, a]));
-  const control = by.control;
-  const hero = by.agent || by.rules;
-  const scale = Math.max(...arms.map((a) => Math.abs(a.lift_net_paise)), 1);
-
-  renderVerdict(data, by, hero, control);
-
-  $("#arms tbody").innerHTML = arms.map((a) => {
-    const isHero = hero && a.arm === hero.arm;
-    const cls = isHero ? "is-hero" : (a.arm === "control" || a.arm === "naive" ? "is-baseline" : "");
-    const lift = a.arm === "control"
-      ? `<span class="nil">— it is the baseline</span>`
-      : `<div class="liftbar">${liftBar(a.lift_net_paise, scale)}` +
-        `<span class="val ${signClass(a.lift_net_paise)}">${rupees(a.lift_net_paise, { signed: true })}</span></div>`;
-    return `
-      <tr class="${cls}">
-        <td class="arm-name"><b>${a.arm}</b><span>${ARM_BLURB[a.arm] || ""}</span></td>
-        <td class="n ${isHero ? "big" : ""}">${pct(a.recovery_rate)}</td>
-        <td>${lift}</td>
-        <td class="n ${a.mandates_halted ? "neg" : "nil"}">${
-          a.mandates_halted ? `${a.mandates_halted} <span class="hint">(${pct(a.mandate_halt_rate)})</span>` : "0"
-        }</td>
-        <td class="n">${a.double_charges ? `<span class="tag bad">${a.double_charges}</span>` : `<span class="nil">0</span>`}</td>
-      </tr>`;
-  }).join("");
-
-  $("#money tbody").innerHTML = arms.map((a) => `
-      <tr class="${hero && a.arm === hero.arm ? "is-hero" : ""}">
-        <td class="arm-name"><b>${a.arm}</b></td>
-        <td class="n">${a.recovered}</td>
-        <td class="n"><span class="tag organic">${a.recovered_organic}</span></td>
-        <td class="n">${rupees(a.gross_paise)}</td>
-        <td class="n">${rupees(a.cost_paise)}</td>
-        <td class="n ${a.residual_loss_paise ? "neg" : "nil"}">${rupees(a.residual_loss_paise)}</td>
-        <td class="n ${signClass(a.net_paise)}">${rupees(a.net_paise)}</td>
-      </tr>`).join("");
-
-  for (const arm of data.pending_arms || []) {
-    $("#arms tbody").insertAdjacentHTML(
-      "beforeend",
-      `<tr class="pending"><td>${escapeHtml(arm)}</td><td colspan="4">not built yet</td></tr>`
-    );
-  }
-}
-
-/* One sentence and four numbers, above the table.
-
-   The tables are correct and they are not a first impression. A viewer given eleven columns
-   spends the first ten seconds working out what they are looking at, and in a five-minute
-   video those are the ten seconds that decide whether the rest lands. */
-function renderVerdict(data, by, hero, control) {
-  if (!hero || !control) {
-    $("#verdict-line").textContent = "Run the control arm to put these numbers in context.";
-    $("#headline").innerHTML = "";
-    return;
-  }
-
-  const naive = by.naive;
-  const lift = hero.lift_net_paise;
-  $("#verdict-line").innerHTML =
-    `Over <b>${data.cases} failed payments and mandates</b> in batch ${data.batch}, the ` +
-    `<b>${hero.arm}</b> arm recovered <b class="num">${pct(hero.recovery_rate)}</b> of them. ` +
-    `Doing nothing at all recovers <b class="num">${pct(control.recovery_rate)}</b>, so what it ` +
-    `is actually worth is the difference: <b class="num ${signClass(lift)}">` +
-    `${rupees(lift, { signed: true })}</b> net, after retry fees, messages, incentives and ` +
-    `any money it had to give back.`;
-
-  const cards = [
-    {
-      cls: lift >= 0 ? "good" : "bad",
-      value: rupees(lift, { signed: true }),
-      label: "net lift over doing nothing",
-      sub: `control recovers ${rupees(control.gross_paise)} unaided; that is subtracted, not counted`,
-    },
-    {
-      cls: "flat",
-      value: pct(hero.recovery_rate),
-      label: "recovery rate",
-      sub: `${hero.recovered} of ${data.cases} cases · ${hero.recovered_organic} would have come back anyway`,
-    },
-    {
-      cls: hero.mandates_halted ? "bad" : "good",
-      value: String(hero.mandates_halted),
-      label: "mandates halted",
-      sub: naive
-        ? `over-retrying destroys subscriptions — naive halted ${naive.mandates_halted}`
-        : "subscriptions destroyed by over-retrying",
-    },
-    {
-      cls: hero.double_charges ? "bad" : "good",
-      value: String(hero.double_charges),
-      label: "double charges",
-      sub: naive
-        ? `retrying a possible debit takes the money twice — naive did it ${naive.double_charges} times`
-        : "money taken twice from a customer",
-    },
-  ];
-
-  $("#headline").innerHTML = cards.map((c) => `
-    <div class="hstat ${c.cls}">
-      <b>${c.value}</b>
-      <span class="lbl">${c.label}</span>
-      <span class="sub">${c.sub}</span>
-    </div>`).join("");
-}
-
-function renderPending() {
-  $("#arms tbody").innerHTML =
-    `<tr class="pending"><td colspan="5">no runs recorded for this batch</td></tr>`;
-  $("#money tbody").innerHTML =
-    `<tr class="pending"><td colspan="7">no runs recorded for this batch</td></tr>`;
-  $("#verdict-line").textContent =
-    "No ledger for this batch yet. Run the replay command below and reload.";
-  $("#headline").innerHTML = "";
-}
-
-/* Six chips per arm rather than six rows.
-
-   The list version was correct and read as boilerplate - six lines of small grey text the
-   eye slides off. These are the falsifiable claims the whole project rests on, and R1 broke
-   on the held-out batch once, so a failed one has to be the loudest thing on the panel
-   rather than a tag at the end of a row.
-
-   The marks are inline SVG, not `✓` and `✕`. Those code points are absent from most
-   monospace faces, so the browser falls back to the emoji font and renders them as blue
-   boxed glyphs that read as UI chrome rather than as a pass or a fail. A drawn mark cannot
-   be substituted by a font stack. */
-const MARK_OK = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.4L13 4.8"/></svg>`;
-const MARK_NO = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>`;
-
-function renderInvariants(data) {
-  $("#invariants").innerHTML = data.reports.map((r) => {
-    const ok = r.held === r.total;
-    // Violations render full width under the grid rather than inside their chip. Inside, a
-    // twenty-six-case list stretches its grid row and drags five passing chips out of shape,
-    // which makes the panel look broken in exactly the place it is working correctly.
-    const broken = r.results.filter((g) => !g.held);
-    return `
-    <div class="inv-run">
-      <header>
-        <h3>${escapeHtml(r.arm)}</h3>
-        <span class="inv-score ${ok ? "ok" : "fail"}">${r.held}/${r.total} held</span>
-        ${r.must_hold
-          ? `<span class="tag good">asserted</span>`
-          : `<span class="tag">baseline — measured, not asserted</span>`}
-      </header>
-      <div class="inv-grid">
-        ${r.results.map((g) => `
-          <div class="inv-chip ${g.held ? "" : "broken"}">
-            <span class="mark">${g.held ? MARK_OK : MARK_NO}</span>
-            <div>
-              <span class="id">${g.id}</span>
-              <div class="title">${escapeHtml(g.title)}
-                <span class="note">${escapeHtml(g.note || "")}</span>
-              </div>
-            </div>
-          </div>`).join("")}
-      </div>
-      ${broken.map((g) => `
-        <div class="inv-violations">
-          <b>${g.id} violated — ${g.violation_count} ${g.violation_count === 1 ? "case" : "cases"}</b>
-          ${g.violations.slice(0, 4).map((v) => escapeHtml(v.subject + ": " + v.detail)).join("<br>")}
-          ${g.violation_count > 4 ? `<br>… ${g.violation_count - 4} more` : ""}
-        </div>`).join("")}
-    </div>`;
-  }).join("");
-}
-
-function renderDetection(data) {
-  const entries = Object.entries(data.by_disposition).sort((a, b) => b[1] - a[1]);
-  const max = Math.max(...entries.map((e) => e[1]), 1);
-  $("#detection").innerHTML = entries.map(([k, v]) => `
-    <div class="det-row">
-      <span class="lbl">${escapeHtml(k)}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${(v / max) * 100}%"></div></div>
-      <span class="val">${v}</span>
-    </div>`).join("");
-}
-
-/* ---------------- ---------------- */
-
-function escapeHtml(s) {
-  return String(s ?? "").replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
 boot();

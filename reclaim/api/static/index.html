@@ -3,187 +3,197 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>reclaim</title>
+<title>reclaim — statement of recovery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<header class="bar">
-  <div class="brand">
-    <span class="mark">R</span>
-    <div>
-      <h1>reclaim</h1>
-      <p>bounded revenue recovery for failed payments and mandates</p>
-    </div>
+<header class="masthead">
+  <div class="ident">
+    <h1>reclaim</h1>
+    <p>Bounded recovery of failed payments and mandates</p>
   </div>
 
-  <div class="bar-right">
-    <label class="field">
-      <span>batch</span>
-      <select id="batch"></select>
-    </label>
-    <label class="field">
-      <span>arm</span>
-      <select id="run"></select>
-    </label>
-    <nav class="tabs" role="tablist">
-      <button class="tab is-active" data-view="live" role="tab">Live</button>
-      <button class="tab" data-view="results" role="tab">Results</button>
-    </nav>
-    <div class="zoom" role="group" aria-label="display size">
-      <button data-zoom="normal" class="is-active" title="desk reading">Normal</button>
-      <button data-zoom="present" title="large enough to read in a screen recording">Present</button>
-    </div>
-  </div>
+  <dl class="issue">
+    <div><dt>Batch</dt><dd id="m-batch">—</dd></div>
+    <div><dt>Basis</dt><dd id="m-basis">—</dd></div>
+    <div><dt>Cases</dt><dd id="m-cases">—</dd></div>
+    <div><dt>At risk</dt><dd id="m-risk">—</dd></div>
+  </dl>
 </header>
 
-<main>
-  <!-- ================= LIVE ================= -->
-  <section id="view-live" class="view is-active">
+<nav class="tabs">
+  <div class="tabset" role="tablist">
+    <button class="tab is-on" data-view="statement" role="tab">Statement</button>
+    <button class="tab" data-view="book" role="tab">Case book</button>
+    <button class="tab" data-view="assurance" role="tab">Assurance</button>
+  </div>
 
-    <div class="strip">
-      <div class="stat"><b id="s-worked">0</b><span>cases worked</span></div>
-      <div class="stat"><b id="s-charges">0</b><span>charge attempts</span></div>
-      <div class="stat"><b id="s-contacts">0</b><span>messages sent</span></div>
-      <div class="stat good"><b id="s-recovered">0</b><span>payments recovered</span></div>
-      <div class="stat bad"><b id="s-double">0</b><span>double charges</span></div>
-      <div class="stat"><b id="s-rows">0</b><span>ledger rows</span></div>
-      <div class="player">
-        <button id="play" class="btn primary">Play</button>
+  <div class="picks">
+    <label class="pick"><span>Batch</span><select id="batch"></select></label>
+    <label class="pick"><span>Arm</span><select id="run"></select></label>
+    <div class="sizer" role="group" aria-label="Text size">
+      <button data-zoom="normal" class="is-on">Normal</button>
+      <button data-zoom="present">Large</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ══════════════════════════ STATEMENT ══════════════════════════ -->
+  <section id="view-statement" class="view is-on">
+
+    <div class="claim">
+      <p class="eyebrow">The claim</p>
+      <p class="lede" id="claim-line">Reading the ledger…</p>
+    </div>
+
+    <div class="cols">
+      <!-- the signature: the headline figure, worked out line by line -->
+      <figure class="derivation" aria-labelledby="deriv-h">
+        <figcaption>
+          <h2 id="deriv-h">How that figure is arrived at</h2>
+          <p>All amounts in rupees. Recoveries the agent did not cause are subtracted, not counted.</p>
+        </figcaption>
+        <table class="ledger" id="derivation"><tbody></tbody></table>
+        <p class="footnote">
+          Every line is read back from the append-only ledger by <code>eval.metrics</code>.
+          Nothing on this page is typed in by hand.
+        </p>
+      </figure>
+
+      <aside class="aside">
+        <h2>Notes</h2>
+        <div id="ledger-notes" class="notes"></div>
+      </aside>
+    </div>
+
+    <section class="block">
+      <div class="block-head">
+        <h2>The same statement, four ways</h2>
+        <p>One engine, four policies over the identical batch. <b>rules</b> and <b>agent</b>
+           are the same code and differ only in what diagnosed the failure, so the gap
+           between those two rows is what the model is worth and nothing else.</p>
+      </div>
+      <div class="scroll">
+        <table class="ledger arms" id="arms">
+          <thead>
+            <tr>
+              <th scope="col">Arm</th>
+              <th scope="col" class="fig">Recovery rate</th>
+              <th scope="col" class="fig">Net retained</th>
+              <th scope="col" class="fig">Lift on control</th>
+              <th scope="col" class="fig">Mandates halted</th>
+              <th scope="col" class="fig">Charged twice</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <h2>Working</h2>
+        <p>The arithmetic behind each row above.</p>
+      </div>
+      <div class="scroll">
+        <table class="ledger arms" id="working">
+          <thead>
+            <tr>
+              <th scope="col">Arm</th>
+              <th scope="col" class="fig">Cases recovered</th>
+              <th scope="col" class="fig">Would have anyway</th>
+              <th scope="col" class="fig">Gross</th>
+              <th scope="col" class="fig">Cost</th>
+              <th scope="col" class="fig">Forfeited</th>
+              <th scope="col" class="fig">Net</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+
+  <!-- ══════════════════════════ CASE BOOK ══════════════════════════ -->
+  <section id="view-book" class="view">
+
+    <div class="tally">
+      <div class="t"><b id="s-worked">0</b><span>cases worked</span></div>
+      <div class="t"><b id="s-charges">0</b><span>charges presented</span></div>
+      <div class="t"><b id="s-contacts">0</b><span>messages sent</span></div>
+      <div class="t is-good"><b id="s-recovered">0</b><span>payments recovered</span></div>
+      <div class="t is-bad"><b id="s-double">0</b><span>charged twice</span></div>
+      <div class="t"><b id="s-rows">0</b><span>ledger entries</span></div>
+      <div class="transport">
+        <button id="play" class="btn is-primary">Play</button>
         <button id="restart" class="btn">Restart</button>
-        <label class="speed">
-          <span>speed</span>
-          <input id="speed" type="range" min="1" max="60" value="18">
-        </label>
+        <label class="speed"><span>Speed</span>
+          <input id="speed" type="range" min="1" max="60" value="18"></label>
       </div>
     </div>
 
-    <div class="split">
-      <div class="panel feed">
-        <div class="panel-head">
-          <h2>Decision stream</h2>
-          <span class="hint" id="stream-hint">replaying recorded run</span>
-        </div>
-        <div class="panel-head" style="border-bottom:1px solid var(--line-soft)">
-          <div class="legend">
-            <i class="l-retry">charge attempted</i>
-            <i class="l-capture">money recovered</i>
-            <i class="l-contact">customer contacted</i>
-            <i class="l-double">double charge</i>
-          </div>
-          <span class="hint">click any row to open the case</span>
+    <div class="cols cols-book">
+      <section class="block feed">
+        <div class="block-head">
+          <h2>Decisions, in the order they were taken</h2>
+          <p class="key">
+            <i class="k-charge">charge</i>
+            <i class="k-good">recovered</i>
+            <i class="k-contact">message</i>
+            <i class="k-bad">charged twice</i>
+            <span>Select any entry to open the case.</span>
+          </p>
         </div>
         <ol id="stream" class="stream" aria-live="polite"></ol>
-        <div class="panel-foot">
-          <span id="stream-progress">0 / 0 events</span>
-          <span class="tag ledger">append-only ledger</span>
+        <div class="block-foot">
+          <span id="stream-progress">0 of 0 entries</span>
+          <span>Append-only. Nothing here can be edited after the fact.</span>
         </div>
-      </div>
+      </section>
 
-      <div class="panel tall">
-        <div class="panel-head">
-          <h2>Case detail</h2>
-          <span class="hint">what the agent was given, and every action it took</span>
+      <section class="block">
+        <div class="block-head">
+          <h2>The case</h2>
+          <p>What the agent was given, and every action it took.</p>
         </div>
         <div id="detail" class="detail">
-          <p class="empty">Press <b>Play</b>, or pick a case from the stream.</p>
+          <p class="vacant">Select <b>Play</b>, or choose an entry from the decision list.</p>
         </div>
-      </div>
+      </section>
     </div>
   </section>
 
-  <!-- ================= RESULTS ================= -->
-  <section id="view-results" class="view">
-
-    <div class="verdict">
-      <p id="verdict-line">Loading the ledger…</p>
-      <div class="headline" id="headline"></div>
+  <!-- ══════════════════════════ ASSURANCE ══════════════════════════ -->
+  <section id="view-assurance" class="view">
+    <div class="claim">
+      <p class="eyebrow">Assurance</p>
+      <p class="lede">Six claims that can fail, recomputed from the ledger after every run.
+        They are not metrics. A metric moves; a claim is either true or it is not.</p>
     </div>
 
-    <div class="panel">
-      <div class="panel-head">
-        <h2>Did it recover money that was not coming back anyway?</h2>
-        <span class="hint" id="results-hint"></span>
-      </div>
-      <div class="scroll-x">
-        <table id="arms" class="table">
-          <thead>
-            <tr>
-              <th>arm</th>
-              <th class="n">recovery rate<span class="sub">share of cases that came good</span></th>
-              <th>net lift vs doing nothing<span class="sub">the only honest headline · bar on a &radic; scale</span></th>
-              <th class="n">mandates halted<span class="sub">subscriptions destroyed</span></th>
-              <th class="n">double charges<span class="sub">money taken twice</span></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="panel-foot">
-        <span class="note">
-          <b>control</b> does nothing at all, and still recovers money — some failed payments
-          always come back on their own. Every other arm's recovery rate silently contains
-          all of it, which is why <b>lift over control</b> is the number and the rate is not.
-        </span>
-      </div>
-    </div>
+    <div id="assurance" class="assurance"></div>
 
-    <div class="panel">
-      <div class="panel-head">
-        <h2>The arithmetic underneath</h2>
-        <span class="hint">gross recovered, minus what it cost, minus what it broke</span>
+    <section class="block">
+      <div class="block-head">
+        <h2>What was opened for recovery</h2>
+        <p>Failures the agent declines to work are refused before diagnosis, not after.</p>
       </div>
-      <div class="scroll-x">
-        <table id="money" class="table">
-          <thead>
-            <tr>
-              <th>arm</th>
-              <th class="n">recovered<span class="sub">cases</span></th>
-              <th class="n">of which organic<span class="sub">would have come back anyway</span></th>
-              <th class="n">gross<span class="sub">money in</span></th>
-              <th class="n">cost<span class="sub">fees, comms, unwinds</span></th>
-              <th class="n">residual<span class="sub">future revenue forfeited</span></th>
-              <th class="n">net<span class="sub">gross − cost − residual</span></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div id="detection" class="detection"></div>
+      <div class="block-foot">
+        <span>Dispositions other than <code>eligible</code> do not arise in the generated
+          batches — the generator emits one clean failure per customer. They are the rules
+          that stop a pending collect request or a redelivered webhook becoming a duplicate
+          debit, and unit tests cover them instead.</span>
       </div>
-      <div class="panel-foot">
-        <span class="note">
-          <b>residual</b> is what an over-eager retry destroys: presenting too often against a
-          recurring rail halts the mandate and forfeits months of future subscription revenue.
-          An arm can win on gross recovery and lose badly here.
-        </span>
-      </div>
-    </div>
-
-    <div class="split">
-      <div class="panel">
-        <div class="panel-head">
-          <h2>Invariants</h2>
-          <span class="hint">re-derived from the ledger after every run — not metrics, claims that can fail</span>
-        </div>
-        <div id="invariants" class="invariants"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <h2>Detection</h2>
-          <span class="hint">what was opened for recovery, and what was not</span>
-        </div>
-        <div id="detection" class="detection"></div>
-        <div class="panel-foot">
-          <span class="note">
-            Dispositions other than <code>eligible</code> do not occur in the generated
-            batches — the generator emits one clean failure per customer. They are the rules
-            that stop a pending collect request or a redelivered webhook from becoming a
-            double charge, and they are covered by unit tests instead.
-          </span>
-        </div>
-      </div>
-    </div>
+    </section>
   </section>
+
 </main>
 
 <div id="toast" class="toast" hidden></div>

@@ -1844,3 +1844,99 @@ python -m pytest         310 passed
 **Next**
 
 Record the video. `docs/recording-runsheet.md` has every shot as a console deep link.
+
+---
+
+### D9 — The console is a statement of account, not a dashboard · 2026-08-29
+
+**Built**
+
+A rebuild of `reclaim/api/static/` around one idea: **a dashboard asks to be trusted, and a
+statement asks to be checked.** Checking is the only thing this project is for. The claim
+has never been "we recovered money"; it is "here is how the figure was arrived at, and every
+line came off a ledger you can re-derive". The console now says that in its form as well as
+its words, by borrowing the grammar of the artifact a payments operations person already
+trusts.
+
+That grammar is load-bearing rather than decorative:
+
+- Figures right-aligned in tabular numerals, in Indian grouping — `5,74,947`, not `574,947`.
+- A loss written `(56,09,640)`, never `-56,09,640`. It is the convention on every statement
+  of account, and it is much harder to misread down a column than a hyphen that can be lost
+  at a column edge or mistaken for a dash.
+- **One rule above a subtotal, two above a final total.** This is the only place in the
+  stylesheet where a border means something instead of separating something: it says *this
+  line is derived from the ones above it*, which is exactly what a reader needs and is
+  otherwise invisible.
+
+**The signature is the derivation.** The headline figure is no longer asserted in a card; it
+is worked, line by line, so a reader who does not believe it can run down the column and name
+the line they disagree with:
+
+```
+        Recovered by the agent                                  10,06,151
+  less  Cost of recovering it — fees, messages, incentives        (10,547)
+  less  Subscription revenue forfeited by halting a mandate              —
+        ─────────────────────────────────────────────────────────────────
+        Net retained                                             9,95,604
+  less  Recovered without any help — what control collected     (4,20,657)
+        ═════════════════════════════════════════════════════════════════
+        Net lift over doing nothing                              5,74,947
+```
+
+Three tabs now, named for what they are rather than for how the app is built:
+**Statement**, **Case book**, **Assurance**. "Assurance" is the audit word and it is the
+honest one — those six checks are not metrics, they are claims that can fail.
+
+Type is IBM Plex Serif / Sans / Mono, one superfamily designed for technical records, used
+across three roles: serif for the claim and the headings, sans for prose, mono with tabular
+figures everywhere a number has to line up. Ground is ledger paper — cool and neutral rather
+than cream, because this is a printed record and warmth would read as decoration. Two inks
+from the ledger itself: a blue-black for structure, and the red that has meant "this one is
+against you" on a balance sheet for four centuries.
+
+Base size is 17px, and `Large` is 21px. Every length is in `rem` against that one lever, so
+the control scales rules, padding and hit targets with the type instead of growing words
+inside boxes that stay put.
+
+**What broke**
+
+*The subject-row marker was drawn on every cell instead of the row.* `inset 3px 0 0` on
+`.is-subject td` put a blue rule down each of the six column boundaries, so the row the
+reader is meant to follow read as six separate boxes. It belongs on `td:first-child`.
+
+*The double rule would not draw.* An inset box-shadow offset to fake a second line rendered
+as one thick rule at every zoom. `border-top: 4px double` is the answer — CSS draws two
+lines with a gap from a single declaration, which is exactly the mark being reproduced. A
+case of reaching for a trick before checking whether the property already existed.
+
+*A `?case=` link landed on the wrong tab.* The default view used to be the stream, and after
+the rebuild it is the statement — so a link naming a case set the case and left the reader on
+the one tab that cannot display it. Every deep link in the runsheet was affected, which is
+the failure mode those links exist to prevent. A case in the URL now implies the case book
+unless a view is named explicitly.
+
+Old view names (`live`, `results`) are still accepted and mapped, so links written before the
+rebuild still land.
+
+**Verified**
+
+Screenshotted headless at several widths and read, which is the only way to check a layout:
+
+```
+python -m pytest                              310 passed
+node --check reclaim/api/static/app.js        ok
+
+chrome --headless=new --screenshot=... at 1500, 1600 and 1920 wide
+  statement   claim, derivation with both rules drawing, arms table, working
+  case book   case_B00106 — the hold reason legible in full, no clipping
+              case_B00072 under naive — "charged twice" in red
+  assurance   four arms across, naive R1 FAILED with its 26 cases beneath
+  430px       single column, nothing clipped
+
+every URL in docs/recording-runsheet.md          6/6 → 200
+```
+
+**Next**
+
+Record the video. The runsheet is updated for the new tab names and for `Large`.
