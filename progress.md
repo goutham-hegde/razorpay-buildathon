@@ -1481,3 +1481,164 @@ description with no bank reference should be treated as possibly-debited by defa
 what that costs in missed recoveries there, and then report the consequence on B once. The
 cost is real and needs stating either way: holding every referenceless timeout would give up
 recoveries on the far larger population of plain technical declines.
+
+---
+
+### D8 — The gate that reads no diagnosis, and what it costs · 2026-08-29
+
+**Built**
+
+One rule, one measurement harness, and a lot of re-running.
+
+`PolicyEngine._post_authorization_veto` is the rule: **never present a charge again when the
+opening failure was reported at `payment_response`**. That step is not "the payment failed",
+it is "we never got an answer to a request we had already sent". Initiation, the
+authentication screen, the authorization decision — every earlier step fails while the money
+is still demonstrably ours. This one does not, and no field in the response says which side
+of the debit the silence fell on.
+
+It sits *after* the cause table rather than before it, and it vetoes the action rather than
+replacing the diagnosis. That ordering is deliberate. The check it has to survive is a
+confident wrong answer, so it cannot be allowed to consult the answer at all — it takes
+whatever `_by_cause` decided, asks one structural question about the failure, and refuses
+only if the action moves money. Outreach still goes out; a `mandate_revoked` case at
+`payment_response` still gets asked for a fresh authorisation, which recovers money without
+presenting against the uncertain payment. That distinction is its own test, because a veto
+written as "hold the case" instead of "refuse the charge" would have quietly deleted a
+recovery path and looked correct.
+
+`reclaim/eval/ablation.py` is the harness, and the reason it exists is that `replay` cannot
+answer "what is this one rule worth". It replays a batch twice — engine with the flag off,
+engine with it on — into two **in-memory** ledgers, and prints the delta. In-memory on
+purpose: an ablation that could write to `data/<batch>/ledger.db` is one command away from
+putting an unshipped policy variant into the README table. It also prints a static exposure
+table off `truth.jsonl` first, so the trade is visible before any arm runs.
+
+The seam in `replay()` is a single optional `engine=` parameter, defaulted to `None`. The
+reported pipeline never passes one, so the shipped configuration is what you get by default
+rather than something a caller has to remember to ask for.
+
+**What broke**
+
+*The measurement I wanted to make was not available on the batch I was supposed to make it
+on.* The whole discipline here is "decide on A, report on B once" — and batch A has no
+committed `groq` cache, because the model artifact was only ever built for B (A has a
+partial 477-case Gemini file from before that provider turned out to be a 20-request/day
+trap). So there is no `agent` arm on A and there cannot be one without spending a day of
+free-tier quota re-diagnosing 600 cases I do not report on.
+
+The vehicle is the `rules` arm instead, and it is worth being precise about which half of
+the result that weakens rather than waving at it. The veto ignores the diagnosis, so its
+**cost** — recoveries given up on cases it holds — is a property of the policy and transfers
+between arms. Its **benefit** depends on how often the diagnoser was about to be wrong, and
+the keyword stub is wrong far more often than the model. So the cost side is informative and
+the benefit side is an upper bound. That is written into the module docstring, because it is
+exactly the caveat that gets lost between a run and a README.
+
+*The test that guards the seal is a substring search, and it caught my documentation.* I
+wrote "a fact about `synth.generator`, not evidence the rule would be perfect against a real
+acquirer" in a docstring, and `test_the_policy_reads_nothing_from_the_simulated_world`
+failed on `assert "synth" not in text`. My first instinct was that the test was too blunt.
+It is not — bluntness is the entire value of it. A test that parses imports properly is a
+test that can be argued with, and this one cannot. The docstring says "the simulated world
+this is evaluated against" now and the assertion stands unchanged.
+
+*The honest finding is that `payment_response` is a perfect tell in this world, and that is
+a fact about the generator rather than about the rule.* Every generated `ambiguous_debited`
+failure carries that step and no other cause is forced to; only `psp_routing_failure`
+overlaps, and only sometimes (16 of 67 on A, 7 of 38 on B). So the veto catches 100% of them
+and always will, here. Reporting that as a hit rate would be the exact circularity this
+project is built to avoid — rediscovering a constant I wrote down myself. What transfers is
+the *shape*: a structural veto is the only kind of check that survives a confident
+misdiagnosis, and a confidence bar is the only kind that can be tuned. Both are in the file
+now and they catch different things. Both README and `solution.md` say this in as many
+words.
+
+*Re-running B moved every number in the reported table, and the script with it.* Batch B's
+agent arm lost 4 cases and Rs 11,521 of net lift. The video script's figures had just been
+refreshed from the D7 run, and were all stale again within a day. Re-cut it, and it came
+back 42 words over a strict five minutes — so the header now states 842 words and 5:15
+rather than pretending, and the recording notes name the exact paragraph to drop if a take
+has to land under 5:00.
+
+**Verified**
+
+The trade, priced on the tuning batch before B was touched:
+
+```
+python -m reclaim.eval.ablation --batch A
+
+true root cause            in batch  at payment_response   share
+ambiguous_debited                20                   20  100.0%
+psp_routing_failure              67                   16   23.9%
+(every other cause)             513                    0    0.0%
+
+arm 'rules': post-authorization veto off vs on
+                          off            on         delta
+recovered cases           322           313            -9
+gross Rs            1,034,278     1,008,387       -25,891
+net Rs              1,025,655     1,000,312       -25,344
+net lift Rs           510,124       484,781       -25,344
+double charges              4             0            -4
+mandates halted             0             0            +0
+charge attempts           758           731           -27
+```
+
+Nine recoveries and 5.0% of net lift, to take R1 from broken to held.
+
+Then batch B, once:
+
+```
+python -m reclaim.eval.replay --batch B --arms all --fresh
+python -m reclaim.eval.metrics --batch B
+
+arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  halt % double
+control    23.8%    420,657        0         0    420,657          -        -    0.0%      0
+naive      44.3%    791,834    7,012 5,973,804 -5,188,982 -5,609,640    0.019   66.1%     26
+rules      45.0%    757,730    9,256         0    748,474   +327,817    0.027    0.0%      0
+agent      58.2%  1,006,151   10,547         0    995,604   +574,947    0.018    0.0%      0
+
+python -m reclaim.core.guards --batch B
+    B - rules   6/6 held
+    B - agent   6/6 held
+    2 asserted arm(s): 6/6 held
+
+python -m reclaim.core.guards --batch A      1 asserted arm(s): 6/6 held
+
+python -m reclaim.eval.sensitivity --batch B
+    claimed ordering naive < rules < agent    held in 16/20
+    agent net lift median Rs 575,425 [-719,602 .. 597,610], doubles 0 [0..0]
+
+python -m reclaim.eval.sensitivity --batch A --arms control,naive,rules
+    claimed ordering naive < rules          held in 20/20
+    rules net lift median Rs 464,972 [-4,006,338 .. 489,700], doubles 0 [0..0]
+
+python -m reclaim.eval.confusion --batch B --provider groq
+    n=600  accuracy 0.977  macro-F1 0.961  cost-weighted error 0.038   (unchanged - the
+    diagnosis cache is a committed artifact and nothing in this session touched it)
+
+python -m pytest                             310 passed
+python docs/wordcount.py --wpm 160           842 words, 5:15
+```
+
+The cost on B: agent net lift 586,468 → **574,947**, four fewer cases recovered. The
+sensitivity line is the part I did not expect and the part worth keeping: doubles went from
+**1 in every one of 20 perturbed worlds** to **0 in every one of them**. R1 holding at every
+point in the jitter range is a much stronger statement than R1 holding on one seed, and it
+is the only evidence here that the rule is not fitted to `case_B00106`.
+
+The ordering claim on B is still 16/20, unchanged — the four misses are worlds where the
+halt threshold lands high enough that naive stops destroying mandates and overtakes rules.
+The agent is the top arm in 20 of 20.
+
+**Next**
+
+Two items, in order.
+
+1. Nothing about the submission blocks on code any more. The remaining work is the
+   recording, and the script is current as of these runs.
+2. Deferred with a reason, not forgotten: the `agent` arm on batch A. It would let the
+   ablation price the veto against the diagnoser that actually ships, instead of against the
+   stub, and it would turn "the benefit side is an upper bound" into a measurement. It costs
+   a day of free-tier quota on a batch nothing is reported from, so it is the right thing to
+   cut and the wrong thing to cut silently.

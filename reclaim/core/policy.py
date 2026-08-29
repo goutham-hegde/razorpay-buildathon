@@ -76,6 +76,7 @@ from reclaim.domain import (
     HUMAN_PRESENT_RAILS,
     RECURRING_RAILS,
     Case,
+    ErrorStep,
     Rail,
     RootCause,
 )
@@ -140,6 +141,20 @@ CONTACT_RESPONSE_WAIT = timedelta(hours=30)
 #: on. Both framings are arbitrary at the margin; only one of them puts the arbitrariness
 #: on the safe side.
 CHARGE_OVER_REFERENCE_CONFIDENCE = 0.75
+
+#: The step at which a failure means the debit instruction had already left our hands.
+#:
+#: `payment_response` is not "the payment failed"; it is "we never got an answer to a
+#: request we had already sent". Everything earlier in the flow - initiation, the
+#: authentication screen, the authorization decision itself - failed while the money was
+#: still demonstrably ours. This one did not, and no field in the response says which side
+#: of the debit the silence fell on.
+#:
+#: This is the observable the D7 run showed was being ignored. `case_B00106` failed at
+#: `payment_response` with the text "timeout after debit instruction sent to BOB", was
+#: diagnosed `issuer_technical_decline` at 0.70, carried no bank reference, and was
+#: presented again. The retry succeeded and the success was a duplicate debit.
+POST_AUTHORIZATION_STEPS: frozenset[ErrorStep] = frozenset({ErrorStep.PAYMENT_RESPONSE})
 
 
 # ---------------------------------------------------------------------------
@@ -245,8 +260,18 @@ class CaseView:
 class PolicyEngine:
     """Turns a diagnosis into the next bounded action. Deterministic, and no model."""
 
-    def __init__(self, known_psps: tuple[str, ...] = ()) -> None:
+    def __init__(
+        self,
+        known_psps: tuple[str, ...] = (),
+        *,
+        post_authorization_hold: bool = True,
+    ) -> None:
         self.known_psps = known_psps
+        #: Refuse to present again when the opening failure happened *after* the debit
+        #: instruction was sent. Shipped on; the constructor flag exists so that
+        #: `eval.ablation` can measure what it costs, not so that a caller can turn a
+        #: safety rule off in production.
+        self.post_authorization_hold = post_authorization_hold
 
     # -- entry point -------------------------------------------------------
 
@@ -262,7 +287,10 @@ class PolicyEngine:
             return stop
         if (gate := self._ambiguity_gate(view)) is not None:
             return gate
-        return self._by_cause(view)
+        action = self._by_cause(view)
+        if (veto := self._post_authorization_veto(view, action)) is not None:
+            return veto
+        return action
 
     # -- stopping rules ----------------------------------------------------
 
@@ -318,10 +346,10 @@ class PolicyEngine:
         it again", is the shape of the one error worth being paranoid about.
 
         Note what this does *not* catch. Roughly a fifth of real debits come back with no
-        reference at all, and nothing observable separates those from a plain timeout. A
-        diagnoser that cannot read the description will double-charge them, and no gate
-        bolted on afterwards can prevent it. That residue is the measurement the rules arm
-        exists to produce.
+        reference at all, and this condition never fires on them. `case_B00106` on the
+        held-out batch was exactly that shape and was charged twice. `_post_authorization_veto`
+        below is the answer to it, and it is a different kind of rule: this one weighs the
+        diagnoser's confidence, that one ignores the diagnosis entirely.
         """
         if view.diagnosis.root_cause is RC.AMBIGUOUS_DEBITED:
             return None  # already handled by the cause table, which never charges
@@ -339,6 +367,58 @@ class PolicyEngine:
             f"confidence, below the {CHARGE_OVER_REFERENCE_CONFIDENCE:.2f} needed to charge "
             f"over a bank reference - treating as a possible completed debit and holding "
             f"for reconciliation rather than presenting again",
+            status="reconcile_hold",
+        )
+
+    def _post_authorization_veto(self, view: CaseView, action: Action) -> Action | None:
+        """Never present again over a failure that happened after the debit was sent.
+
+        The last line, and the only rule here that does not consult the diagnosis at all.
+        Everything above this asks "what went wrong, and how sure are we?". This asks one
+        structural question about the failure itself - did the instruction leave our hands
+        before the silence started? - and if the answer is yes, no charge is allowed no
+        matter which cause was named or how confidently.
+
+        That independence is the point. A gate that trusts the diagnoser's confidence
+        cannot catch a *confident* misdiagnosis, and the confusion pair this project is
+        built around produces exactly those: `ambiguous_debited` and
+        `issuer_technical_decline` are written to read alike, so the diagnoser's error mode
+        is to be sure and wrong. `case_B00106` cleared the confidence gate's second
+        condition by carrying no bank reference, which is the tell it was relying on, and
+        the retry took the money twice.
+
+        WHAT THIS COSTS, AND WHY IT IS STILL WORTH IT
+        ---------------------------------------------
+        It is a blunt instrument and the bluntness is priced. A routing failure can also
+        fail at `payment_response` - our switch dropped the answer, the bank never moved
+        anything - and those cases are recoverable by re-routing, which this now refuses.
+        `eval.ablation` measures the trade on batch A and `README.md` reports it: the rule
+        buys the double charges and pays in forfeited routing recoveries.
+
+        WHAT IT DOES NOT PROVE
+        ----------------------
+        In the simulated world this is evaluated against, `payment_response` happens to be
+        a perfect tell - every generated `ambiguous_debited` failure carries it and no other
+        cause is forced to. So a clean catch rate there is a fact about how that world was
+        written, not evidence the rule would be perfect against a real acquirer, where the
+        step field is set by whichever integration reported the failure and is noisier than
+        this. What transfers is the *shape* of the rule - a structural veto that does not
+        depend on being right about the cause - not its hit rate.
+        """
+        if not self.post_authorization_hold or not action.moves_money:
+            return None
+        attempt = view.case.attempts[-1] if view.case.attempts else None
+        if attempt is None or attempt.error is None:
+            return None
+        if attempt.error.step not in POST_AUTHORIZATION_STEPS:
+            return None
+        return Action(
+            "hold",
+            view.now,
+            f"the opening failure was reported at {attempt.error.step}, after the debit "
+            f"instruction had already been sent - the money may have moved and nothing "
+            f"observable says whether it did; holding for reconciliation instead of the "
+            f"{action.kind} this case was otherwise due",
             status="reconcile_hold",
         )
 

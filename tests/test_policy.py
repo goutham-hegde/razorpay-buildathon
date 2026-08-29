@@ -38,6 +38,7 @@ from reclaim.core.detect import Detection, Disposition
 from reclaim.core.diagnose import Diagnosis
 from reclaim.core.policy import (
     CHARGE_OVER_REFERENCE_CONFIDENCE,
+    POST_AUTHORIZATION_STEPS,
     TECH_BACKOFF,
     Action,
     CaseView,
@@ -80,11 +81,12 @@ def make_case(
     bank_reference: str | None = None,
     psp: str = "psp_alpha",
     opened_at: datetime = T0,
+    step: ErrorStep = ErrorStep.PAYMENT_AUTHORIZATION,
 ) -> Case:
     error = ObservedError(
         code="GATEWAY_ERROR",
         source=ErrorSource.BANK,
-        step=ErrorStep.PAYMENT_AUTHORIZATION,
+        step=step,
         reason="payment_failed",
         description="something went wrong",
         bank_reference=bank_reference,
@@ -235,6 +237,97 @@ def test_the_gate_does_not_fire_on_causes_that_never_charge(engine: PolicyEngine
         salary_day=SALARY_DAY_IN_HORIZON,
     )
     assert engine.next_action(view).kind == "retry"
+
+
+# ---------------------------------------------------------------------------
+# 2b. The post-authorization veto - the gate that does not consult the diagnosis
+# ---------------------------------------------------------------------------
+
+
+def test_a_confident_technical_decline_after_the_debit_was_sent_is_still_held(
+    engine: PolicyEngine,
+) -> None:
+    """`case_B00106`, reduced to a unit test.
+
+    Confident, no bank reference, textbook `issuer_technical_decline` - it clears the
+    confidence gate on both conditions, and on the held-out batch the retry that followed
+    took the money twice. The only thing left that says otherwise is the step.
+    """
+    view = make_view(
+        RC.ISSUER_TECHNICAL_DECLINE,
+        confidence=0.99,
+        case=make_case(step=ErrorStep.PAYMENT_RESPONSE, bank_reference=None),
+    )
+    action = engine.next_action(view)
+    assert action.kind == "hold"
+    assert action.status == "reconcile_hold"
+
+
+def test_the_veto_costs_a_recoverable_reroute_and_that_is_the_trade(
+    engine: PolicyEngine,
+) -> None:
+    """The price, asserted rather than described.
+
+    A routing failure at `payment_response` is our own switch losing the answer, and it is
+    recoverable by presenting through a different PSP. The veto refuses anyway, because
+    nothing observable distinguishes it from a debit that landed. `eval.ablation` measures
+    how many cases this gives up.
+    """
+    view = make_view(
+        RC.PSP_ROUTING_FAILURE,
+        confidence=0.99,
+        case=make_case(step=ErrorStep.PAYMENT_RESPONSE),
+    )
+    assert engine.next_action(view).kind == "hold"
+
+
+@pytest.mark.parametrize(
+    "step",
+    [s for s in ErrorStep if s not in POST_AUTHORIZATION_STEPS],
+)
+def test_the_veto_leaves_every_earlier_step_alone(
+    engine: PolicyEngine, step: ErrorStep
+) -> None:
+    """Everything before the response failed while the money was still ours."""
+    view = make_view(RC.ISSUER_TECHNICAL_DECLINE, case=make_case(step=step))
+    assert engine.next_action(view).kind == "retry"
+
+
+def test_the_veto_does_not_block_actions_that_move_no_money(
+    engine: PolicyEngine,
+) -> None:
+    """Outreach is not a debit.
+
+    Worth its own assertion: a veto written as "hold the case" rather than "refuse the
+    charge" would silently stop asking a customer for a fresh mandate, which recovers money
+    without ever presenting against the uncertain payment.
+    """
+    view = make_view(
+        RC.MANDATE_REVOKED,
+        case=make_case(kind="recurring", rail=Rail.UPI_AUTOPAY, step=ErrorStep.PAYMENT_RESPONSE),
+    )
+    assert engine.next_action(view).kind == "contact"
+
+
+def test_the_veto_is_what_changes_the_answer_not_something_else() -> None:
+    """The ablation seam, asserted from both sides.
+
+    `eval.ablation` reports a delta between two engines, and that number means nothing
+    unless the flag is genuinely the only difference. Same view, two engines, opposite
+    decisions.
+    """
+    view = make_view(
+        RC.ISSUER_TECHNICAL_DECLINE,
+        confidence=0.99,
+        case=make_case(step=ErrorStep.PAYMENT_RESPONSE),
+    )
+    assert PolicyEngine(PSPS, post_authorization_hold=True).next_action(view).kind == "hold"
+    assert PolicyEngine(PSPS, post_authorization_hold=False).next_action(view).kind == "retry"
+
+
+def test_the_veto_ships_on_by_default(engine: PolicyEngine) -> None:
+    """A safety rule that has to be switched on is not a safety rule."""
+    assert PolicyEngine(PSPS).post_authorization_hold is True
 
 
 # ---------------------------------------------------------------------------

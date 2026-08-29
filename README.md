@@ -37,8 +37,8 @@ Batch **B** — the held-out batch — the policy was never tuned against it. 60
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | **control** | no intervention at all | 23.8% | 420,657 | 420,657 | — | — | 0.0% | 0 |
 | **naive** | retry immediately, 3x, fixed interval | 44.3% | 791,834 | -5,188,982 | -5,609,640 | 0.019 | 66.1% | 26 |
-| **rules** | policy engine, keyword diagnosis, no model | 45.5% | 767,927 | 758,135 | +337,478 | 0.028 | 0.0% | 4 |
-| **agent** | policy engine, model diagnosis | 58.8% | 1,017,847 | 1,007,125 | +586,468 | 0.018 | 0.0% | 1 |
+| **rules** | policy engine, keyword diagnosis, no model | 45.0% | 757,730 | 748,474 | +327,817 | 0.027 | 0.0% | 0 |
+| **agent** | policy engine, model diagnosis | 58.2% | 1,006,151 | 995,604 | +574,947 | 0.018 | 0.0% | 0 |
 
 **net** = gross recovered − cost (retry fees, comms, incentives, double-charge unwinds) −
 residual, where residual is the future subscription revenue forfeited by halting a mandate.
@@ -57,19 +57,6 @@ footnote.
 **double** = duplicate charges. `ambiguous_debited` is the case where the customer may
 already have been debited and a retry *succeeds*; the success is the liability, and R1 is
 the invariant that asserts against it.
-
-**R1 does not hold for the `agent` arm on this batch: 1 double charge.** The diagnosis
-that caused it read a real ambiguous debit as a technical decline. R1 holds on the tuning
-batch and fails here, which is what holding a batch out is for — the number is reported
-rather than the claim repaired.
-
-The double-charge gate refuses to charge when the diagnosis is below the confidence bar
-*and* the failure carries a bank reference. These failures carried none, and only about a
-quarter of them do, so the gate had nothing to fire on — exactly the residue
-`_ambiguity_gate` documents rather than a case it was expected to catch. It is not a tuning
-problem either: nothing observable separates a timeout that moved money from one that did
-not, so the only real defence is the diagnosis itself. What gives the column its meaning is
-the other arms over the same cases, in the table above.
 
 <!-- /RESULTS-TABLE -->
 
@@ -117,14 +104,49 @@ The tempting `SELECT`-then-`INSERT` has a window in which a redelivered webhook 
 both see an empty result and both proceed; the failure mode is a duplicate charge on a real
 customer's card. A unique constraint has no window.
 
-**On the held-out batch, R1 fails once for the `agent` arm** — see the note under the
-results table. Worth separating the two halves of the claim, because only one of them broke.
-The structural half held: no attempt was ever executed twice, which is what the constraint
-can guarantee. What failed is the semantic half the guard checks — a *new* attempt, with its
-own attempt number and so no constraint to violate, presented against a payment whose money
-had probably already moved. A database constraint cannot see that; only the diagnosis can.
-The gap between those two sentences is the honest scope of "R1 is structural", and it took a
-held-out batch to make it visible.
+R1 has two halves, and it is worth separating them, because the held-out batch broke one and
+not the other. The structural half is the constraint above: no attempt is ever *executed*
+twice. The semantic half is what the guard actually checks — that no new attempt, carrying
+its own attempt number and therefore violating no constraint, is presented against a payment
+whose money had already moved. A unique index cannot see that.
+
+**The first held-out run failed the semantic half once**, on `case_B00106`: a real
+`ambiguous_debited` failure the model read as a technical decline at 0.70 confidence, charged
+again, and the retry succeeded. The double-charge gate did not fire, because it weighs the
+diagnoser's confidence *and* looks for a bank reference, and that failure carried none.
+
+The fix is a second gate that consults the diagnosis not at all
+(`PolicyEngine._post_authorization_veto`): **never present again when the opening failure was
+reported at `payment_response`**. That step means the debit instruction had already left our
+hands when the silence started — every earlier step failed while the money was still
+demonstrably ours. It is a structural question about the failure, so a confident
+misdiagnosis cannot talk it out of firing, and the confusion pair this whole project is built
+around produces exactly confident misdiagnoses.
+
+It is blunt and the bluntness is priced. A routing failure can also die at
+`payment_response` — our own switch lost the answer and the bank moved nothing — and those
+are recoverable by re-routing, which this now refuses. The decision was taken on the tuning
+batch, before batch B was re-run, and `reclaim/eval/ablation.py` is the measurement:
+
+```
+python -m reclaim.eval.ablation --batch A        # arm 'rules', veto off vs on
+                       off            on         delta
+recovered cases        322           313            -9
+gross Rs         1,034,278     1,008,387       -25,891
+net lift Rs        510,124       484,781       -25,344
+double charges           4             0            -4
+```
+
+Nine recoveries and 5.0% of net lift, to move R1 from broken to held. On the reported batch
+the same trade cost the `agent` arm four cases and Rs 11,521 of net lift — and the
+sensitivity run now reports **0 double charges in all 20 perturbed worlds**, where it
+previously reported 1 in every one of them.
+
+What this does *not* show is a rule that generalises. In the world these numbers come from,
+`payment_response` is a perfect tell — every generated ambiguous debit carries it and no
+other cause is forced to — so the clean catch rate is a fact about how that world was
+written, not evidence the rule would be perfect against a real acquirer. What transfers is
+the shape: a veto that does not depend on the diagnosis being right.
 
 The ledger is append-only and that is *enforced*, not promised — every table carries
 `BEFORE UPDATE`/`BEFORE DELETE` triggers that abort.
@@ -163,6 +185,7 @@ py -3.13 -m venv .venv
 .venv/Scripts/python -m reclaim.eval.metrics     --batch B   # the results table
 .venv/Scripts/python -m reclaim.core.guards      --batch B   # invariants R1-R6
 .venv/Scripts/python -m reclaim.eval.sensitivity --batch B   # ranking across 20 worlds
+.venv/Scripts/python -m reclaim.eval.ablation    --batch A   # what one policy rule is worth
 ```
 
 The ledger is append-only, so replaying a batch that already has a recorded run needs
@@ -204,6 +227,7 @@ reclaim/
     confusion.py     diagnosis scored against ground truth
     report.py        the results table, rendered into the README from the ledger
     sensitivity.py   the same comparison across perturbed worlds
+    ablation.py      one rule at a time, on the tuning batch: off vs on
   api/               demo console (vanilla JS, no build step)
 docs/
   video-script.md    the explainer, written to be read aloud

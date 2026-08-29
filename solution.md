@@ -171,9 +171,10 @@ Being a pure function is also what makes it testable without a simulator.
 ### Order of evaluation
 
 ```
-1. stopping rules      checked FIRST, before the cause is even looked at
-2. the ambiguity gate  an independent refusal to charge over evidence of a debit
-3. the cause table     the nine-way action mapping
+1. stopping rules              checked FIRST, before the cause is even looked at
+2. the ambiguity gate          an independent refusal to charge over evidence of a debit
+3. the cause table             the nine-way action mapping
+4. the post-authorization veto a last refusal that consults no diagnosis at all
 ```
 
 Stopping rules go first on purpose. A stopping rule that only applies when the policy has not
@@ -198,8 +199,58 @@ cannot tell" is not a mandate to take the money a second time.
 
 **Measured effect on batch A:** the keyword-driven arm would have double-charged all 20
 ambiguous cases. The gate caught 16. The remaining 4 carried no bank reference, and nothing
-observable separates those from an ordinary timeout — only reading the description can. That
-residue is precisely what the model is for.
+observable separates those from an ordinary timeout — only reading the description can.
+
+That residue was written down as "precisely what the model is for", and the held-out batch
+disagreed. See below.
+
+### The post-authorization veto — the gate that trusts nothing
+
+The residue above is the honest limit of a gate built on confidence. A confidence bar
+catches a diagnoser that admits it is unsure; it cannot catch a diagnoser that is sure and
+wrong, and the engineered confusion pair produces exactly that. On the first held-out run,
+`case_B00106` — a genuine ambiguous debit, described as *"timeout after debit instruction
+sent to BOB"*, no bank reference — was diagnosed `issuer_technical_decline` at 0.70, cleared
+the gate on the reference half, was charged again, and the retry succeeded. R1 broke.
+
+So there is a fourth check, and it asks a question about the **failure** rather than about
+the diagnosis:
+
+```python
+POST_AUTHORIZATION_STEPS = frozenset({ErrorStep.PAYMENT_RESPONSE})
+```
+
+`payment_response` is not "the payment failed". It is "we never got an answer to a request we
+had already sent". Initiation, the authentication screen, the authorization decision — all of
+those fail while the money is still demonstrably ours. This one does not, and no field in the
+response says which side of the debit the silence fell on. So no charge goes out over one,
+whatever cause was named and however confidently.
+
+**It is blunt, and the bluntness is priced.** A routing failure can also die at
+`payment_response`: our own switch lost the answer and the bank moved nothing. Those are
+recoverable by re-routing, and the veto refuses them too. `eval/ablation.py` exists to put a
+number on that, and the decision was taken on the tuning batch before batch B was re-run:
+
+```
+python -m reclaim.eval.ablation --batch A       # arm 'rules'
+                       off            on         delta
+recovered cases        322           313            -9
+gross Rs         1,034,278     1,008,387       -25,891
+net lift Rs        510,124       484,781       -25,344
+double charges           4             0            -4
+```
+
+Nine recoveries and 5.0% of net lift on batch A, to take R1 from broken to held. On the
+reported batch the same trade cost the `agent` arm 4 cases and Rs 11,521 of net lift.
+
+**What this does not prove.** In this simulated world `payment_response` is a perfect tell —
+every generated `ambiguous_debited` failure carries it, and no other cause is forced to — so
+the clean catch rate is a fact about how `synth/generator.py` was written, not evidence the
+rule would be perfect against a real acquirer, where that field is set by whichever
+integration reported the failure. What transfers is the shape of the rule, not its hit rate:
+a structural veto is the only kind of check that survives a confident misdiagnosis, and the
+confidence gate is the only kind that can be tuned. Both are in the file, and they catch
+different things.
 
 ---
 
@@ -251,6 +302,14 @@ a second worker both see an empty result and both proceed. The window is small a
 failure mode is a duplicate charge on a real customer's card. A unique constraint is
 evaluated atomically and has no window at all.
 
+**...and that covers less than it sounds like.** The constraint guarantees no attempt is
+*executed* twice. It says nothing about a **new** attempt, with its own attempt number and
+therefore no constraint to violate, presented against a payment whose money had already
+moved. That is the semantic half, only the guard can see it, and it is the half the held-out
+batch broke on the first run — see §5. Both sentences are now in the README, separately,
+because letting "R1 is structural" carry the weight of both is the exact overclaim a payments
+reviewer is looking for.
+
 **They are re-derived, not read back.** R3 does not call the helper the policy used to decide
 whether to send; it sorts raw rows and slides its own window. *A check that shares an
 implementation with the thing it is checking will agree with it about a bug.*
@@ -285,40 +344,66 @@ delta turns out to be small, this document will say so.
 
 ---
 
-## 9. Results so far
+## 9. Results
 
-**Batch A (the tuning batch — reported figures will come from held-out batch B):**
+**Batch B — the held-out batch.** This is the reported table. The policy was tuned on A and
+this batch has a different seed and a shifted failure mix.
 
 ```
+python -m reclaim.eval.replay --batch B --arms all --fresh
+python -m reclaim.eval.metrics --batch B
+
 arm        rec %   gross Rs  cost Rs  residual     net Rs   net lift  cost/Re  halt % double
 --------------------------------------------------------------------------------------------
-control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
-naive      51.7%    894,590    6,245 6,573,330 -5,684,985 -6,200,516    0.016   61.8%     20
-rules      53.7%  1,034,278    8,623         0  1,025,655   +510,124    0.017    0.0%      4
+control    23.8%    420,657        0         0    420,657          -        -    0.0%      0
+naive      44.3%    791,834    7,012 5,973,804 -5,188,982 -5,609,640    0.019   66.1%     26
+rules      45.0%    757,730    9,256         0    748,474   +327,817    0.027    0.0%      0
+agent      58.2%  1,006,151   10,547         0    995,604   +574,947    0.018    0.0%      0
 ```
 
 Read the columns, not the headline:
 
-- **28.2% of cases recover with no help at all.** Naive's 51.7% "recovery rate" is mostly
-  not naive's doing. This is why lift is the headline and rate is not.
-- **Naive destroys 230 of 372 mandates — 61.8% of the recurring book.** The forfeited
-  subscription months turn about Rs 3.8 lakh of recovered invoices into **−Rs 62 lakh** of
-  destroyed revenue. This is the entire reason `residual` is a column and not a footnote.
-- The policy arm is worth **Rs 67 lakh more** than naive, and makes **one fifth the double
-  charges** (4 vs 20) on identical inputs.
-- It also recovers *more* — 53.7% against 51.7%. That was not true until the arms were
-  properly paired (§10), and the fact that it changed is itself worth knowing: a two-point
-  recovery gap sat inside the noise of how the simulator was drawing random numbers.
+- **23.8% of cases recover with no help at all.** Naive's 44.3% "recovery rate" is mostly not
+  naive's doing. This is why lift is the headline and rate is not.
+- **Naive destroys 244 of 369 mandates — 66.1% of the recurring book.** The forfeited
+  subscription months turn Rs 7.9 lakh of recovered invoices into **−Rs 56 lakh** of net
+  lift. This is the entire reason `residual` is a column and not a footnote.
+- **The model is worth +Rs 2.47 lakh of net lift over the same policy engine fed by keyword
+  matching** — `rules` and `agent` are the *same* code and differ only in the diagnoser. That
+  delta is the answer to "what is the LLM actually doing here", and it is measured rather
+  than assumed. It is also the single number this project would have had no way to state
+  without keeping an arm almost nobody keeps.
+- Both policy arms halt **zero** mandates and make **zero** double charges. The zero in the
+  last column is not free — §5 prices it.
 
-**Diagnosis quality**, stratified sample of batch A weighted to the hard confusion pairs:
+**Batch A, the tuning batch**, for working, three arms (A has no committed model diagnosis
+cache, so there is no `agent` arm on it):
+
+```
+control    28.2%    515,531        0         0    515,531          -        -    0.0%      0
+naive      51.7%    894,590    6,245 6,573,330 -5,684,985 -6,200,516    0.016   61.8%     20
+rules      52.2%  1,008,387    8,075         0  1,000,312   +484,781    0.016    0.0%      0
+```
+
+**Diagnosis quality on batch B**, all 600 cases, scored against ground truth:
+
+```
+python -m reclaim.eval.confusion --batch B --provider groq
+```
 
 | | stub (keyword) | groq `gpt-oss-120b` |
 |---|---|---|
-| accuracy | 0.325 | **0.985** |
-| `ambiguous_debited` recall | 0/14 | **14/14** |
-| `ambiguous_debited` precision | — | **1.000** |
+| accuracy | 0.552 | **0.977** |
+| macro-F1 | 0.452 | **0.961** |
+| cost-weighted error | 0.970 | **0.038** |
+| `ambiguous_debited` recall | 0/26 | **25/26** |
+| `ambiguous_debited` precision | — | 0.714 |
 
-Batch B diagnosis is running now; the agent arm and the reported table follow from it.
+The stub finds **none** of the 26 ambiguous debits — it has no rule that can, because the
+text is written to read like a technical decline. The model finds 25 of 26, and the one it
+misses is `case_B00106`, which is why §5 has a fourth gate in it. Its precision of 0.714 is
+the model erring the *safe* way: 10 technical declines called ambiguous, which costs 10
+recoveries and takes no money twice.
 
 ---
 
@@ -360,13 +445,21 @@ Re-running the whole comparison across 20 worlds, with every calibration constan
 up to ±20% simultaneously:
 
 ```
+python -m reclaim.eval.sensitivity --batch A --arms control,naive,rules
+
 arm              net lift Rs, median [min .. max]       doubles  worst halt %  worlds w/ halt
 ---------------------------------------------------------------------------------------------
 naive         -6,197,653  [-8,888,408 .. 382,012]   20 [20..20]         71.8%           16/20
-rules            490,325  [-3,983,433 .. 514,979]      4 [4..4]         35.8%            7/20
+rules            464,972  [-4,006,338 .. 489,700]      0 [0..0]         35.5%            7/20
 ```
 
 The claimed ordering `naive < rules` held in **20 of 20**.
+
+(The `rules` row moved after this section was first written: the post-authorization veto in
+§5 took its median net lift from 490,325 down to 464,972 and its double charges from 4 in
+every world to 0 in every world. That is the same trade the ablation prices, restated across
+20 perturbed worlds — which is the more convincing form of it, because the veto holding R1
+at every point in the jitter range is a stronger claim than it holding on one seed.)
 
 Two columns in that table are doing more work than the ordering line, and both belong in
 any honest reading of it:
@@ -469,6 +562,10 @@ estimate carries. What it cost was fifteen lines; what it bought:
 | policy arm net lift | +424,427 | **+510,124** |
 | net-lift range across 20 worlds | 5.24L wide | **4.50L wide** |
 | double charges across 20 worlds | 3 to 4 | **exactly 4, every world** |
+
+Measured before the post-authorization veto existed; that row now reads 0 in every world,
+which is why the table is dated rather than refreshed. The point it was making is about
+*variance*, and refreshing it to a column of zeroes would destroy the evidence.
 
 The last row is the clearest evidence that this is noise removal rather than a better draw.
 Whether a specific ambiguous payment gets double-charged should be a property of that case,

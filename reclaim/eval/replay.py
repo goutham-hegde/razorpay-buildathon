@@ -526,6 +526,7 @@ def replay(
     ledger: Ledger | None = None,
     tag: str = "",
     fresh: bool = False,
+    engine: PolicyEngine | None = None,
 ) -> dict[str, str]:
     """Run `arms` over `batch`. Returns {arm: run_id}.
 
@@ -546,7 +547,10 @@ def replay(
     # hard-coded. The policy needs it to re-route away from a broken PSP; it is a fact
     # about our own acquiring setup, not about the world.
     known_psps = tuple(sorted({c.psp for c in b.cases}))
-    engine = PolicyEngine(known_psps)
+    # An injected engine is how `eval.ablation` runs a policy variant over the same batch.
+    # The reported pipeline never passes one, so the shipped configuration is the default
+    # rather than something a caller has to remember to ask for.
+    engine = engine or PolicyEngine(known_psps)
 
     owned = ledger is None
     ledger = ledger or open_ledger(b.name, root, fresh=fresh)
