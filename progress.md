@@ -1815,7 +1815,7 @@ Two repos exist because I could not decide between the two readings of the brief
 both and let the numbers settle it. `reclaim` is the submission. It answers the track's
 question in the track's own words — measured money recovered across a batch, compliant
 escalation, stopping rules, an audit trail — and it can put a rupee figure on what the
-language model contributed, which `preflight` cannot: +Rs 2,47,130, `rules` against `agent`,
+language model contributed, which `preflight` cannot: +Rs 2,47,129, `rules` against `agent`,
 same engine, only the diagnoser different.
 
 `preflight` is linked rather than hidden because the two things it has that this repo does
@@ -1919,6 +1919,33 @@ unless a view is named explicitly.
 Old view names (`live`, `results`) are still accepted and mapped, so links written before the
 rebuild still land.
 
+*The redesign quietly deleted half the console, and "make it understandable" was the excuse.*
+
+The rebuild shipped without the net-lift bars, without the four headline figures, without the
+`pending_arms` row and without the indicator naming which run the feed is replaying. I had
+talked myself into each cut as restraint — one memorable thing, everything around it quiet.
+That is a reasonable principle and it was the wrong one to apply here, because the reader I
+was cutting for is a reviewer with five minutes who needs *more* ways into the number, not
+fewer. Simplifying a page is not the same as removing what it says, and I did the second while
+describing it as the first.
+
+Everything is back, in the statement's own idiom rather than reverted: the four figures are a
+ruled strip rather than cards, and the lift bars sit on a hairline track with the zero tick
+drawn. Restoring them also surfaced how much the API was returning that nothing displayed —
+`charge_attempts`, `contacts`, `lift_cases` and `cost_per_rupee_lifted` were computed on every
+run and shown nowhere. The working table carries all four now.
+
+*And the one figure that mattered most was missing entirely.* The aside repeated "charged
+twice" and "mandates destroyed" straight from the strip above it, while **what the model is
+worth** — the whole question an AI-track reviewer is going to ask — appeared nowhere on the
+page. It is `agent` lift minus `rules` lift, the same engine with a different diagnoser, and
+it is now the first note: **₹2,47,129**.
+
+Which caught a smaller error: the D8d entry said ₹2,47,130, because I subtracted two figures
+that had already been rounded to rupees. The console computes it in paise (24,712,929p) and is
+right. Corrected above. Rounding before subtracting is exactly the habit this file exists to
+catch.
+
 **Verified**
 
 Screenshotted headless at several widths and read, which is the only way to check a layout:
@@ -1928,7 +1955,8 @@ python -m pytest                              310 passed
 node --check reclaim/api/static/app.js        ok
 
 chrome --headless=new --screenshot=... at 1500, 1600 and 1920 wide
-  statement   claim, derivation with both rules drawing, arms table, working
+  statement   claim, four headline figures, derivation with both rules drawing,
+              arms table with lift bars, eleven-column working table, all fitting at 1440px
   case book   case_B00106 — the hold reason legible in full, no clipping
               case_B00072 under naive — "charged twice" in red
   assurance   four arms across, naive R1 FAILED with its 26 cases beneath

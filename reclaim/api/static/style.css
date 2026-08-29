@@ -178,6 +178,28 @@ main { padding: 0 var(--gut) 4rem; max-width: 82rem; margin: 0 auto; }
 .cols-book { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.75rem; align-items: start; }
 @media (max-width: 62rem) { .cols, .cols-book { grid-template-columns: minmax(0, 1fr); gap: 2rem; } }
 
+/* ── key figures ──────────────────────────────────────────────────────────
+   Restored after being cut: the derivation answers "is this number right", and these answer
+   "what am I looking at" — which is the question a reader has first. Set as ruled columns
+   rather than cards, so they read as part of the statement and not as a dashboard bolted on
+   top of one. */
+
+.figures {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0 2rem; margin: 0 0 2.25rem;
+  border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule);
+}
+.f-item { padding: 1rem 0 1.1rem; }
+.f-item + .f-item { border-left: 1px solid var(--rule); padding-left: 1.5rem; margin-left: -0.75rem; }
+.f-val {
+  font-family: var(--mono); font-size: 1.75rem; font-weight: 600; line-height: 1.1;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+.f-item.up .f-val { color: var(--green); }
+.f-item.down .f-val { color: var(--red); }
+.f-lbl { margin-top: 0.3rem; font-weight: 600; font-size: 0.92rem; }
+.f-sub { margin-top: 0.1rem; font-size: 0.82rem; color: var(--ink-2); line-height: 1.5; }
+
 /* ── the derivation — the signature ──────────────────────────────────────
    The headline figure is not asserted, it is worked. A reader who does not believe the
    number can follow it down the column and find the line they disagree with. */
@@ -195,6 +217,10 @@ main { padding: 0 var(--gut) 4rem; max-width: 82rem; margin: 0 auto; }
 .ledger .fig {
   text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums;
   white-space: nowrap; padding-left: 1.25rem;
+}
+.ledger thead th .sub {
+  display: block; font-weight: 400; text-transform: none; letter-spacing: 0;
+  color: var(--ink-3); font-size: 0.95em;
 }
 .ledger thead th {
   font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
@@ -222,6 +248,11 @@ main { padding: 0 var(--gut) 4rem; max-width: 82rem; margin: 0 auto; }
 #derivation .spacer td { padding: 0.2rem 0; }
 
 .arms tbody td { border-bottom: 1px solid var(--rule); font-size: 0.95rem; }
+/* The working table runs to eleven columns. Tighten its gutters rather than let it scroll
+   at ordinary widths - a figure a reader has to scroll sideways to find is a figure they
+   will not check. */
+#working td, #working th { padding-left: 0.85rem; font-size: 0.9rem; }
+#working .arm { padding-left: 0; }
 .arms tbody tr:last-child td { border-bottom: 0; }
 .arms .arm { font-weight: 600; }
 .arms .arm small { display: block; font-weight: 400; font-size: 0.82rem; color: var(--ink-2); }
@@ -234,6 +265,21 @@ main { padding: 0 var(--gut) 4rem; max-width: 82rem; margin: 0 auto; }
 .arms .nil { color: var(--ink-3); }
 .arms .up { color: var(--green); }
 .arms .down { color: var(--red); }
+
+/* The lift bar. A hairline track with the zero tick drawn, so a bar reads against a datum
+   rather than floating. Square-root scale — see `liftBar` in app.js for why, and the column
+   header says so. */
+.liftcell { display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; }
+.liftcell .track {
+  position: relative; flex: 1 1 5rem; min-width: 4rem; height: 0.4rem;
+  background: var(--paper-2);
+}
+.liftcell .zero { position: absolute; left: 50%; top: -0.2rem; bottom: -0.2rem; width: 1px; background: var(--rule-2); }
+.liftcell .fill { position: absolute; top: 0; bottom: 0; }
+.liftcell .fill.up { background: var(--green); }
+.liftcell .fill.down { background: var(--red); }
+
+.arms .pending td { color: var(--ink-3); font-style: italic; }
 
 .scroll { overflow-x: auto; }
 

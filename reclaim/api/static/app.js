@@ -218,6 +218,8 @@ async function loadRun() {
   const data = await api(`/api/timeline?batch=${state.batch}&run=${state.run}&limit=3000`);
   state.events = data.events;
   state.totals.rows = data.ledger_rows;
+  const hint = $("#stream-hint");
+  if (hint) hint.textContent = `replaying ${data.run_id}`;
   restart();
 }
 
@@ -231,10 +233,28 @@ const ARM_BLURB = {
 };
 const ARM_ORDER = { control: 0, naive: 1, rules: 2, agent: 3 };
 
+/* Net lift, drawn, on a SQUARE-ROOT scale - and the column header says so, because an
+   undisclosed non-linear axis is a lie told with a picture.
+
+   Linear was tried and does not work here: naive's net lift is about -56 lakh and the two
+   arms a reader is actually comparing are +3.3 and +5.7 lakh, so on a linear axis naive
+   fills the row and the comparison that matters renders as two identical specks. The figure
+   beside the bar is always exact and unscaled; the bar only has to carry the sign and the
+   order of magnitude from across a room. */
+function liftBar(paise, scale) {
+  if (!scale) return "";
+  const frac = Math.min(Math.sqrt(Math.abs(paise)) / Math.sqrt(scale), 1);
+  const w = paise === 0 ? 0 : Math.max(frac * 50, 1.5);
+  const side = paise >= 0 ? `left:50%;width:${w}%` : `right:50%;width:${w}%`;
+  return `<span class="track"><span class="zero"></span>` +
+         `<span class="fill ${paise >= 0 ? "up" : "down"}" style="${side}"></span></span>`;
+}
+
 function renderNoLedger() {
   $("#claim-line").textContent =
     "No run recorded for this batch yet. Replay it and reload.";
   $("#derivation").innerHTML = "";
+  $("#figures").innerHTML = "";
   $("#ledger-notes").innerHTML = "";
   $("#arms tbody").innerHTML = "";
   $("#working tbody").innerHTML = "";
@@ -247,14 +267,18 @@ function renderStatement(data) {
   const subject = by.agent || by.rules || arms[arms.length - 1];
 
   renderClaim(data, subject, control);
+  renderFigures(by, subject, control);
   renderDerivation(subject, control);
   renderNotes(by, subject, control);
+
+  const scale = Math.max(...arms.map((a) => Math.abs(a.lift_net_paise)), 1);
 
   $("#arms tbody").innerHTML = arms.map((a) => {
     const isSubject = subject && a.arm === subject.arm;
     const lift = a.arm === "control"
       ? `<span class="nil">the baseline</span>`
-      : `<span class="${dirClass(a.lift_net_paise)}">${fig(a.lift_net_paise)}</span>`;
+      : `<span class="liftcell">${liftBar(a.lift_net_paise, scale)}` +
+        `<span class="${dirClass(a.lift_net_paise)}">${fig(a.lift_net_paise)}</span></span>`;
     return `<tr class="${isSubject ? "is-subject" : ""}">
       <td class="arm">${escapeHtml(a.arm)}<small>${escapeHtml(ARM_BLURB[a.arm] || "")}</small></td>
       <td class="fig">${pct(a.recovery_rate)}</td>
@@ -272,11 +296,60 @@ function renderStatement(data) {
       <td class="arm">${escapeHtml(a.arm)}</td>
       <td class="fig">${inr(a.recovered)}</td>
       <td class="fig">${inr(a.recovered_organic)}</td>
+      <td class="fig ${a.arm === "control" ? "nil" : dirClass(a.lift_cases)}">${
+        a.arm === "control" ? "—" : (a.lift_cases > 0 ? "+" : "") + inr(a.lift_cases)}</td>
+      <td class="fig">${inr(a.charge_attempts)}</td>
+      <td class="fig">${inr(a.contacts)}</td>
       <td class="fig">${fig(a.gross_paise)}</td>
       <td class="fig">${fig(-a.cost_paise)}</td>
       <td class="fig ${a.residual_loss_paise ? "down" : ""}">${fig(-a.residual_loss_paise)}</td>
       <td class="fig ${dirClass(a.net_paise)}">${fig(a.net_paise)}</td>
+      <td class="fig">${a.cost_per_rupee_lifted != null
+        ? a.cost_per_rupee_lifted.toFixed(3)
+        : `<span class="nil">—</span>`}</td>
     </tr>`).join("");
+
+  // An arm that has not been replayed yet is named rather than silently absent, so a reader
+  // can tell "not built" apart from "built and scored zero".
+  for (const arm of data.pending_arms || []) {
+    $("#arms tbody").insertAdjacentHTML("beforeend",
+      `<tr class="pending"><td class="arm">${escapeHtml(arm)}</td>` +
+      `<td colspan="5">not replayed yet</td></tr>`);
+    $("#working tbody").insertAdjacentHTML("beforeend",
+      `<tr class="pending"><td class="arm">${escapeHtml(arm)}</td>` +
+      `<td colspan="10">not replayed yet</td></tr>`);
+  }
+}
+
+/* The four figures a reader wants before any table: what it was worth, how much it
+   recovered, and the two things it did not break. Each is captioned with what the strawman
+   did to the same batch, because a zero means nothing without something to be zero against. */
+function renderFigures(by, subject, control) {
+  if (!subject || !control) { $("#figures").innerHTML = ""; return; }
+  const naive = by.naive;
+  const lift = subject.lift_net_paise;
+
+  const cards = [
+    { dir: dirClass(lift), val: rs(lift), lbl: "net lift over doing nothing",
+      sub: `control collects ${rs(control.net_paise)} unaided — subtracted, not counted` },
+    { dir: "", val: pct(subject.recovery_rate), lbl: "of cases recovered",
+      sub: `${inr(subject.recovered)} of ${inr(subject.cases)}, against ${pct(control.recovery_rate)} doing nothing` },
+    { dir: subject.mandates_halted ? "down" : "up",
+      val: subject.mandates_halted ? inr(subject.mandates_halted) : "None",
+      lbl: "mandates destroyed",
+      sub: naive ? `retrying blindly destroyed ${inr(naive.mandates_halted)}` : "subscriptions halted by over-retrying" },
+    { dir: subject.double_charges ? "down" : "up",
+      val: subject.double_charges ? inr(subject.double_charges) : "None",
+      lbl: "payments charged twice",
+      sub: naive ? `retrying blindly did it ${inr(naive.double_charges)} times` : "money taken twice from a customer" },
+  ];
+
+  $("#figures").innerHTML = cards.map((c) => `
+    <div class="f-item ${c.dir}">
+      <div class="f-val">${c.val}</div>
+      <div class="f-lbl">${c.lbl}</div>
+      <div class="f-sub">${c.sub}</div>
+    </div>`).join("");
 }
 
 /* One sentence, in the register of the statement: what is being claimed, and against what.
@@ -325,35 +398,47 @@ function renderDerivation(subject, control) {
   tb.innerHTML = html;
 }
 
+/* The aside carries what the figures strip cannot: the numbers that need a sentence to mean
+   anything. It used to repeat "charged twice" and "mandates destroyed" straight from the
+   strip above it, which is wasted column - and meanwhile the single most important figure in
+   an AI-track submission was nowhere on the page at all. */
 function renderNotes(by, subject, control) {
-  if (!subject) { $("#ledger-notes").innerHTML = ""; return; }
-  const naive = by.naive;
+  if (!subject || !control) { $("#ledger-notes").innerHTML = ""; return; }
 
-  const items = [
-    {
-      dir: subject.double_charges ? "down" : "up",
-      figure: subject.double_charges ? inr(subject.double_charges) : "None",
-      label: "payments charged twice",
-      sub: "A retry against a payment that may already have been debited succeeds, and the " +
-           "success is a refund, an unwind and a customer who stops trusting the payment page." +
-           (naive ? ` Retrying blindly did it ${inr(naive.double_charges)} times.` : ""),
-    },
-    {
-      dir: subject.mandates_halted ? "down" : "up",
-      figure: subject.mandates_halted ? inr(subject.mandates_halted) : "None",
-      label: "mandates destroyed",
-      sub: "Presenting too often against a recurring rail halts the mandate and forfeits " +
-           "months of future revenue." +
-           (naive ? ` Retrying blindly destroyed ${inr(naive.mandates_halted)} of them.` : ""),
-    },
-    {
+  const items = [];
+
+  // What the model is worth, in rupees. `rules` and `agent` are the same policy engine and
+  // differ only in the diagnoser, so this subtraction is the whole answer to "what is the
+  // language model doing here" - and it is measured rather than assumed.
+  if (by.rules && by.agent) {
+    const worth = by.agent.lift_net_paise - by.rules.lift_net_paise;
+    items.push({
+      dir: dirClass(worth),
+      figure: rs(worth),
+      label: "is what the model is worth",
+      sub: "<b>agent</b> and <b>rules</b> are the same policy engine over the same batch and " +
+           "differ only in what read the failure text — a model, or keyword matching. The gap " +
+           "between their lift is attributable to diagnosis quality and to nothing else.",
+    });
+  }
+
+  if (subject.cost_per_rupee_lifted != null) {
+    items.push({
       dir: "",
-      figure: control ? pct(control.recovery_rate) : "—",
-      label: "came back on their own",
-      sub: "Failed payments recover unaided all the time. Every arm's headline rate contains " +
-           "all of them, which is why the figure opposite is lift and not gross recovery.",
-    },
-  ];
+      figure: subject.cost_per_rupee_lifted.toFixed(3),
+      label: "paise spent per rupee won",
+      sub: "Per rupee of <i>incremental</i> recovery, not per rupee recovered. Dividing by " +
+           "gross would flatter every arm with the money that was coming back anyway.",
+    });
+  }
+
+  items.push({
+    dir: "",
+    figure: pct(control.recovery_rate),
+    label: "came back on their own",
+    sub: "Failed payments recover unaided all the time. Every arm's headline rate contains " +
+         "all of them, which is why the figure opposite is lift and not gross recovery.",
+  });
 
   $("#ledger-notes").innerHTML = items.map((i) => `
     <div class="n-item ${i.dir}">

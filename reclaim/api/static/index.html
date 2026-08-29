@@ -52,6 +52,8 @@
       <p class="lede" id="claim-line">Reading the ledger…</p>
     </div>
 
+    <div class="figures" id="figures"></div>
+
     <div class="cols">
       <!-- the signature: the headline figure, worked out line by line -->
       <figure class="derivation" aria-labelledby="deriv-h">
@@ -86,7 +88,7 @@
               <th scope="col">Arm</th>
               <th scope="col" class="fig">Recovery rate</th>
               <th scope="col" class="fig">Net retained</th>
-              <th scope="col" class="fig">Lift on control</th>
+              <th scope="col" class="fig">Lift on control<span class="sub">bar on a &radic; scale</span></th>
               <th scope="col" class="fig">Mandates halted</th>
               <th scope="col" class="fig">Charged twice</th>
             </tr>
@@ -99,19 +101,27 @@
     <section class="block">
       <div class="block-head">
         <h2>Working</h2>
-        <p>The arithmetic behind each row above.</p>
+        <p>The arithmetic behind each row above, and what each arm spent to get there.
+           <b>Unaided</b> is how many of an arm's recoveries would have happened anyway;
+           <b>extra won</b> is the rest. <b>Cost per ₹</b> is paise spent per rupee of
+           <i>incremental</i> recovery — dividing by gross would flatter every arm with the
+           control's free recoveries.</p>
       </div>
       <div class="scroll">
         <table class="ledger arms" id="working">
           <thead>
             <tr>
               <th scope="col">Arm</th>
-              <th scope="col" class="fig">Cases recovered</th>
-              <th scope="col" class="fig">Would have anyway</th>
+              <th scope="col" class="fig">Recovered</th>
+              <th scope="col" class="fig">Unaided</th>
+              <th scope="col" class="fig">Extra won</th>
+              <th scope="col" class="fig">Charges</th>
+              <th scope="col" class="fig">Messages</th>
               <th scope="col" class="fig">Gross</th>
               <th scope="col" class="fig">Cost</th>
               <th scope="col" class="fig">Forfeited</th>
               <th scope="col" class="fig">Net</th>
+              <th scope="col" class="fig">Cost per ₹</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -142,6 +152,7 @@
       <section class="block feed">
         <div class="block-head">
           <h2>Decisions, in the order they were taken</h2>
+          <span class="hint" id="stream-hint">replaying the recorded run</span>
           <p class="key">
             <i class="k-charge">charge</i>
             <i class="k-good">recovered</i>
