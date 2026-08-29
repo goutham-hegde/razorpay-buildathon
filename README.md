@@ -31,6 +31,48 @@ in five directions at once, and the gap between those two things is what this me
 
 <!-- RESULTS-TABLE -->
 
+Batch **B** — the held-out batch — the policy was never tuned against it. 600 failed payments and mandates, Rs 1,761,200 at risk. Every figure here was produced by running the commands under [Run it](#run-it); none of it is typed in by hand.
+
+| arm | what it does | rec % | gross Rs | net Rs | net lift Rs | cost/Re lifted | halt % | double |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| **control** | no intervention at all | 23.8% | 420,657 | 420,657 | — | — | 0.0% | 0 |
+| **naive** | retry immediately, 3x, fixed interval | 44.3% | 791,834 | -5,188,982 | -5,609,640 | 0.019 | 66.1% | 26 |
+| **rules** | policy engine, keyword diagnosis, no model | 45.5% | 767,927 | 758,135 | +337,478 | 0.028 | 0.0% | 4 |
+| **agent** | policy engine, model diagnosis | 58.8% | 1,017,847 | 1,007,125 | +586,468 | 0.018 | 0.0% | 1 |
+
+**net** = gross recovered − cost (retry fees, comms, incentives, double-charge unwinds) −
+residual, where residual is the future subscription revenue forfeited by halting a mandate.
+
+**net lift** = this arm's net minus the control arm's. The control arm does nothing at all,
+and it still recovers money — some payments come back on their own. Every arm's gross figure
+contains those recoveries in full, so lift, not gross, is the claim.
+
+**cost/Re lifted** = paise spent per rupee of *incremental* gross recovery. Dividing by gross
+would flatter every arm by the control's free recoveries.
+
+**halt %** = share of recurring cases whose mandate the arm destroyed. An arm can win on
+gross recovery and lose here; that is the whole reason residual is a column and not a
+footnote.
+
+**double** = duplicate charges. `ambiguous_debited` is the case where the customer may
+already have been debited and a retry *succeeds*; the success is the liability, and R1 is
+the invariant that asserts against it.
+
+**R1 does not hold for the `agent` arm on this batch: 1 double charge.** The diagnosis
+that caused it read a real ambiguous debit as a technical decline. R1 holds on the tuning
+batch and fails here, which is what holding a batch out is for — the number is reported
+rather than the claim repaired.
+
+The double-charge gate refuses to charge when the diagnosis is below the confidence bar
+*and* the failure carries a bank reference. These failures carried none, and only about a
+quarter of them do, so the gate had nothing to fire on — exactly the residue
+`_ambiguity_gate` documents rather than a case it was expected to catch. It is not a tuning
+problem either: nothing observable separates a timeout that moved money from one that did
+not, so the only real defence is the diagnosis itself. What gives the column its meaning is
+the other arms over the same cases, in the table above.
+
+<!-- /RESULTS-TABLE -->
+
 ---
 
 ## Why you can believe the numbers
@@ -74,6 +116,15 @@ R1 is **structural**: `UNIQUE (run_id, payment_id, attempt_no)`, insert-first-th
 The tempting `SELECT`-then-`INSERT` has a window in which a redelivered webhook and a retry
 both see an empty result and both proceed; the failure mode is a duplicate charge on a real
 customer's card. A unique constraint has no window.
+
+**On the held-out batch, R1 fails once for the `agent` arm** — see the note under the
+results table. Worth separating the two halves of the claim, because only one of them broke.
+The structural half held: no attempt was ever executed twice, which is what the constraint
+can guarantee. What failed is the semantic half the guard checks — a *new* attempt, with its
+own attempt number and so no constraint to violate, presented against a payment whose money
+had probably already moved. A database constraint cannot see that; only the diagnosis can.
+The gap between those two sentences is the honest scope of "R1 is structural", and it took a
+held-out batch to make it visible.
 
 The ledger is append-only and that is *enforced*, not promised — every table carries
 `BEFORE UPDATE`/`BEFORE DELETE` triggers that abort.

@@ -111,9 +111,28 @@ gross recovery and lose here; that is the whole reason residual is a column and 
 footnote.
 
 **double** = duplicate charges. `ambiguous_debited` is the case where the customer may
-already have been debited and a retry *succeeds*; the success is the liability. Invariant R1
-exists so this column stays at zero.
+already have been debited and a retry *succeeds*; the success is the liability, and R1 is
+the invariant that asserts against it.
 """
+
+#: Appended only when the agent arm actually double-charged on the batch being reported.
+#: Written as a generated paragraph rather than prose in the README, because a hand-written
+#: caveat survives the run that stops being true - and this is exactly the sentence a reader
+#: would most want to trust. If the column is clean, nothing is claimed about it beyond the
+#: table; if it is not, the table cannot be published without this.
+R1_BROKEN = """\
+**R1 does not hold for the `agent` arm on this batch: {n} double {word}.** The diagnosis
+that caused it read a real ambiguous debit as a technical decline. R1 holds on the tuning
+batch and fails here, which is what holding a batch out is for — the number is reported
+rather than the claim repaired.
+
+The double-charge gate refuses to charge when the diagnosis is below the confidence bar
+*and* the failure carries a bank reference. These failures carried none, and only about a
+quarter of them do, so the gate had nothing to fire on — exactly the residue
+`_ambiguity_gate` documents rather than a case it was expected to catch. It is not a tuning
+problem either: nothing observable separates a timeout that moved money from one that did
+not, so the only real defence is the diagnosis itself. What gives the column its meaning is
+the other arms over the same cases, in the table above."""
 
 
 def render_block(metrics: list[ArmMetrics], batch: str) -> str:
@@ -141,6 +160,19 @@ def render_block(metrics: list[ArmMetrics], batch: str) -> str:
         markdown_table(metrics),
         "",
         FOOTNOTES.rstrip(),
+    ]
+
+    agent = next((m for m in metrics if m.arm == "agent"), None)
+    if agent is not None and agent.double_charges:
+        parts += [
+            "",
+            R1_BROKEN.format(
+                n=agent.double_charges,
+                word="charge" if agent.double_charges == 1 else "charges",
+            ),
+        ]
+
+    parts += [
         "",
         CLOSE_MARKER,
     ]

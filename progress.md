@@ -1395,3 +1395,89 @@ The pipeline is unblocked and the rest is mechanical, in order: score the read
 which is what finally produces the `agent` arm; then `report --batch B --write`, `guards`
 (must print 6/6) and a 20-trial `sensitivity` run on B. The video script's figures are batch
 A stand-ins and must be swapped for B before anything is recorded.
+
+---
+
+### D7 — The held-out batch broke an invariant, and that is the result · 2026-08-29
+
+**Built**
+
+The reported table. With batch B's diagnoses complete, the rest of the pipeline ran end to
+end for the first time on held-out data: confusion, replay of all four arms, guards,
+`report --write`, and twenty perturbed worlds.
+
+`eval/report.py` gained a conditional paragraph. The footnote block used to end with
+"Invariant R1 exists so this column stays at zero", which stopped being true the moment the
+agent arm double-charged once on B. It is now generated from the metrics — the paragraph is
+emitted only when the agent arm actually double-charged, so it appears under the batch B
+table and stays absent from batch A's, where the column is clean. A hand-written caveat
+would have been one edit away from lying; this one cannot be, because it is derived from the
+same numbers as the table above it.
+
+**What broke**
+
+**R1 fails once for the agent arm on batch B.** `case_B00106`: truth `ambiguous_debited`,
+diagnosed `issuer_technical_decline` at 0.70 confidence, retried, and the retry succeeded —
+which is the failure, not the success. On batch A the agent still holds 6/6. This is exactly
+what a held-out batch is for, and it is the second time this project has found something by
+refusing to report on the batch it tuned against.
+
+The mechanism was documented before it happened, which is the part worth recording. The
+double-charge gate fires only when two things are true at once: the diagnosis is below the
+0.75 confidence bar, *and* the failure carries a bank reference. This one cleared neither
+half of the trap — 0.70 was under the bar, but the attempt had no bank reference, and only
+27% of failures in the batch do. `_ambiguity_gate`'s own docstring predicts this residue and
+says no gate bolted on afterwards can catch it: nothing observable separates a timeout that
+moved money from a timeout that did not. The model's rationale even reasoned *from* the
+absent reference to "the issuer did not respond rather than a confirmed debit" — the
+inference the world is built to make unreliable.
+
+Two halves of the R1 claim, and only one broke. The structural half held: no attempt was
+executed twice, which is what `UNIQUE (run_id, payment_id, attempt_no)` can guarantee. What
+failed is the semantic half — a *new* attempt, with its own attempt number and therefore no
+constraint to violate, presented against a payment whose money had already moved. A database
+constraint cannot see that. The README now separates the two sentences rather than letting
+"R1 is structural" carry more weight than it can.
+
+The sensitivity run also came back weaker than batch A's: the claimed ordering
+`naive < rules < agent` holds in **16/20** perturbed worlds rather than 20/20. The four
+misses are all worlds where the mandate-halt threshold lands high enough that naive stops
+destroying mandates, which lets it post a positive net lift and overtake rules. The agent is
+still the top arm in 20 of 20. Reported as 16/20, because the claim being made is about the
+whole ordering.
+
+**Verified**
+
+```
+python -m reclaim.eval.confusion --batch B --provider groq
+    n=600  accuracy 0.977  macro-F1 0.961  cost-weighted error 0.038
+
+python -m reclaim.eval.replay --batch B --arms all --fresh
+    arm      recovered  gross Rs    halted  double
+    control        143   420,657         0       0
+    naive          266   791,834       244      26
+    rules          273   767,927         0       4
+    agent          353 1,017,847         0       1
+
+python -m reclaim.core.guards --batch A      1 asserted arm(s): 6/6 held
+python -m reclaim.core.guards --batch B      agent 5/6 - R1 VIOLATED (case_B00106)
+
+python -m reclaim.eval.sensitivity --batch B
+    claimed ordering naive < rules < agent    held in 16/20
+    agent net lift median Rs 586,963 [-708,059 .. 609,144], doubles 1 [1..1]
+
+python -m pytest                             302 passed
+```
+
+Net lift on held-out B: agent **+Rs 586,468**, rules +Rs 337,478, naive **−Rs 5,609,640**
+against a control arm that recovers Rs 420,657 by doing nothing at all.
+
+**Next**
+
+The deferred item is now the obvious one: the ambiguity gate's second condition. The honest
+version is not "make the gate catch `case_B00106`" — that is fitting to a case I have now
+seen in the reported batch. It is to decide, on batch A only, whether a timeout-shaped
+description with no bank reference should be treated as possibly-debited by default, measure
+what that costs in missed recoveries there, and then report the consequence on B once. The
+cost is real and needs stating either way: holding every referenceless timeout would give up
+recoveries on the far larger population of plain technical declines.
