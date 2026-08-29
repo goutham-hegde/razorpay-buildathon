@@ -237,6 +237,33 @@ docs/
 
 ---
 
+## The same track, approached from the other end
+
+While building this I also built [**`preflight`**](https://github.com/goutham-hegde/raz) —
+a separate, self-contained system for the same track that tries to stop the failure instead
+of recovering from it. It predicts which stored cards and mandates will fail on their *next*
+billing cycle and intervenes before the debit is presented, while the cheap remedies (moving
+the debit date, switching rails) are still available.
+
+It is a different submission, not a component of this one, and it is worth a look for two
+things this repo does not have:
+
+- **An oracle bound.** Because its simulator authors the world, it can compute what a
+  perfectly-informed predictor *and* a perfectly-informed policy would have retained under
+  the same costs and contact caps. Every arm is then reported as a share of achievable rather
+  than against 100% — a ceiling you can check, instead of an accuracy figure you cannot.
+- **A headline that disagrees with its own thesis.** The model arm, the model-plus-LLM arm
+  and the oracle arm all retain the *same* money. Every cycle the predictor is confident
+  about turns out to be one where the failure is already a fact with a free remedy, so
+  nothing above the contact floor is reachable by outreach at all. Choosing the right action
+  is worth something there; predicting better is worth nothing — and it can show that,
+  because perfect prediction is one of the arms.
+
+Both repos are built the same way and hold the same line: a sealed simulator, tune on A and
+report on B, a control arm that does nothing, and invariants asserted after every run.
+
+---
+
 ## Further reading
 
 - [`solution.md`](solution.md) — the full approach: the thesis, the seal, the policy engine,

@@ -1800,3 +1800,47 @@ python -m pytest                          310 passed
 **Next**
 
 Recording. `docs/recording-runsheet.md` now says to record at 1920 wide in `Present`.
+
+---
+
+### D8d — Linking the other one · 2026-08-29
+
+**Built**
+
+A section in `README.md` pointing at [`preflight`](https://github.com/goutham-hegde/raz), the
+other system I built for this track — the one that tries to prevent the failure rather than
+recover from it.
+
+Two repos exist because I could not decide between the two readings of the brief, so I built
+both and let the numbers settle it. `reclaim` is the submission. It answers the track's
+question in the track's own words — measured money recovered across a batch, compliant
+escalation, stopping rules, an audit trail — and it can put a rupee figure on what the
+language model contributed, which `preflight` cannot: +Rs 2,47,130, `rules` against `agent`,
+same engine, only the diagnoser different.
+
+`preflight` is linked rather than hidden because the two things it has that this repo does
+not are worth a reviewer's time: an oracle bound, so every arm is reported as a share of
+achievable rather than against 100%, and a headline that disagrees with its own thesis —
+perfect prediction earns exactly what the model earns, because every cycle the predictor is
+confident about is already a fact with a free remedy.
+
+**What broke**
+
+Nothing in the code. The thing that broke was my own tracking of which repo was which: two
+projects, one track, both with a `data/A`, a `data/B`, arms, a `progress.md` and a console,
+and nothing in either one naming the other. A session spent working in the wrong one before
+noticing. The README section fixes that permanently in the only place it matters — each repo
+should say what the other is, so neither has to be remembered.
+
+**Verified**
+
+```
+python -m pytest         310 passed
+```
+
+`README.md` renders; the new section sits outside the `<!-- RESULTS-TABLE -->` markers, so
+`eval.report --write` will not overwrite it.
+
+**Next**
+
+Record the video. `docs/recording-runsheet.md` has every shot as a console deep link.
