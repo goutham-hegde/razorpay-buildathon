@@ -1344,3 +1344,54 @@ arm faces an identically seeded world, but the draw sequence diverges as soon as
 different numbers of actions, so this is a common-parameter comparison rather than a paired
 one. Pairing each case to its own stream would tighten every lift estimate here. It needs a
 change inside `synth/outcome.py`, and today already spent one of those.
+
+---
+
+### D6 — Batch B's diagnoses, all 600 · 2026-08-29
+
+**Built**
+
+Nothing new. This was the run finishing: batch B's diagnosis artifact reached **600/600** and
+`data/B/diagnoses.jsonl` is now complete and committed. The pass ran in three sittings — 350
+by the 27th, 470 earlier today, the last 130 in a single uninterrupted 2,518-second run.
+
+The cause mix over the batch:
+
+```
+230  insufficient_funds          35  ambiguous_debited
+126  issuer_technical_decline    35  mandate_revoked
+ 81  auth_abandoned              31  limit_exceeded
+ 38  psp_routing_failure         16  instrument_invalid
+                                  8  risk_declined
+```
+
+**What broke**
+
+Nothing broke, but one assumption was wrong in a useful direction. The cost model behind the
+schedule said ~2,150 tokens per case against a 200,000/day ceiling — about 93 cases a day,
+which is what turned a 250-case remainder into a three-day plan and why the run kept being
+parked. Today it covered 143 cases in one day without a single 429. So either the daily
+window rolls on a boundary I had not accounted for, or the real per-case bill is well under
+the estimate that was derived from a handful of early samples. The practical lesson is that
+the ceiling was being treated as a measured constant when it was an inference from a small
+sample, and it cost days of scheduling around a limit that never fired.
+
+The resume path held up exactly as designed: three separate runs, each picking up from the
+cache in seconds, no case diagnosed twice, and every line parses.
+
+**Verified**
+
+```
+wc -l data/B/diagnoses.jsonl          600
+python -m reclaim.core.diagnose --batch B --provider groq --rpm 4.2
+    130/130  case_B00599 -> insufficient_funds (0.97)
+    600 diagnoses in 2518.3s
+```
+
+**Next**
+
+The pipeline is unblocked and the rest is mechanical, in order: score the read
+(`eval.confusion --batch B --provider groq`), then `replay --batch B --arms all --fresh`,
+which is what finally produces the `agent` arm; then `report --batch B --write`, `guards`
+(must print 6/6) and a 20-trial `sensitivity` run on B. The video script's figures are batch
+A stand-ins and must be swapped for B before anything is recorded.
