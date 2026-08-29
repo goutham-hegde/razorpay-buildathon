@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-zoom="normal">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,6 +30,10 @@
       <button class="tab is-active" data-view="live" role="tab">Live</button>
       <button class="tab" data-view="results" role="tab">Results</button>
     </nav>
+    <div class="zoom" role="group" aria-label="display size">
+      <button data-zoom="normal" class="is-active" title="desk reading">Normal</button>
+      <button data-zoom="present" title="large enough to read in a screen recording">Present</button>
+    </div>
   </div>
 </header>
 
@@ -41,7 +45,7 @@
       <div class="stat"><b id="s-worked">0</b><span>cases worked</span></div>
       <div class="stat"><b id="s-charges">0</b><span>charge attempts</span></div>
       <div class="stat"><b id="s-contacts">0</b><span>messages sent</span></div>
-      <div class="stat good"><b id="s-recovered">0</b><span>captured</span></div>
+      <div class="stat good"><b id="s-recovered">0</b><span>payments recovered</span></div>
       <div class="stat bad"><b id="s-double">0</b><span>double charges</span></div>
       <div class="stat"><b id="s-rows">0</b><span>ledger rows</span></div>
       <div class="player">
@@ -55,10 +59,19 @@
     </div>
 
     <div class="split">
-      <div class="panel">
+      <div class="panel feed">
         <div class="panel-head">
           <h2>Decision stream</h2>
           <span class="hint" id="stream-hint">replaying recorded run</span>
+        </div>
+        <div class="panel-head" style="border-bottom:1px solid var(--line-soft)">
+          <div class="legend">
+            <i class="l-retry">charge attempted</i>
+            <i class="l-capture">money recovered</i>
+            <i class="l-contact">customer contacted</i>
+            <i class="l-double">double charge</i>
+          </div>
+          <span class="hint">click any row to open the case</span>
         </div>
         <ol id="stream" class="stream" aria-live="polite"></ol>
         <div class="panel-foot">
@@ -67,10 +80,10 @@
         </div>
       </div>
 
-      <div class="panel">
+      <div class="panel tall">
         <div class="panel-head">
           <h2>Case detail</h2>
-          <span class="hint">what the agent saw, and what it did</span>
+          <span class="hint">what the agent was given, and every action it took</span>
         </div>
         <div id="detail" class="detail">
           <p class="empty">Press <b>Play</b>, or pick a case from the stream.</p>
@@ -82,9 +95,14 @@
   <!-- ================= RESULTS ================= -->
   <section id="view-results" class="view">
 
+    <div class="verdict">
+      <p id="verdict-line">Loading the ledger…</p>
+      <div class="headline" id="headline"></div>
+    </div>
+
     <div class="panel">
       <div class="panel-head">
-        <h2>Arms over the held-out batch</h2>
+        <h2>Did it recover money that was not coming back anyway?</h2>
         <span class="hint" id="results-hint"></span>
       </div>
       <div class="scroll-x">
@@ -92,16 +110,10 @@
           <thead>
             <tr>
               <th>arm</th>
-              <th class="n">recovered</th>
-              <th class="n">rate</th>
-              <th class="n">of which organic</th>
-              <th class="n">lift vs control</th>
-              <th class="n">gross</th>
-              <th class="n">cost</th>
-              <th class="n">net</th>
-              <th class="n">net lift</th>
-              <th class="n">halt rate</th>
-              <th class="n">double charges</th>
+              <th class="n">recovery rate<span class="sub">share of cases that came good</span></th>
+              <th>net lift vs doing nothing<span class="sub">the only honest headline · bar on a &radic; scale</span></th>
+              <th class="n">mandates halted<span class="sub">subscriptions destroyed</span></th>
+              <th class="n">double charges<span class="sub">money taken twice</span></th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -109,8 +121,39 @@
       </div>
       <div class="panel-foot">
         <span class="note">
-          Lift is the only honest headline: some of these cases were always coming back,
-          and the control arm measures exactly how many.
+          <b>control</b> does nothing at all, and still recovers money — some failed payments
+          always come back on their own. Every other arm's recovery rate silently contains
+          all of it, which is why <b>lift over control</b> is the number and the rate is not.
+        </span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>The arithmetic underneath</h2>
+        <span class="hint">gross recovered, minus what it cost, minus what it broke</span>
+      </div>
+      <div class="scroll-x">
+        <table id="money" class="table">
+          <thead>
+            <tr>
+              <th>arm</th>
+              <th class="n">recovered<span class="sub">cases</span></th>
+              <th class="n">of which organic<span class="sub">would have come back anyway</span></th>
+              <th class="n">gross<span class="sub">money in</span></th>
+              <th class="n">cost<span class="sub">fees, comms, unwinds</span></th>
+              <th class="n">residual<span class="sub">future revenue forfeited</span></th>
+              <th class="n">net<span class="sub">gross − cost − residual</span></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="panel-foot">
+        <span class="note">
+          <b>residual</b> is what an over-eager retry destroys: presenting too often against a
+          recurring rail halts the mandate and forfeits months of future subscription revenue.
+          An arm can win on gross recovery and lose badly here.
         </span>
       </div>
     </div>
@@ -119,7 +162,7 @@
       <div class="panel">
         <div class="panel-head">
           <h2>Invariants</h2>
-          <span class="hint">asserted after every run, against the ledger</span>
+          <span class="hint">re-derived from the ledger after every run — not metrics, claims that can fail</span>
         </div>
         <div id="invariants" class="invariants"></div>
       </div>
@@ -133,9 +176,9 @@
         <div class="panel-foot">
           <span class="note">
             Dispositions other than <code>eligible</code> do not occur in the generated
-            batches - the generator emits one clean failure per customer. They are the
-            rules that stop a pending collect request or a redelivered webhook from
-            becoming a double charge, and they are covered by unit tests instead.
+            batches — the generator emits one clean failure per customer. They are the rules
+            that stop a pending collect request or a redelivered webhook from becoming a
+            double charge, and they are covered by unit tests instead.
           </span>
         </div>
       </div>

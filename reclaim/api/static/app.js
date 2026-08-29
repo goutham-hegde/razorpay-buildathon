@@ -33,7 +33,25 @@ const wanted = {
   arm: link.get("run") || link.get("arm"),
   case: link.get("case"),
   view: link.get("view"),
+  zoom: link.get("zoom"),
 };
+
+/* Display size. `present` scales the root font size, and because every length in style.css
+   is in `rem`, that scales the whole interface rather than just the words - which is the
+   difference between "bigger text in the same small boxes" and something legible in a
+   screen recording. Sticky, because reaching for it again after a reload mid-take is
+   exactly the fumble the deep links exist to prevent. */
+function setZoom(mode, persist = true) {
+  const m = mode === "present" ? "present" : "normal";
+  document.documentElement.dataset.zoom = m;
+  $$(".zoom button").forEach((b) => b.classList.toggle("is-active", b.dataset.zoom === m));
+  if (persist) { try { localStorage.setItem("reclaim.zoom", m); } catch (e) { /* private mode */ } }
+  syncLink();
+}
+
+function storedZoom() {
+  try { return localStorage.getItem("reclaim.zoom"); } catch (e) { return null; }
+}
 
 /* ---------------- helpers ---------------- */
 
@@ -49,7 +67,7 @@ const clock = (iso) => (iso || "").slice(11, 16);
 const day = (iso) => (iso || "").slice(5, 10);
 
 function signClass(v) {
-  return v > 0 ? "pos" : v < 0 ? "neg" : "zero";
+  return v > 0 ? "pos" : v < 0 ? "neg" : "nil";
 }
 
 async function api(path) {
@@ -93,6 +111,8 @@ function syncLink() {
   if (state.caseId) q.set("case", state.caseId);
   const view = currentView();
   if (view !== "live") q.set("view", view);
+  const zoom = document.documentElement.dataset.zoom;
+  if (zoom === "present") q.set("zoom", zoom);
   history.replaceState(null, "", location.pathname + "?" + q.toString());
 }
 
@@ -126,6 +146,8 @@ async function boot() {
   });
 
   $$(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
+  $$(".zoom button").forEach((b) => b.addEventListener("click", () => setZoom(b.dataset.zoom)));
+  setZoom(wanted.zoom || storedZoom() || "normal", !wanted.zoom);
 
   $("#play").addEventListener("click", togglePlay);
   $("#restart").addEventListener("click", restart);
@@ -197,10 +219,15 @@ function restart() {
 
   if (!state.events.length) {
     $("#stream").innerHTML =
-      `<li class="ev"><time></time><span class="dot"></span><div class="body">` +
-      `<div class="head">no actions recorded</div>` +
-      `<div class="why">This arm took no actions — which for the control arm is the ` +
-      `entire point. Switch to another arm to watch one work.</div></div></li>`;
+      `<li class="idle"><p><b>No actions recorded.</b> This arm did nothing at all — which ` +
+      `for the control arm is the entire point, and is what every other arm's recovery ` +
+      `number is measured against. Switch arms to watch one work.</p></li>`;
+  } else {
+    $("#stream").innerHTML =
+      `<li class="idle"><p>Press <b>Play</b> to replay all ` +
+      `${state.events.length.toLocaleString()} recorded decisions in order, or open a case ` +
+      `directly from a link. Nothing here is generated live — it is read back off the ` +
+      `append-only ledger.</p></li>`;
   }
 }
 
@@ -237,6 +264,8 @@ function step() {
   const ev = state.events[state.cursor++];
   const li = renderEvent(ev);
   const stream = $("#stream");
+  const idle = stream.querySelector(".idle");
+  if (idle) idle.remove();
   stream.prepend(li);
   while (stream.children.length > 120) stream.lastElementChild.remove();
   // Newest-first feeds must stay pinned to the top. Prepending into a container that has
@@ -369,7 +398,7 @@ async function showCase(caseId) {
         <span class="tag ${det.disposition === "eligible" ? "good" : "warn"}">${det.disposition}</span>
         ${det.flags.map((f) => `<span class="tag">${escapeHtml(f)}</span>`).join(" ")}
       </div>
-      <div class="why" style="margin-top:6px;font-size:11.5px;color:var(--ink-dim)">
+      <div class="why" style="margin-top:0.5rem;color:var(--ink-dim)">
         ${escapeHtml(det.reason)}
       </div>
     </div>
@@ -401,66 +430,221 @@ function trailRow(r) {
     why = `${r.status}` +
       (r.recovered_paise ? ` · ${rupees(r.recovered_paise)} via ${r.recovered_by}` : "");
   }
-  const cls = r.double_charge ? ' style="color:var(--bad)"' : "";
-  return `<li><time>${(r.at || "").replace("T", " ").slice(0, 16)}</time>` +
-         `<div><div class="what"${cls}>${escapeHtml(what)}</div>` +
+  // Two rows in this list are the ones a reader is meant to stop on: a duplicate debit, and
+  // the policy refusing to cause one. Both get a class rather than an inline colour.
+  const cls = [
+    r.double_charge ? "is-double" : "",
+    r.kind === "decision" && (r.action === "hold" || r.action === "escalate") ? "is-hold" : "",
+  ].filter(Boolean).join(" ");
+  return `<li class="${cls}"><time>${(r.at || "").replace("T", " ").slice(0, 16)}</time>` +
+         `<div><div class="what">${escapeHtml(what)}</div>` +
          `<div class="why">${escapeHtml(why)}</div></div></li>`;
 }
 
 /* ---------------- results ---------------- */
 
+/* What each arm actually is. The table used to print the word `agent` and leave the reader
+   to work out that it is the same engine as `rules` with a different diagnoser - which is
+   the single most important fact on the page. */
+const ARM_BLURB = {
+  control: "no intervention at all",
+  naive:   "retry immediately, 3x, fixed interval",
+  rules:   "policy engine, keyword diagnosis, no model",
+  agent:   "policy engine, model diagnosis",
+};
+
+const ARM_ORDER = { control: 0, naive: 1, rules: 2, agent: 3 };
+
+/* A two-sided bar, zero in the middle, on a SQUARE-ROOT scale - and the column caption says
+   so, because an undisclosed non-linear axis is a lie told with a picture.
+ 
+   Linear was tried first and it does not work here. Naive's net lift is around -56 lakh and
+   the two arms the reader is actually comparing are +3.3 and +5.7 lakh, so on a linear axis
+   naive fills the row and the comparison that matters renders as two identical specks. The
+   numbers next to the bar are exact and unscaled; the bar's job is only to make the sign and
+   the order of magnitude legible from across a room. */
+function liftBar(paise, scale) {
+  if (!scale) return "";
+  const frac = Math.min(Math.sqrt(Math.abs(paise)) / Math.sqrt(scale), 1);
+  const w = paise === 0 ? 0 : Math.max(frac * 50, 1.5);
+  const side = paise >= 0 ? `left:50%;width:${w}%` : `right:50%;width:${w}%`;
+  return `<div class="track"><span class="zero" style="left:50%"></span>` +
+         `<span class="fill ${paise >= 0 ? "pos" : "neg"}" style="${side}"></span></div>`;
+}
+
 function renderResults(data) {
   $("#results-hint").textContent =
-    `${data.batch} · ${data.cases} cases · ${rupees(data.at_risk_paise)} at risk`;
+    `batch ${data.batch} · ${data.cases} cases · ${rupees(data.at_risk_paise)} at risk`;
 
-  const body = $("#arms tbody");
-  const rows = data.arms.map((a) => {
-    const baseline = a.arm === "naive";
+  const arms = [...data.arms].sort(
+    (a, b) => (ARM_ORDER[a.arm] ?? 9) - (ARM_ORDER[b.arm] ?? 9)
+  );
+  const by = Object.fromEntries(arms.map((a) => [a.arm, a]));
+  const control = by.control;
+  const hero = by.agent || by.rules;
+  const scale = Math.max(...arms.map((a) => Math.abs(a.lift_net_paise)), 1);
+
+  renderVerdict(data, by, hero, control);
+
+  $("#arms tbody").innerHTML = arms.map((a) => {
+    const isHero = hero && a.arm === hero.arm;
+    const cls = isHero ? "is-hero" : (a.arm === "control" || a.arm === "naive" ? "is-baseline" : "");
+    const lift = a.arm === "control"
+      ? `<span class="nil">— it is the baseline</span>`
+      : `<div class="liftbar">${liftBar(a.lift_net_paise, scale)}` +
+        `<span class="val ${signClass(a.lift_net_paise)}">${rupees(a.lift_net_paise, { signed: true })}</span></div>`;
     return `
-      <tr class="${baseline ? "baseline" : ""}">
-        <td class="arm-name">${a.arm}</td>
+      <tr class="${cls}">
+        <td class="arm-name"><b>${a.arm}</b><span>${ARM_BLURB[a.arm] || ""}</span></td>
+        <td class="n ${isHero ? "big" : ""}">${pct(a.recovery_rate)}</td>
+        <td>${lift}</td>
+        <td class="n ${a.mandates_halted ? "neg" : "nil"}">${
+          a.mandates_halted ? `${a.mandates_halted} <span class="hint">(${pct(a.mandate_halt_rate)})</span>` : "0"
+        }</td>
+        <td class="n">${a.double_charges ? `<span class="tag bad">${a.double_charges}</span>` : `<span class="nil">0</span>`}</td>
+      </tr>`;
+  }).join("");
+
+  $("#money tbody").innerHTML = arms.map((a) => `
+      <tr class="${hero && a.arm === hero.arm ? "is-hero" : ""}">
+        <td class="arm-name"><b>${a.arm}</b></td>
         <td class="n">${a.recovered}</td>
-        <td class="n">${pct(a.recovery_rate)}</td>
         <td class="n"><span class="tag organic">${a.recovered_organic}</span></td>
-        <td class="n ${signClass(a.lift_cases)}">${a.arm === "control" ? "—" : (a.lift_cases > 0 ? "+" : "") + a.lift_cases}</td>
         <td class="n">${rupees(a.gross_paise)}</td>
         <td class="n">${rupees(a.cost_paise)}</td>
-        <td class="n">${rupees(a.net_paise)}</td>
-        <td class="n ${signClass(a.lift_net_paise)}">${a.arm === "control" ? "—" : rupees(a.lift_net_paise, { signed: true })}</td>
-        <td class="n">${pct(a.mandate_halt_rate)}</td>
-        <td class="n">${a.double_charges ? `<span class="tag bad">${a.double_charges}</span>` : "0"}</td>
-      </tr>`;
-  });
+        <td class="n ${a.residual_loss_paise ? "neg" : "nil"}">${rupees(a.residual_loss_paise)}</td>
+        <td class="n ${signClass(a.net_paise)}">${rupees(a.net_paise)}</td>
+      </tr>`).join("");
 
-  for (const arm of data.pending_arms) {
-    rows.push(`<tr class="pending"><td>${arm}</td><td colspan="10">not built yet</td></tr>`);
+  for (const arm of data.pending_arms || []) {
+    $("#arms tbody").insertAdjacentHTML(
+      "beforeend",
+      `<tr class="pending"><td>${escapeHtml(arm)}</td><td colspan="4">not built yet</td></tr>`
+    );
   }
-  body.innerHTML = rows.join("");
+}
+
+/* One sentence and four numbers, above the table.
+
+   The tables are correct and they are not a first impression. A viewer given eleven columns
+   spends the first ten seconds working out what they are looking at, and in a five-minute
+   video those are the ten seconds that decide whether the rest lands. */
+function renderVerdict(data, by, hero, control) {
+  if (!hero || !control) {
+    $("#verdict-line").textContent = "Run the control arm to put these numbers in context.";
+    $("#headline").innerHTML = "";
+    return;
+  }
+
+  const naive = by.naive;
+  const lift = hero.lift_net_paise;
+  $("#verdict-line").innerHTML =
+    `Over <b>${data.cases} failed payments and mandates</b> in batch ${data.batch}, the ` +
+    `<b>${hero.arm}</b> arm recovered <b class="num">${pct(hero.recovery_rate)}</b> of them. ` +
+    `Doing nothing at all recovers <b class="num">${pct(control.recovery_rate)}</b>, so what it ` +
+    `is actually worth is the difference: <b class="num ${signClass(lift)}">` +
+    `${rupees(lift, { signed: true })}</b> net, after retry fees, messages, incentives and ` +
+    `any money it had to give back.`;
+
+  const cards = [
+    {
+      cls: lift >= 0 ? "good" : "bad",
+      value: rupees(lift, { signed: true }),
+      label: "net lift over doing nothing",
+      sub: `control recovers ${rupees(control.gross_paise)} unaided; that is subtracted, not counted`,
+    },
+    {
+      cls: "flat",
+      value: pct(hero.recovery_rate),
+      label: "recovery rate",
+      sub: `${hero.recovered} of ${data.cases} cases · ${hero.recovered_organic} would have come back anyway`,
+    },
+    {
+      cls: hero.mandates_halted ? "bad" : "good",
+      value: String(hero.mandates_halted),
+      label: "mandates halted",
+      sub: naive
+        ? `over-retrying destroys subscriptions — naive halted ${naive.mandates_halted}`
+        : "subscriptions destroyed by over-retrying",
+    },
+    {
+      cls: hero.double_charges ? "bad" : "good",
+      value: String(hero.double_charges),
+      label: "double charges",
+      sub: naive
+        ? `retrying a possible debit takes the money twice — naive did it ${naive.double_charges} times`
+        : "money taken twice from a customer",
+    },
+  ];
+
+  $("#headline").innerHTML = cards.map((c) => `
+    <div class="hstat ${c.cls}">
+      <b>${c.value}</b>
+      <span class="lbl">${c.label}</span>
+      <span class="sub">${c.sub}</span>
+    </div>`).join("");
 }
 
 function renderPending() {
   $("#arms tbody").innerHTML =
-    `<tr class="pending"><td colspan="11">no runs recorded for this batch</td></tr>`;
+    `<tr class="pending"><td colspan="5">no runs recorded for this batch</td></tr>`;
+  $("#money tbody").innerHTML =
+    `<tr class="pending"><td colspan="7">no runs recorded for this batch</td></tr>`;
+  $("#verdict-line").textContent =
+    "No ledger for this batch yet. Run the replay command below and reload.";
+  $("#headline").innerHTML = "";
 }
 
+/* Six chips per arm rather than six rows.
+
+   The list version was correct and read as boilerplate - six lines of small grey text the
+   eye slides off. These are the falsifiable claims the whole project rests on, and R1 broke
+   on the held-out batch once, so a failed one has to be the loudest thing on the panel
+   rather than a tag at the end of a row.
+
+   The marks are inline SVG, not `✓` and `✕`. Those code points are absent from most
+   monospace faces, so the browser falls back to the emoji font and renders them as blue
+   boxed glyphs that read as UI chrome rather than as a pass or a fail. A drawn mark cannot
+   be substituted by a font stack. */
+const MARK_OK = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.4L13 4.8"/></svg>`;
+const MARK_NO = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>`;
+
 function renderInvariants(data) {
-  $("#invariants").innerHTML = data.reports.map((r) => `
+  $("#invariants").innerHTML = data.reports.map((r) => {
+    const ok = r.held === r.total;
+    // Violations render full width under the grid rather than inside their chip. Inside, a
+    // twenty-six-case list stretches its grid row and drags five passing chips out of shape,
+    // which makes the panel look broken in exactly the place it is working correctly.
+    const broken = r.results.filter((g) => !g.held);
+    return `
     <div class="inv-run">
       <header>
-        <h3>${r.arm}</h3>
-        <span class="tag ${r.held === r.total ? "good" : "bad"}">${r.held}/${r.total} held</span>
-        ${r.must_hold ? "" : `<span class="tag">baseline — measured, not asserted</span>`}
+        <h3>${escapeHtml(r.arm)}</h3>
+        <span class="inv-score ${ok ? "ok" : "fail"}">${r.held}/${r.total} held</span>
+        ${r.must_hold
+          ? `<span class="tag good">asserted</span>`
+          : `<span class="tag">baseline — measured, not asserted</span>`}
       </header>
-      ${r.results.map((g) => `
-        <div class="inv-row ${g.held ? "held" : ""}">
-          <span class="id">${g.id}</span>
-          <span class="title">${escapeHtml(g.title)}</span>
-          <span class="tag ${g.held ? "good" : "bad"}">${g.held ? "held" : "violated"}</span>
-          ${g.held ? "" : `<div class="inv-violations">${
-            g.violations.slice(0, 3).map((v) => escapeHtml(v.subject + ": " + v.detail)).join("<br>")
-          }${g.violation_count > 3 ? `<br>… ${g.violation_count - 3} more` : ""}</div>`}
+      <div class="inv-grid">
+        ${r.results.map((g) => `
+          <div class="inv-chip ${g.held ? "" : "broken"}">
+            <span class="mark">${g.held ? MARK_OK : MARK_NO}</span>
+            <div>
+              <span class="id">${g.id}</span>
+              <div class="title">${escapeHtml(g.title)}
+                <span class="note">${escapeHtml(g.note || "")}</span>
+              </div>
+            </div>
+          </div>`).join("")}
+      </div>
+      ${broken.map((g) => `
+        <div class="inv-violations">
+          <b>${g.id} violated — ${g.violation_count} ${g.violation_count === 1 ? "case" : "cases"}</b>
+          ${g.violations.slice(0, 4).map((v) => escapeHtml(v.subject + ": " + v.detail)).join("<br>")}
+          ${g.violation_count > 4 ? `<br>… ${g.violation_count - 4} more` : ""}
         </div>`).join("")}
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 
 function renderDetection(data) {

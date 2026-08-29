@@ -1710,3 +1710,93 @@ uvicorn on :8000, then
 **Next**
 
 Recording. Nothing in the repo blocks it.
+
+---
+
+### D8c — The console was built for a monitor, not for a recording · 2026-08-29
+
+**Built**
+
+A rework of `reclaim/api/static/`, for two complaints that turned out to have the same root:
+it was too small to read, and too hard to understand.
+
+*Too small.* The stylesheet set 33 pixel font sizes, most between 10.5px and 12.5px. That is
+a reasonable density two feet from a monitor and it is illegible in a 1080p capture played
+back in a browser tab — which is the only way anyone evaluating this will ever see it. Every
+length in `style.css` is now in `rem` against a single lever, `html[data-zoom]`, so `Present`
+scales type, padding, controls and hit targets together instead of making words bigger inside
+boxes that stay the same size. `Normal` is 16px, `Present` is 21px, the choice sticks in
+`localStorage`, and `?zoom=present` is part of the deep-link vocabulary so the runsheet's URLs
+carry it.
+
+*Too hard to understand.* The results view opened on an eleven-column table with column names
+like `of which organic` and no statement of what any of it meant. It now opens on one sentence
+and four numbers — net lift, recovery rate, mandates halted, double charges, each captioned
+with what the baseline did so the number has something to be compared against. The table under
+it splits in two: the four columns that answer "did it recover money that was not already
+coming back", and a second table for the arithmetic. Each arm carries its one-line description
+in the row, because `rules` and `agent` being the same engine with different diagnosers is the
+most important fact on the page and it was nowhere on it.
+
+Net lift is also drawn now, as a two-sided bar. **On a square-root scale, and the column
+caption says so** — an undisclosed non-linear axis is a lie told with a picture. Linear was
+tried first: naive's -56 lakh fills the row and renders the +3.3 vs +5.7 lakh comparison that
+actually matters as two identical specks.
+
+Invariants went from six grey rows per arm to six chips with drawn pass/fail marks, and
+violations moved out of the chip to a full-width block underneath.
+
+**What broke**
+
+*A global `.mark` class, and forty minutes lost to the wrong theory.* The invariant chips'
+tick rendered as a blue gradient badge. I diagnosed it as the browser falling back to an emoji
+font for `✓` — plausible, since that code point is missing from most monospace faces — and
+rewrote the marks as inline SVG to make them font-independent. They still rendered as blue
+badges.
+
+The actual cause was in the stylesheet the whole time: `.mark` was an unscoped selector
+already used by the brand logo in the header, painting `background: linear-gradient(...)` on
+anything with that class name. The chips were inheriting the logo. Scoping it to
+`.brand .mark` fixed it in one line.
+
+Worth recording for the general lesson rather than the specific bug: I had a screenshot
+showing the symptom and reached for the more interesting explanation instead of grepping the
+stylesheet for the class name. The SVG rewrite was not wasted — it is genuinely more robust —
+but it was not the fix, and I would have found the fix first by searching before theorising.
+
+*The case panel was clipping the one thing it exists to show.* Both live panels were
+grid-stretched to a shared height with `max-height` on both, so the D8 policy `reason` — the
+payoff shot of the whole video — ran off the bottom of the panel. The feed needs a definite
+height because its list scrolls inside it; the case panel has to be free to grow. Separated,
+with `align-items: start`.
+
+*Media queries do not see the zoom.* `rem` in a media query resolves against the initial
+16px, not against the `html` font-size override, so the breakpoint at which two columns stop
+fitting cannot be expressed once. It is written twice — 1400px normally, 1800px in `Present`
+— and stacked order is flipped so a deep-linked case sits above the feed rather than under it.
+
+**Verified**
+
+Screenshotted headless at 1920x1080 and checked by eye, which is the only way to verify this
+kind of change:
+
+```
+chrome --headless=new --window-size=1920,1400 --screenshot=... \
+  "http://127.0.0.1:8000/?batch=B&view=results&zoom=present"
+
+  verdict line, four headline cards, both tables, lift bars ranked naive < rules < agent
+  invariants: green ticks, naive 5/6 with its 26 violations listed below the grid
+
+  "...&run=agent&case=case_B00106&zoom=present"
+  the hold reason renders in full, four lines, no clipping
+
+  "...&run=naive&case=case_B00072&zoom=present"
+  trail row 2 reads DOUBLE CHARGE in red
+
+node --check reclaim/api/static/app.js    ok
+python -m pytest                          310 passed
+```
+
+**Next**
+
+Recording. `docs/recording-runsheet.md` now says to record at 1920 wide in `Present`.

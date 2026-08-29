@@ -26,14 +26,24 @@ Then open two browser windows and leave them on these:
 
 | Window | URL |
 |---|---|
-| **A — live** | <http://127.0.0.1:8000/?batch=B&run=naive&case=case_B00072> |
-| **B — results** | <http://127.0.0.1:8000/?batch=B&view=results> |
+| **A — live** | <http://127.0.0.1:8000/?batch=B&run=naive&case=case_B00072&zoom=present> |
+| **B — results** | <http://127.0.0.1:8000/?batch=B&view=results&zoom=present> |
 
 And one terminal, cleared, sitting in the repo root.
 
-Console URLs take `batch`, `run` (arm name or run id), `case`, and `view` (`live` or
-`results`). The address bar rewrites itself as you click, so any shot you find by hand is a
+Console URLs take `batch`, `run` (arm name or run id), `case`, `view` (`live` or `results`)
+and `zoom`. The address bar rewrites itself as you click, so any shot you find by hand is a
 link you can paste back into this file.
+
+**Record at 1920x1080 or wider, and leave the console in `Present`.** Every link here carries
+`zoom=present`, which scales the whole interface — type, padding and controls together — to
+something legible when a 1080p capture is played back in a browser tab. `Normal` is the desk
+size and is too small on camera; it is what the first version of this console only had. The
+setting sticks across reloads, so you set it once.
+
+Below about 1800px wide in `Present`, the live view stacks into one column and puts the case
+panel above the feed. That is deliberate and it still records fine — but two columns is the
+better shot, so give the window the full width.
 
 ---
 
@@ -54,7 +64,7 @@ Then, without saying anything about it yet, switch the arm picker to **agent** �
 one `escalate` decision, closed `reconcile_hold`, no charge at all. That silent cut is worth
 more than a sentence.
 
-> <http://127.0.0.1:8000/?batch=B&run=agent&case=case_B00072>
+> <http://127.0.0.1:8000/?batch=B&run=agent&case=case_B00072&zoom=present>
 
 ### 0:33 — 1:19 · What it does
 
@@ -77,7 +87,7 @@ Six green lines, and the name of the test is the argument:
 
 Then **Window A**, arm picker to **control**:
 
-> <http://127.0.0.1:8000/?batch=B&run=control>
+> <http://127.0.0.1:8000/?batch=B&run=control&zoom=present>
 
 The stream says *"no actions recorded — which for the control arm is the entire point."* That
 is the shot for "a control arm that does **nothing at all**", and it is better than any
@@ -97,11 +107,14 @@ you the take. The numbers are in `README.md` if a still is wanted instead.
 
 ### 3:27 — 4:37 · Bounded, and provable
 
-**Window B**, scroll down to the invariants panel. Six rows, all green, both asserted arms.
+**Window B**, scroll down to the invariants panel. Six green ticks per arm, and both asserted
+arms reading `6/6 held`. Naive is on the same panel showing `5/6` with its twenty-six
+double-charged cases listed underneath in red — that contrast is worth a beat, because it is
+the same six checks run against the strawman.
 
 Then **Window A**, and this is the payoff shot of the whole video:
 
-> <http://127.0.0.1:8000/?batch=B&run=agent&case=case_B00106>
+> <http://127.0.0.1:8000/?batch=B&run=agent&case=case_B00106&zoom=present>
 
 One decision. The reason field reads, in full:
 
