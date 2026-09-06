@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>reclaim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Serif:wght@400;600&display=swap" rel="stylesheet">
+
+<!--
+  Opening card for the explainer video.
+
+  Not part of the app - a recording asset, which is why it lives in docs/ and is opened from
+  the filesystem. It borrows the console's tokens verbatim so the cut from card to console
+  does not read as a cut between two different projects.
+
+  One card, one file, no scrolling and nothing that moves: open it, press F11, hold the
+  frame. Two files rather than one with anchors, because a stray wheel notch on camera that
+  lands between two cards is a retaken take.
+
+  THE NAME BELOW COMES FROM THIS REPOSITORY'S GIT IDENTITY. Check it before recording.
+-->
+
+<style>
+:root {
+  --paper: #f6f7f4; --ink: #16191a; --ink-2: #5a625e; --ink-3: #858d88; --rule: #d3d8cf;
+  --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --sans:  "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:  "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+
+body {
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 8vw;
+  font-family: var(--sans);
+}
+
+.eyebrow {
+  font-family: var(--mono); font-size: 0.95rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0 0 2.2rem;
+}
+
+h1 {
+  font-family: var(--serif); font-weight: 600; font-size: 7.5rem;
+  line-height: 0.95; letter-spacing: -0.02em; margin: 0 0 1.5rem;
+}
+
+.standfirst {
+  font-family: var(--serif); font-size: 2.1rem; line-height: 1.35;
+  margin: 0 0 3rem; max-width: 30ch;
+}
+
+hr { border: 0; border-top: 1px solid var(--rule); margin: 0 0 1.6rem; }
+
+.byline { display: flex; gap: 4rem; flex-wrap: wrap;
+          font-family: var(--mono); font-size: 1.05rem; }
+.byline b { display: block; font-weight: 400; color: var(--ink-3);
+            font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase;
+            margin-bottom: 0.45rem; }
+.byline span { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<p class="eyebrow">Razorpay buildathon &middot; Track 3 &middot; AI revenue recovery</p>
+
+<h1>reclaim</h1>
+
+<p class="standfirst">Bounded recovery of failed payments and failed recurring mandates.</p>
+
+<hr>
+
+<div class="byline">
+  <div><b>Built by</b><span>Goutham Hegde</span></div>
+  <div><b>Measured over</b><span>600 failed payments, held out</span></div>
+  <div><b>Reported as</b><span>lift over a do-nothing control</span></div>
+</div>
+
+</body>
+</html>

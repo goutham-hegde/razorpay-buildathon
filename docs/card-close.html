@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>reclaim — every figure reproduces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Serif:wght@400;600&display=swap" rel="stylesheet">
+
+<!--
+  Closing card for the explainer video. See card-open.html for why these are two files.
+
+  THE THREE FIGURES BELOW ARE THE REPORTED BATCH B NUMBERS. If the ledger is ever
+  regenerated they must be re-read from it, not carried forward:
+
+      python -m reclaim.eval.metrics --batch B
+      python -m reclaim.core.guards  --batch B
+-->
+
+<style>
+:root {
+  --paper: #f6f7f4; --ink: #16191a; --ink-2: #5a625e; --ink-3: #858d88; --rule: #d3d8cf;
+  --blue: #1b3a6b; --green: #1f6047;
+  --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --sans:  "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:  "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+
+body {
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 8vw;
+  font-family: var(--sans);
+}
+
+.eyebrow {
+  font-family: var(--mono); font-size: 0.95rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0 0 2rem;
+}
+
+h1 {
+  font-family: var(--serif); font-weight: 600; font-size: 5.5rem;
+  line-height: 0.95; letter-spacing: -0.02em; margin: 0 0 2.6rem;
+}
+
+/* One rule above the figures, the way a subtotal is ruled on the console's statement. */
+.claims { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0 3.5rem; margin: 0 0 3rem; max-width: 64rem; }
+.claims > div { border-top: 2px solid var(--ink); padding-top: 1rem; }
+.claims dt { font-family: var(--mono); font-size: 2.6rem; font-weight: 500;
+             color: var(--green); margin: 0 0 0.5rem; }
+.claims dd { margin: 0; font-size: 1.05rem; line-height: 1.45; color: var(--ink-2); }
+
+hr { border: 0; border-top: 1px solid var(--rule); margin: 0 0 1.6rem; }
+
+.repo { font-family: var(--mono); font-size: 1.7rem; color: var(--blue); margin: 0 0 0.9rem; }
+.reproduce { font-size: 1.05rem; color: var(--ink-2); max-width: 60ch;
+             line-height: 1.5; margin: 0; }
+.reproduce code { font-family: var(--mono); color: var(--ink); }
+</style>
+</head>
+<body>
+
+<p class="eyebrow">Every figure reproduces from a clean clone</p>
+
+<h1>reclaim</h1>
+
+<dl class="claims">
+  <div>
+    <dt>&#8377;5,74,947</dt>
+    <dd>net lift over doing nothing, after every fee, message, incentive and refund</dd>
+  </div>
+  <div>
+    <dt>6 of 6</dt>
+    <dd>invariants held, re-derived from the append-only ledger after every run</dd>
+  </div>
+  <div>
+    <dt>None</dt>
+    <dd>mandates destroyed, and no payment charged twice</dd>
+  </div>
+</dl>
+
+<hr>
+
+<p class="repo">github.com/goutham-hegde/razorpay-buildathon</p>
+<p class="reproduce">
+  No API key of any kind. <code>pip install -e .</code>, then <code>replay</code>,
+  <code>metrics</code> and <code>guards</code> — and every number in this video prints again.
+</p>
+
+</body>
+</html>

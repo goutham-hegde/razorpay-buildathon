@@ -241,6 +241,8 @@ reclaim/
 docs/
   video-script.md      the explainer, written to be read aloud
   recording-runsheet.md what to have on screen, per section, as deep links
+  card-open.html       opening and closing cards, styled from the console's own
+  card-close.html        tokens so the cut between them is not a cut between projects
   wordcount.py         what it actually runs to, per section
 ```
 

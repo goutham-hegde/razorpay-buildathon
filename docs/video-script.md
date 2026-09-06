@@ -7,11 +7,17 @@ Each section carries the shot to be on screen and the URL that opens it directly
 has to be hunted for on camera. [`recording-runsheet.md`](recording-runsheet.md) has the
 setup block, the fallbacks and the two things worth resisting.
 
-Spoken text only — headings, cues and this preamble excluded — it runs **737 words**:
-**4:54** at 150 words per minute, 4:36 at 160. The timestamps below are speaking time,
-derived from each section's own word count rather than guessed, so they stay honest if you
-re-cut it. They do not include the deliberate silences — the arm switch at 0:36, the pause on
-the reason field at 4:22 — which is where the remaining seconds go. Re-check after any edit:
+It opens and closes on a card (`docs/card-open.html`, `docs/card-close.html`) styled from
+the console's own tokens, so the whole thing reads as one piece rather than as a screen
+recording with talking either side of it.
+
+Spoken text only — headings, cues and this preamble excluded — it runs **749 words**: exactly
+**5:00** at 150 words per minute, and **4:41** at 160, which is the pace this register
+actually wants. Take the second number: the difference is what pays for the deliberate
+silences — the arm switch at 0:51, the derivation at 2:31, the reason field at 4:25, and two
+seconds of held card at each end. The timestamps below are speaking time, derived from each
+section's own word count rather than guessed, so they stay honest if you re-cut it. Re-check
+after any edit:
 
 ```bash
 python docs/wordcount.py
@@ -38,7 +44,18 @@ Record at 1920x1080 or wider and leave the console on **Large** — every link b
 
 ---
 
-## 0:00 — 0:36 · The trap
+## 0:00 — 0:15 · Title
+
+> **Open:** `docs/card-open.html` from the filesystem, fullscreen. Nothing moves. Hold the
+> frame for two seconds before speaking and two after, so the cut has somewhere to land.
+
+I'm Goutham. This is `reclaim`, built for Track 3. The brief asks for measured money
+recovered — with stopping rules and an audit trail. So the harness and the honest baseline
+are the product here, not the features.
+
+---
+
+## 0:15 — 0:51 · The trap
 
 > **Open:** <http://127.0.0.1:8000/?batch=B&run=naive&case=case_B00072&zoom=present>
 >
@@ -61,13 +78,13 @@ A system that retries everything three times finds that case. And charges it twi
 
 ---
 
-## 0:36 — 1:14 · What it does
+## 0:51 — 1:29 · What it does
 
 > **Show:** the editor, not the browser — `reclaim/core/policy.py`, the `WHAT EACH CAUSE
 > BUYS` block near the top of the module docstring. Nine causes, nine actions, one screen,
 > no scrolling.
 
-`reclaim` sorts every failure into one of nine root causes, because each implies a different
+It sorts every failure into one of nine root causes, because each implies a different
 action. An empty account needs a different **time**, not more attempts. An abandoned OTP
 screen needs the *customer* back. A broken route needs another route, now.
 
@@ -79,7 +96,7 @@ moves money is plain code behind a gate.
 
 ---
 
-## 1:14 — 2:18 · Why you can believe the number
+## 1:29 — 2:31 · Why you can believe the number
 
 > **Show:** the terminal. Run this live — it takes about a second, and the six test names are
 > the whole argument. `-vv`, not `-v`: `addopts = "-q"` in `pyproject.toml` cancels a single
@@ -96,7 +113,7 @@ moves money is plain code behind a gate.
 > — the control arm's stream, which reads *"no actions recorded — which for the control arm
 > is the entire point."* Better than any diagram of one.
 
-Now the part that took most of the work: making the measurement hard to fool.
+Now the part that took most of the work.
 
 The world is simulated, because this data is not public. Which creates a problem: if the
 agent could read the simulator's parameters, it would be rediscovering constants I wrote down
@@ -114,7 +131,7 @@ never been tuned against.
 
 ---
 
-## 2:18 — 3:17 · The result, and the thing it caught
+## 2:31 — 3:23 · The result, and the thing it caught
 
 > **Open:** <http://127.0.0.1:8000/?batch=B&view=statement&zoom=present>
 >
@@ -126,23 +143,21 @@ never been tuned against.
 > For the sensitivity paragraph there is nothing to show, and that is fine — stay on the
 > table. Do not cut to a terminal running `sensitivity`; it takes minutes.
 
-Four arms, same batch. Control does nothing. Naive retries three times. Rules-only and the
-agent run the **same policy engine** and differ only in what diagnosed the failure — so the
-gap between those two rows is exactly what the model is worth.
+Four arms, one batch. Rules-only and the agent run the **same policy engine** and differ
+only in what diagnosed the failure — so the gap between those two rows is exactly what the
+model is worth.
 
 Now look at naive. Retry a subscription too often and the rail **halts the mandate**. Naive
-destroys **66.1%** of the recurring book — nine months of forfeited revenue each. It recovers
-eight lakh rupees of invoices and destroys sixty lakh of future revenue, finishing **Rs 62
-lakh** behind the agent. Invisible, if you report recovery rate alone — which is why there is
-a halt column and a net column.
+destroys **66.1%** of the recurring book. It recovers eight lakh rupees of invoices and
+forfeits sixty lakh of future revenue — finishing **Rs 62 lakh** behind the agent. Invisible,
+if you report recovery rate alone. Which is why there is a halt column and a net column.
 
-How confident am I? Twenty worlds, every constant moved twenty percent at once. The agent is
-the top arm in **all twenty**. The full ordering holds in **sixteen**, and sixteen is what I
-report.
+Twenty worlds, every constant moved twenty percent at once. The agent is the top arm in **all
+twenty**. The full ordering holds in **sixteen**, and sixteen is what I report.
 
 ---
 
-## 3:17 — 4:22 · Bounded, and provable
+## 3:23 — 4:25 · Bounded, and provable
 
 > **Open:** <http://127.0.0.1:8000/?batch=B&view=assurance&zoom=present>
 > — four arms side by side, six checks each. Both asserted arms read `6 of 6 held`. Naive
@@ -154,9 +169,8 @@ report.
 > One decision, and a reason field that explains itself. Let it be legible and stop talking
 > over it. A reviewer who reads that sentence off the screen has understood the project.
 
-The track asks for compliant escalation, stopping rules, and an audit trail. Here those are
-not features — they are six assertions that can fail, re-derived from the ledger after every
-run.
+Compliant escalation, stopping rules, an audit trail. Here those are not features — they are
+six assertions that can fail, re-derived from the ledger after every run.
 
 The first is structural. "No payment charged twice" is a unique constraint, and the executor
 inserts the claim **before** it charges. Check-then-charge leaves a window where a retry and
@@ -168,12 +182,12 @@ confidently. So there is one more rule, and it reads no diagnosis at all: if the
 back **after** the debit instruction went out, we never charge again. It costs four
 recoveries, and the repo prices that.
 
-The ledger is append-only, enforced by triggers. Every decision is on it — what the agent
-believed, how confident, and why.
+The ledger is append-only. Every decision is on it — what the agent believed, how confident,
+and why.
 
 ---
 
-## 4:22 — 4:54 · What it does not do
+## 4:25 — 4:55 · What it does not do
 
 > **Show:** the GitHub repo page, then the README results table. Nothing to operate.
 
@@ -181,10 +195,19 @@ The limits, straight. The world is synthetic and its constants are anchors from 
 sources, not measurements. I am not claiming they are right — I am claiming the ranking
 survives moving all of them at once.
 
-The model runs **once per batch, ever**, and its output is committed. Clone this repo with no
-API key of any kind, run four commands, and every number reproduces.
+The model runs **once per batch, ever**, and its output is committed. There is no key to get:
+four commands, and every number reproduces.
 
 That was the goal. Not the highest recovery rate — a number you can check.
+
+---
+
+## 4:55 — 5:00 · Close
+
+> **Open:** `docs/card-close.html`, fullscreen. The three figures on it are the reported
+> batch B numbers, and the repo URL is under them. Hold four seconds after the last word.
+
+The repo is public and runs without a key. Thank you.
 
 ---
 

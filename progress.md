@@ -2085,3 +2085,69 @@ both linked repos public, nothing unpushed, commit identity `goutham-hegde`.
 
 Record. The script is 4:54 of speaking and the silences are marked; the runsheet's links all
 resolve against a server started per its own setup block.
+
+### D11 — An opening and a close, so it is a video and not a screen recording · 2026-09-06
+
+**Built**
+
+Two cards, `docs/card-open.html` and `docs/card-close.html`. The explainer cold-opened on a
+double-charged payment and ended on a README, which is a strong first thirty seconds and no
+first *five* seconds — nobody was told whose project this is or what it is for. The cards
+take the console's own tokens verbatim (Plex Serif over the same ledger-paper ground, the
+same two-rule-above-a-total grammar on the closing figures), so cutting from card to console
+does not read as cutting between two different projects.
+
+Two files rather than one with `#open` and `#close` anchors. The anchored version was built
+first and screenshotted blank: `scroll-snap-type: y mandatory` plus a fragment does not
+reliably land where you asked in a headless capture, and on camera a stray wheel notch
+between two cards is a retaken take. One card, one file, nothing that scrolls.
+
+The script is recut to **749 words — 5:00 flat at 150 wpm, 4:41 at 160**, which is what pays
+for the held card at each end. The 38 words of intro were bought by cutting two lines the
+card now carries: "the part that took most of the work" and the recital of the track's brief.
+
+**What broke**
+
+**The script told the reader to say the name of a test that does not exist.** The seal shot
+was written as `pytest tests/test_seal.py -v`, narrated as
+`test_the_policy_reads_nothing_from_the_simulated_world`. There is no such test — the six are
+named for what each one poisons or reads — and `-v` prints no names at all here, because
+`addopts = "-q"` is already set in `pyproject.toml` and a single `-v` only cancels it back to
+the default. The shot as written would have put six anonymous dots on screen under a
+confident recital of a name a reviewer could then fail to find in the repo. It is `-vv` now,
+with the six real names in the runsheet and `test_core_cannot_read_ground_truth` as the line
+to land on. Found by running the shot rather than re-reading it, which is the whole lesson.
+
+**Three of the six shots do not fit a 1080-tall viewport, and the runsheet did not say so.**
+Screenshotting each one at 1920x1080 rather than at the 1440 the console was last checked at:
+the case panel's trail — the red `DOUBLE CHARGE` row, the entire point of the cold open — is
+*below the fold* at `zoom=present`, as is the fourth `Assurance` card and the whole four-arm
+table. Every one is fine with a scroll before the take, but "do not scroll, let the trail sit
+still" was written against a taller window than anyone will record in, and the browser's own
+chrome costs another 130px on top. The runsheet now carries a table of which shot needs how
+many wheel notches, and F11 is no longer a suggestion.
+
+The one shot that fits exactly is `run=control&view=book` — the arm that does nothing needs
+no room.
+
+**Verified**
+
+```
+python -m pytest                                    311 passed
+python docs/wordcount.py                            749 words, 4:59 - fits by 1
+python -m reclaim.core.guards --batch B             2 asserted arm(s): 6/6 held
+
+chrome --headless --screenshot, 1920x1080, each shot in the runsheet
+  card-open.html    title, standfirst, byline - one viewport, no scroll
+  card-close.html   three figures, repo URL - one viewport, no scroll
+  run=naive&case=case_B00072    DOUBLE CHARGE row present after ~4 notches
+  run=agent&case=case_B00072    same error text, one escalate, no charge
+  run=control&view=book         "No actions recorded" - fits with no scroll
+  view=statement                claim + derivation above the fold; table at ~8 notches
+  view=assurance                control/naive/rules across, naive R1 FAILED in red
+  run=agent&case=case_B00106    hold reason legible in full, four lines
+```
+
+**Next**
+
+Record. Ten clips, none longer than about forty-five seconds.

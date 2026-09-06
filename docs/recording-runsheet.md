@@ -39,11 +39,24 @@ or `assurance`) and `zoom`. A link naming a `case` opens the case book on it. Wi
 the console opens on **B**, the reported one. The address bar rewrites itself as you click,
 so any shot you find by hand is a link you can paste back into this file.
 
-**Record at 1920x1080 or wider, and leave the console on `Large`.** Every link here carries
-`zoom=present`, which scales the whole page — type, padding and controls together — to
-something legible when a 1080p capture is played back in a browser tab. `Normal` is the desk
-size and is too small on camera; it is what the first version of this console only had. The
-setting sticks across reloads, so you set it once.
+**Record at 1920x1080 or wider, leave the console on `Large`, and press F11.** Every link
+here carries `zoom=present`, which scales the whole page — type, padding and controls
+together — to something legible when a 1080p capture is played back in a browser tab.
+`Normal` is the desk size and is too small on camera. The setting sticks across reloads, so
+you set it once.
+
+F11 is not optional. The browser's own chrome costs about 130px, and two shots need the
+bottom of a 1080-tall viewport: the case panel's trail, and the fourth `Assurance` card.
+
+**Which shots need a scroll, measured at 1920x1080 rather than guessed:**
+
+| Shot | Scroll |
+|---|---|
+| Title, Close | none — one card, one viewport |
+| Any `case=` link | **~4 wheel notches**, until `case_B00072` (or `_B00106`) sits near the top. The whole trail is then on screen, down to `closed`. Scroll *before* recording, then leave it. |
+| `run=control&view=book` | **none.** It fits exactly, which is the joke — the arm that did nothing needs no room |
+| `view=statement` | none for the claim and the derivation; **~8 notches** to bring `The same statement, four ways` to the top for the arm table |
+| `view=assurance` | none for the three columns; **~1 notch** at the end, to bring up `R1 failed on 26 cases` and the `agent 6 of 6 held` card, which sit on a second row |
 
 Below about 62rem wide, the live view stacks into one column and puts the case
 panel above the feed. That is deliberate and it still records fine — but two columns is the
@@ -53,7 +66,16 @@ better shot, so give the window the full width.
 
 ## The shots, in script order
 
-### 0:00 — 0:36 · The trap
+### 0:00 — 0:15 · Title
+
+**A third window**, or the same one on another tab: `docs/card-open.html`, opened from the
+filesystem. Fullscreen, nothing moves, nothing to operate. Hold two seconds before the first
+word and two after the last, so the cut into the console has somewhere to land.
+
+Check the name on it before recording — it is taken from the repository's git identity, not
+from anything you typed.
+
+### 0:15 — 0:51 · The trap
 
 **Window A**, already loaded: `case_B00072` under the **naive** arm.
 
@@ -70,15 +92,15 @@ more than a sentence.
 
 > <http://127.0.0.1:8000/?batch=B&run=agent&case=case_B00072&zoom=present>
 
-### 0:36 — 1:14 · What it does
+### 0:51 — 1:29 · What it does
 
 **Editor**, not the browser: `reclaim/core/policy.py`, the `WHAT EACH CAUSE BUYS` block in
 the module docstring (near the top). Nine causes, nine actions, one screen, no scrolling.
 
 Then scroll once to `_post_authorization_veto` if you want a second beat — but the script
-does not need it here, and the same code has its own moment at 3:17.
+does not need it here, and the same code has its own moment at 3:23.
 
-### 1:14 — 2:18 · Why you can believe the number
+### 1:29 — 2:31 · Why you can believe the number
 
 **Terminal**, one command, let it run on camera. It takes about a second:
 
@@ -109,7 +131,7 @@ The stream says *"no actions recorded — which for the control arm is the entir
 is the shot for "a control arm that does **nothing at all**", and it is better than any
 diagram of one.
 
-### 2:18 — 3:17 · The result, and the thing it caught
+### 2:31 — 3:23 · The result, and the thing it caught
 
 **Window B**, the Statement tab. Open on the claim sentence and the derivation beside it —
 the headline figure worked line by line, ending in a double-ruled total. Let a viewer read
@@ -124,7 +146,7 @@ For the sensitivity paragraph there is nothing to show and that is fine — stay
 Do not cut to a terminal running `sensitivity`; it takes minutes and the silence will cost
 you the take. The numbers are in `README.md` if a still is wanted instead.
 
-### 3:17 — 4:22 · Bounded, and provable
+### 3:23 — 4:25 · Bounded, and provable
 
 **Window B**, the **Assurance** tab:
 
@@ -149,11 +171,21 @@ there is a fourth gate, and a reviewer who reads that sentence off the screen ha
 the project.
 
 If you want the before-and-after, `git show 5509291 --stat` is the D7 commit and `a802135`
-is the fix — but the script does not call for it, and the spoken script already fills 4:54.
+is the fix — but the script does not call for it, and the spoken script already fills 5:00.
 
-### 4:22 — 4:54 · What it does not do
+### 4:25 — 4:55 · What it does not do
 
 **Browser**, the GitHub repo page, then the README results table. Nothing to operate.
+
+### 4:55 — 5:00 · Close
+
+`docs/card-close.html`, fullscreen. Three figures and the repo URL. Hold four seconds after
+the last word — this is the frame anyone who wants to look the project up will pause on.
+
+Those three figures are the reported batch B numbers, typed into the card by hand. They are
+the only figures in this project that are not read back from the ledger, so if the ledger is
+ever regenerated, re-read them with `metrics --batch B` and `guards --batch B` and edit the
+card. The comment at the top of the file says so too.
 
 ---
 
@@ -176,5 +208,5 @@ is the fix — but the script does not call for it, and the spoken script alread
 other submission will have. Time spent on the console's UI is time not spent on it.
 
 **Re-recording to fix a stumble in the middle.** The spine is "why you can believe the
-number", at 1:14 — 2:18. If that section is clean, a stumble elsewhere is survivable. If it
+number", at 1:29 — 2:31. If that section is clean, a stumble elsewhere is survivable. If it
 is not, the take is not worth keeping however good the rest was.
