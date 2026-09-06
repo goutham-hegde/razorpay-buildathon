@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from reclaim.api.main import app
+from reclaim.api.main import REPORTED_BATCH, app
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -107,3 +107,15 @@ def test_missing_batch_explains_the_fix(client: TestClient) -> None:
     """A 404 should tell the reader which command to run, not just fail."""
     res = client.get("/api/results?batch=ZZ")
     assert res.status_code in (404, 500)
+
+
+def test_exactly_one_batch_is_marked_reported(client: TestClient) -> None:
+    """The console opens on this flag, so it must name the held-out batch and only it.
+
+    Landing a reviewer on the tuning batch would show them a figure the README does not
+    claim, which is a worse failure than showing them nothing.
+    """
+    batches = client.get("/api/batches").json()["batches"]
+    reported = [b for b in batches if b["reported"]]
+    assert [b["name"] for b in reported] == [REPORTED_BATCH]
+    assert reported[0]["role"].startswith("held out")

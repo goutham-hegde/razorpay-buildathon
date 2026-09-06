@@ -4,7 +4,10 @@
 of URLs and commands rather than a list of clicks — because the one shot guaranteed to be
 fumbled on camera is "now let me find case B00106 in this six-hundred-case stream".
 
-Every link below opens the console directly on the shot. Read the script; follow this.
+Every link below opens the console directly on the shot. The script carries the same links
+inline, so it can be read on its own; this file is the longer form — the setup block, the
+framing for each shot, and what to do when something looks wrong. If the two ever disagree
+about a timestamp, `python docs/wordcount.py` settles it.
 
 ---
 
@@ -13,7 +16,7 @@ Every link below opens the console directly on the shot. Read the script; follow
 Four commands, in this order. The first three take about a minute; the fourth stays running.
 
 ```bash
-.venv/Scripts/python -m pytest                                    # expect 310 passed
+.venv/Scripts/python -m pytest                                    # expect 311 passed
 .venv/Scripts/python -m reclaim.eval.replay --batch B --arms all --fresh
 .venv/Scripts/python -m reclaim.core.guards --batch B             # expect 6/6, both arms
 .venv/Scripts/python -m uvicorn reclaim.api.main:app --port 8000
@@ -49,7 +52,7 @@ better shot, so give the window the full width.
 
 ## The shots, in script order
 
-### 0:00 — 0:33 · The trap
+### 0:00 — 0:36 · The trap
 
 **Window A**, already loaded: `case_B00072` under the **naive** arm.
 
@@ -66,15 +69,15 @@ more than a sentence.
 
 > <http://127.0.0.1:8000/?batch=B&run=agent&case=case_B00072&zoom=present>
 
-### 0:33 — 1:19 · What it does
+### 0:36 — 1:14 · What it does
 
 **Editor**, not the browser: `reclaim/core/policy.py`, the `WHAT EACH CAUSE BUYS` block in
 the module docstring (near the top). Nine causes, nine actions, one screen, no scrolling.
 
 Then scroll once to `_post_authorization_veto` if you want a second beat — but the script
-does not need it here, and the same code has its own moment at 3:27.
+does not need it here, and the same code has its own moment at 3:17.
 
-### 1:19 — 2:19 · Why you can believe the number
+### 1:14 — 2:18 · Why you can believe the number
 
 **Terminal**, one command, let it run on camera. It takes about a second:
 
@@ -93,7 +96,7 @@ The stream says *"no actions recorded — which for the control arm is the entir
 is the shot for "a control arm that does **nothing at all**", and it is better than any
 diagram of one.
 
-### 2:19 — 3:27 · The result, and the thing it caught
+### 2:18 — 3:17 · The result, and the thing it caught
 
 **Window B**, the Statement tab. Open on the claim sentence and the derivation beside it —
 the headline figure worked line by line, ending in a double-ruled total. Let a viewer read
@@ -108,7 +111,7 @@ For the sensitivity paragraph there is nothing to show and that is fine — stay
 Do not cut to a terminal running `sensitivity`; it takes minutes and the silence will cost
 you the take. The numbers are in `README.md` if a still is wanted instead.
 
-### 3:27 — 4:37 · Bounded, and provable
+### 3:17 — 4:22 · Bounded, and provable
 
 **Window B**, the **Assurance** tab:
 
@@ -133,9 +136,9 @@ there is a fourth gate, and a reviewer who reads that sentence off the screen ha
 the project.
 
 If you want the before-and-after, `git show 5509291 --stat` is the D7 commit and `a802135`
-is the fix — but the script does not call for it and the take is already at 5:15.
+is the fix — but the script does not call for it, and the spoken script already fills 4:54.
 
-### 4:37 — 5:15 · What it does not do
+### 4:22 — 4:54 · What it does not do
 
 **Browser**, the GitHub repo page, then the README results table. Nothing to operate.
 
@@ -147,8 +150,8 @@ is the fix — but the script does not call for it and the take is already at 5:
   different `--root`. Re-run the setup block.
 - **The arm picker has fewer than four arms** — `replay --arms all` was not used.
 - **A number on screen disagrees with the script** — the script is what is wrong. Every figure
-  in it came from the runs logged in `progress.md` under D8; re-run `metrics --batch B` and
-  fix the script, never the other way round.
+  in it was last re-derived from a clean clone under D10 in `progress.md`; re-run
+  `metrics --batch B` and fix the script, never the other way round.
 - **Invariants panel is not 6/6** — stop and find out why before recording. That table is the
   claim.
 
@@ -160,5 +163,5 @@ is the fix — but the script does not call for it and the take is already at 5:
 other submission will have. Time spent on the console's UI is time not spent on it.
 
 **Re-recording to fix a stumble in the middle.** The spine is "why you can believe the
-number", at 1:19 — 2:19. If that section is clean, a stumble elsewhere is survivable. If it
+number", at 1:14 — 2:18. If that section is clean, a stumble elsewhere is survivable. If it
 is not, the take is not worth keeping however good the rest was.

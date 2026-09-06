@@ -11,13 +11,13 @@ what broke along the way. Newest entries at the bottom.
 |---|---|---|
 | D1 | Sealed world — domain model, personas, outcome engine, batch generator | ✅ **done** |
 | D2 | Detection, append-only ledger, invariants R1–R6 | ✅ **done** |
-| D3 | Root-cause diagnosis + labelled evaluation and confusion matrix | 🟡 **batch B run in flight** |
+| D3 | Root-cause diagnosis + labelled evaluation and confusion matrix | ✅ **done** — batch B diagnosed once, committed |
 | D4 | Policy engine, budgets, retry scheduler | ✅ **done** |
-| D5 | Evaluation harness, four arms, metrics, sensitivity | ✅ **done** — reported table waits on D3 |
-| D6 | Executor + Razorpay test-mode integration | ⬜ (cut before the sensitivity work if time runs short) |
-| D7 | Console polish + one injected failure handled gracefully | ⬜ (shell built early, D2) |
-| D8 | README, ADRs, results writeup | 🟡 everything but the results section |
-| D9 | Video | 🟡 script drafted, figures pending batch B |
+| D5 | Evaluation harness, four arms, metrics, sensitivity | ✅ **done** |
+| D6 | Executor + Razorpay test-mode integration | ❌ **cut**, deliberately — see D5, and "what this does not do" in the README |
+| D7 | Console polish + one injected failure handled gracefully | ✅ **done** (D8b–D9) |
+| D8 | README, ADRs, results writeup | ✅ **done** — results table written from the ledger |
+| D9 | Video | 🟡 script and runsheet done, 4:54; recording is the last thing outstanding |
 
 ---
 
@@ -1968,3 +1968,120 @@ every URL in docs/recording-runsheet.md          6/6 → 200
 **Next**
 
 Record the video. The runsheet is updated for the new tab names and for `Large`.
+
+---
+
+### D10 — Walking the reviewer's path, once, properly · 2026-09-06
+
+**Built**
+
+Nothing new. This was a submission pass: read the repo as a stranger with no key and no
+context, from the first command in the README to the last link in the runsheet, and fix
+whatever that reading found. Four things came out of it.
+
+**The console opened on the wrong batch.** The picker chose `batches.find(b => b.has_ledger)`,
+and `/api/batches` sorts directory names, so that is A — the *tuning* batch. Worse, A has no
+`diagnoses.jsonl`: the model is run once per batch and only B has one, so A's headline row
+read `agent — not replayed yet`. Anyone who followed the README's `uvicorn` line landed on a
+batch whose figures this repo does not claim, with the arm the whole project is about
+missing from the table. There is now a `REPORTED_BATCH` constant in `api/main.py`, a
+`reported` flag on each batch, and the console prefers it over sort order. A link still wins
+over both.
+
+The absent arm is also explained rather than left blank — `/api/results` returns a
+`pending_note` when `agent` is missing off the reported batch, and the row reads *"not
+replayed on this batch — the model diagnoses are generated once per batch and committed, and
+only batch B has them"*. That is the seal's economics stated where someone actually meets it,
+instead of only in the README.
+
+**The README understated its own sensitivity result.** It said "here is the range over which
+the ranking survives" and pointed a reader at `sensitivity --batch B`. That command prints
+`held in 16/20 trials (80%)`. `solution.md` §10 says the ordering held in **20 of 20** — true,
+correctly scoped to batch A over `control,naive,rules`, and both figures reproduce — but no
+reader carries a scope across two files. The README now gives the batch B numbers: `agent` is
+the top arm in 20 of 20 worlds, the full `naive < rules < agent` ordering holds in 16, the
+four exceptions are worlds where the jitter lifts the halt threshold enough that `naive`
+survives an extra presentation and passes `rules`, and this arm's own left tail runs to
+−Rs 7,19,602. The number a command prints belongs in the file that tells you to run it.
+
+**The video script was over.** 842 words, 5:36 at a slow read, against a five-minute cap. Recut
+to **737 — 4:54 at 150 wpm**, and every shot's URL is now inline in the script so it reads
+standalone; the runsheet stays as the longer form. The paragraph that went was the "constant
+in a file, not a prompt" line, not because it is weak but because the paragraph above it
+already makes the claim — it is noted as the first thing to put back if a take runs short.
+Timestamps are recomputed from the new per-section counts rather than nudged.
+
+**What broke**
+
+**A clean clone had never actually been run.** Every figure in this repo is checked against a
+working tree that has a `ledger.db` sitting in it from the last replay — and `.gitignore` has
+`*.db`, so a reviewer has no ledger at all. Cloned the public repo into a temp directory and
+ran the README's Quickstart against it with `--root`. It reproduces exactly, so the claim
+holds, but it was a claim and not a fact until today. `replay` before the console is not
+optional on a fresh clone, which is what the API's 404 body already said; it now has a reason
+to be trusted.
+
+**Two documents told a reviewer to expect the wrong test count.** Adding
+`test_exactly_one_batch_is_marked_reported` took the suite from 310 to 311, and `# expect 310
+passed` is the *first line* of the runsheet's setup block — the first command anyone runs
+before recording, disagreeing with the terminal. A number pasted into prose is a number that
+will go stale; the ones that matter are written by `eval.report --write`, and these two were
+not.
+
+**The sorted-order bug is the interesting one.** Nothing was wrong with
+`find(b => b.has_ledger)` when it was written — there was one batch. The second batch made an
+incidental ordering into an editorial decision about which numbers a reviewer sees first, and
+nothing failed, because a default that is merely *wrong* rather than *broken* has no test to
+fail. Now it has one: exactly one batch may carry `reported`, and it must be the held-out
+one.
+
+**Verified**
+
+Cloned from GitHub into a temp directory — no `.env`, no ledger — and ran the README:
+
+```
+git clone https://github.com/goutham-hegde/razorpay-buildathon.git
+
+python -m reclaim.eval.replay --batch B --arms all --root <clone>/data
+  arm         recovered   of n     gross Rs    cost Rs  halted  double
+  control           143    600      420,657          0       0       0
+  naive             266    600      791,834      7,012     244      26
+  rules             270    600      757,730      9,256       0       0
+  agent             349    600    1,006,151     10,547       0       0
+
+python -m reclaim.core.guards --batch B --root <clone>/data
+  2 asserted arm(s): 6/6 held
+
+python -m reclaim.eval.ablation --batch A --root <clone>/data
+  veto off vs on: gross 1,034,278 → 1,008,387 (-25,891), doubles 4 → 0
+
+python -m reclaim.eval.sensitivity --batch B --root <clone>/data
+  naive < rules < agent held in 16/20 (80%); doubles 0 [0..0] for rules and agent
+
+python -m reclaim.eval.sensitivity --batch A --arms control,naive,rules --root <clone>/data
+  naive < rules held in 20/20 — the solution.md §10 table, reproduced
+```
+
+Every figure matched what is printed in `README.md`. Then, in the working tree:
+
+```
+python -m pytest                                          311 passed in 8.12s
+python -m reclaim.core.guards --batch B                   2 asserted arm(s): 6/6 held
+python docs/wordcount.py                                  737 words, 4:54 — fits by 13
+
+curl /api/batches      A reported=false · B reported=true, role "held out - reported"
+curl /api/results?batch=A   pending_arms ['agent'] + pending_note
+curl /api/results?batch=B   pending_arms [] · pending_note null
+
+chrome --headless --screenshot http://127.0.0.1:8931/
+  opens on B / agent / "held out - reported", 58.2%, net lift 5,74,947
+```
+
+Also checked, because a public repo is a different artifact from a working one:
+`git ls-files | grep -i claude` empty, `.env` untracked, no key material in any tracked file,
+both linked repos public, nothing unpushed, commit identity `goutham-hegde`.
+
+**Next**
+
+Record. The script is 4:54 of speaking and the silences are marked; the runsheet's links all
+resolve against a server started per its own setup block.

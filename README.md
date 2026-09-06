@@ -91,6 +91,15 @@ numbers that make your agent win"*: yes, and here is the range over which the **
 survives. It is also what caught the most important design flaw in the project — see
 [`solution.md`](solution.md) §10.
 
+On the reported batch, `agent` is the top arm in **20 of 20** perturbed worlds. The full
+`naive < rules < agent` ordering holds in **16 of 20**, and that is the figure the command
+prints. The four exceptions are worlds where the jitter pushes the recurring rail's halt
+threshold high enough that `naive` survives an extra presentation and finishes above
+`rules` — `agent` is ahead of both in every one of them. The same run reports this arm's own
+worst case — 7 of 20 worlds where the halt threshold catches the policy too, and a net lift
+that runs as low as −Rs 7,19,602. Those columns are printed next to the ordering line rather
+than left out of it.
+
 **Invariants, asserted after every run.** Not metrics — falsifiable claims:
 
 ```
@@ -234,6 +243,32 @@ docs/
   recording-runsheet.md what to have on screen, per section, as deep links
   wordcount.py         what it actually runs to, per section
 ```
+
+---
+
+## What this does not do
+
+Stated here rather than left for a reviewer to find.
+
+- **The world is simulated, and its constants are anchors rather than measurements.** They
+  are order-of-magnitude figures from public sources - bank-wise UPI decline data, published
+  card-versus-UPI completion gaps - and no conclusion here rests on their exact values. What
+  is claimed is that the ranking of the arms survives moving all of them at once, and the
+  range is printed rather than described.
+- **Nothing here charges a real card.** The arms present charges to the simulated world and
+  write to the ledger; there is no live PSP integration and `core/` holds no client for one.
+  That was a deliberate cut. A test-mode integration would have demonstrated less than the
+  control arm does, and cost more of the nine days than it was worth.
+- **Escalation is charged for and credited with nothing.** Every retry fee, message and
+  incentive is subtracted inside each arm's `net` before lift is computed, and no goodwill or
+  retention value is added back. Net lift is a floor, not an estimate.
+- **The diagnosis is scored against a taxonomy this repo also wrote.** `confusion.py` reports
+  that honestly, including the two confusion pairs the error catalogue was built not to make
+  easy - but a real acquirer's free text is messier than a generator's, and the accuracy
+  figure should be read as a property of this world.
+- **Every case in the generated batches is `eligible`.** The detection rules that refuse a
+  pending collect request or a redelivered webhook are covered by unit tests rather than by
+  the batch, because the generator emits one clean failure per customer.
 
 ---
 

@@ -146,8 +146,15 @@ async function boot() {
   sel.innerHTML = data.batches
     .map((b) => `<option value="${b.name}">${b.name}</option>`).join("");
 
+  // A link wins; otherwise open on the reported batch, not on whichever one sorts first.
+  // Batch A is the tuning batch and its figures are not the result, so landing there by
+  // accident is worse than showing nothing.
   const asked = wanted.batch && data.batches.find((b) => b.name === wanted.batch.toUpperCase());
-  const chosen = asked || data.batches.find((b) => b.has_ledger) || data.batches[0];
+  const chosen =
+    asked ||
+    data.batches.find((b) => b.reported && b.has_ledger) ||
+    data.batches.find((b) => b.has_ledger) ||
+    data.batches[0];
   sel.value = chosen.name;
   state.batch = chosen.name;
   state.meta = Object.fromEntries(data.batches.map((b) => [b.name, b]));
@@ -311,13 +318,14 @@ function renderStatement(data) {
 
   // An arm that has not been replayed yet is named rather than silently absent, so a reader
   // can tell "not built" apart from "built and scored zero".
+  const why = data.pending_note ? ` — ${escapeHtml(data.pending_note)}` : "";
   for (const arm of data.pending_arms || []) {
     $("#arms tbody").insertAdjacentHTML("beforeend",
       `<tr class="pending"><td class="arm">${escapeHtml(arm)}</td>` +
-      `<td colspan="5">not replayed yet</td></tr>`);
+      `<td colspan="5">not replayed on this batch${why}</td></tr>`);
     $("#working tbody").insertAdjacentHTML("beforeend",
       `<tr class="pending"><td class="arm">${escapeHtml(arm)}</td>` +
-      `<td colspan="10">not replayed yet</td></tr>`);
+      `<td colspan="10">not replayed on this batch${why}</td></tr>`);
   }
 }
 

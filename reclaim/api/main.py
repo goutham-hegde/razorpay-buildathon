@@ -30,6 +30,12 @@ from reclaim.eval.metrics import batch_metrics
 DATA_ROOT = Path("data")
 STATIC = Path(__file__).parent / "static"
 
+#: The batch the README reports. A is tuned against; B is held out, and is the only batch
+#: whose numbers are quoted anywhere. The console opens on it rather than on whichever
+#: batch happens to sort first, because landing a reviewer on the tuning batch invites them
+#: to read a tuning figure as the result.
+REPORTED_BATCH = "B"
+
 app = FastAPI(title="reclaim", docs_url="/api/docs", openapi_url="/api/openapi.json")
 
 
@@ -79,7 +85,8 @@ def batches() -> dict[str, Any]:
                 "cases": len(b.cases),
                 "at_risk_paise": b.at_risk_paise,
                 "seed": b.meta.get("seed"),
-                "role": "held out - reported" if name == "B" else "tuning",
+                "role": "held out - reported" if name == REPORTED_BATCH else "tuning",
+                "reported": name == REPORTED_BATCH,
                 "has_ledger": (DATA_ROOT / name / "ledger.db").exists(),
             }
         )
@@ -108,17 +115,27 @@ def results(batch: str = Query("B")) -> dict[str, Any]:
     b = _batch(batch)
     with _ledger(batch) as lg:
         arms = [m.as_dict() for m in batch_metrics(lg, batch)]
+    # Named here rather than in the page so the frontend cannot quietly claim an arm
+    # exists before it has been built.
+    pending = [
+        a for a in ("control", "naive", "rules", "agent")
+        if a not in {m["arm"] for m in arms}
+    ]
     return {
         "batch": b.name,
         "cases": len(b.cases),
         "at_risk_paise": b.at_risk_paise,
         "arms": arms,
-        # Named here rather than in the page so the frontend cannot quietly claim an arm
-        # exists before it has been built.
-        "pending_arms": [
-            a for a in ("control", "naive", "rules", "agent")
-            if a not in {m["arm"] for m in arms}
-        ],
+        "pending_arms": pending,
+        # 'agent' missing off the reported batch is not an oversight: the model is run once
+        # per batch and its output is committed, and only the reported batch has one. Saying
+        # so beats leaving a reviewer to read a blank row as a broken build.
+        "pending_note": (
+            "the model diagnoses are generated once per batch and committed, and only "
+            f"batch {REPORTED_BATCH} has them"
+            if pending == ["agent"] and b.name != REPORTED_BATCH
+            else None
+        ),
     }
 
 
