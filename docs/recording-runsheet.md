@@ -236,9 +236,22 @@ you the take. The numbers are in `README.md` if a still is wanted instead.
 
 > <http://127.0.0.1:8000/?batch=B&view=assurance&zoom=present>
 
-Four arms side by side, six checks each. Both asserted arms read `6 of 6 held`. Naive reads
-`5 of 6` with `R1 FAILED` in red and its twenty-six double-charged cases listed underneath —
-that contrast is worth a beat, because it is the same six checks run against the strawman.
+**Unscrolled for the whole narration.** Measured at 1920x1080 with `zoom=present`, the frame
+holds the three columns entire — headers at content-y 444, R1 at 546, R6 at 976, the closing
+rule at 1001 — so `control 6 of 6`, `naive 5 of 6` and `rules 6 of 6` read across one line
+with naive's `R1 FAILED` in red below them. That contrast is the shot: the same six checks
+run against the strawman.
+
+**The fourth card is not missing.** It is a three-column grid, so `agent` wraps to a second
+row and starts at content-y 1392 — below the fold, and 990px from the three headers, which is
+just wider than a 1080 frame minus the sticky tab bar. The two cannot be in one frame, so do
+not try.
+
+**One scroll, and it is the last thing you do.** On "a constraint has no window", scroll until
+the arm names tuck under the tab bar. That lands the pink `R1 failed on 26 cases` list
+(content-y 1021-1359, with `case_B00072` at the top of it — the case from the cold open) and
+the `agent 6 of 6 held` header at 1434. It is the only frame in the entire cut that shows the
+arm the video is about holding all six, so it is worth the move.
 
 Then **Window A**, and this is the payoff shot of the whole video:
 

@@ -169,10 +169,15 @@ twenty**. The full ordering holds in **sixteen**, and sixteen is what I report.
 
 ## 3:24 — 4:26 · Bounded, and provable
 
-> **Open:** <http://127.0.0.1:8000/?batch=B&view=assurance&zoom=present>
-> — four arms side by side, six checks each. Both asserted arms read `6 of 6 held`. Naive
-> reads `5 of 6` with `R1 FAILED` in red and its twenty-six double-charged cases listed
-> underneath. Hold there for a beat.
+> **Open:** <http://127.0.0.1:8000/?batch=B&view=assurance&zoom=present> and do **not**
+> scroll for the narration — unscrolled at 1080 the frame already holds all three columns
+> complete, R1 through R6, with `control 6 of 6`, `naive 5 of 6` and `rules 6 of 6` on one
+> line and naive's `R1 FAILED` in red beneath.
+>
+> **One scroll, on the last sentence.** As you say "a constraint has no window", scroll until
+> the arm names sit under the tab bar: that brings up the pink `R1 failed on 26 cases` list
+> and the `agent 6 of 6 held` card, which is the only place in the cut where the arm the
+> video is about is shown holding all six.
 >
 > **Then open — the payoff shot of the whole video:**
 > <http://127.0.0.1:8000/?batch=B&run=agent&case=case_B00106&zoom=present>
