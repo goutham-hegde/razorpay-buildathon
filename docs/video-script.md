@@ -181,8 +181,16 @@ twenty**. The full ordering holds in **sixteen**, and sixteen is what I report.
 >
 > **Then open — the payoff shot of the whole video:**
 > <http://127.0.0.1:8000/?batch=B&run=agent&case=case_B00106&zoom=present>
-> One decision, and a reason field that explains itself. Let it be legible and stop talking
-> over it. A reviewer who reads that sentence off the screen has understood the project.
+> Scroll ~4 notches, as in the cold open, until `case_B00106` tucks under the tab bar. The
+> panel is about 1,040px against roughly 1,005px of usable frame, so the final `closed`
+> row sits at or just past the bottom edge — that is fine, `close · case closed as
+> reconcile_hold` is above it and says the same thing.
+>
+> **Three entries, and not one of them is a charge.** Point at `Bank reference: none
+> returned` in the error box while saying "confidently": that absent reference is exactly why
+> the confidence gate could not catch this one, and it is why the rule that replaced it reads
+> no diagnosis at all. Then let the `hold` reason be legible and stop talking over it. A
+> reviewer who reads that sentence off the screen has understood the project.
 
 Compliant escalation, stopping rules, an audit trail. Not features — six assertions that can
 fail, re-derived from the ledger after every run.

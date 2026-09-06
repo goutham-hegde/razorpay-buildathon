@@ -267,6 +267,30 @@ Let that be legible. It is the case that broke R1 on the first held-out run, it 
 there is a fourth gate, and a reviewer who reads that sentence off the screen has understood
 the project.
 
+**Scroll as in the cold open** — about four notches, until `case_B00106` tucks under the tab
+bar. The panel runs roughly 1,040px from the title to the last trail row against about
+1,005px of usable frame once the sticky tab bar takes its 75, so the final `closed ·
+reconcile_hold` row lands on or just past the bottom edge. Leave it there; `close · case
+closed as reconcile_hold` is directly above and carries the same fact.
+
+**The detail to point at is `Bank reference: none returned`,** in the error box, while saying
+"confidently". The double-charge gate weighs the diagnoser's confidence *and* looks for a bank
+reference, and this failure carried neither a low confidence nor a reference — which is the
+whole reason the rule that replaced it consults no diagnosis at all. The contrast is exact
+and both halves are in this cut:
+
+| | `case_B00072` (cold open) | `case_B00106` (here) |
+|---|---|---|
+| rail | `card_recurring · AXIS` | `upi_autopay · BOB` |
+| bank reference | `AXIS821756247497` | **none returned** |
+| step | `payment_response` | `payment_response` |
+| agent's action | `escalate` | `hold` |
+
+Two different rails, two different reference situations, one shared `step` — and the veto
+holds both, because `step` is the only thing it reads. Say "three entries, and not one of
+them is a charge" if you want the count on screen to do work; the panel header reads
+`EVERY ACTION TAKEN — 3 ENTRIES`.
+
 If you want the before-and-after, `git show 5509291 --stat` is the D7 commit and `a802135`
 is the fix — but the script does not call for it, and the spoken script already fills 5:00.
 
