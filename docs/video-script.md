@@ -125,13 +125,13 @@ myself, and every recovery figure would be meaningless. So the boundary is enfor
 intended: the agent may never import the world, and a test fails if it does. The most
 important test in the repository.
 
-Second — the one most demos skip. A control arm that does **nothing at all**. Because
-**23.8%** of these payments come back on their own. The customer retries. The bank clears.
-Report gross recovery and you are claiming credit for money that was already coming back. So
-every number here is **lift over that control**. Never gross.
+Second — the one most demos skip. A control arm that does **nothing at all**: no charges, no
+messages, nothing. And it still recovers **23.8%**, because failed payments come back on
+their own. The customer retries. The bank clears. Report gross recovery and you take credit
+for money that was already coming back. So every number here is **lift over that control**.
+Never gross.
 
-Third: I tuned on batch A. Everything you are about to see is batch B, which the policy has
-never been tuned against.
+Third: this is batch B. I tuned on A, and the policy has never seen this one.
 
 ---
 
@@ -173,8 +173,8 @@ twenty**. The full ordering holds in **sixteen**, and sixteen is what I report.
 > One decision, and a reason field that explains itself. Let it be legible and stop talking
 > over it. A reviewer who reads that sentence off the screen has understood the project.
 
-Compliant escalation, stopping rules, an audit trail. Here those are not features — they are
-six assertions that can fail, re-derived from the ledger after every run.
+Compliant escalation, stopping rules, an audit trail. Not features — six assertions that can
+fail, re-derived from the ledger after every run.
 
 The first is structural. "No payment charged twice" is a unique constraint, and the executor
 inserts the claim **before** it charges. Check-then-charge leaves a window where a retry and

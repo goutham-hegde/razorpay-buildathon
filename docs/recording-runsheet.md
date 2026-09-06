@@ -169,9 +169,25 @@ Then **Window A**, arm picker to **control**:
 
 > <http://127.0.0.1:8000/?batch=B&run=control&view=book&zoom=present>
 
-The stream says *"no actions recorded — which for the control arm is the entire point."* That
-is the shot for "a control arm that does **nothing at all**", and it is better than any
-diagram of one.
+**This shot needs no scrolling.** It is the only one that fits a 1080 frame exactly, which is
+the joke: the arm that did nothing needs no room. The stream reads *"No actions recorded.
+This arm did nothing at all — which for the control arm is the entire point, and is what
+every other arm's recovery figure is measured against."* Better than any diagram of one.
+
+**The counter row is a trap, and the script is worded around it.** It reads `0 cases worked`,
+`0 charges presented`, `0 messages sent`, **`0 payments recovered`** — and those are *replay*
+counters, how much of the recorded stream has been played back, not what the arm achieved.
+Saying "23.8% come back on their own" over a screen that says `0 payments recovered` reads as
+a flat contradiction to anyone watching, in the one section whose whole subject is honesty.
+So the line is *"a control arm that does nothing at all: no charges, no messages, nothing.
+**And it still recovers 23.8%**"* — actions first, matching the zeros on screen, then the
+recovery. Do not shorten it back.
+
+**Do not try to show a control-arm Statement.** The arm picker drives the case book only;
+`renderStatement` fixes its subject as `by.agent || by.rules || …`, so the Statement tab
+reads "the **agent** arm recovered 58.2%" no matter what the picker says. That is deliberate
+— there is one statement, not four — but it means switching tabs here would put the agent's
+headline on screen under a sentence about the control arm.
 
 ### 2:32 — 3:24 · The result, and the thing it caught
 
