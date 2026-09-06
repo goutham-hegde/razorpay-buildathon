@@ -210,9 +210,21 @@ arms table, which is not on screen yet.
 
 Then scroll to the four-arm table.
 
-The two columns to point at are `halt %` and `net Rs` — naive at **66.1%** and
-**−5,188,982** against a gross figure that looks like a win. If you can highlight, highlight
-the naive row's `net Rs` cell while saying "sixty lakh of future revenue".
+**Press `End`, not a counted number of wheel notches.** The working table is the last thing
+in the statement view, so the bottom of the page is a fixed, repeatable frame that holds
+*both* tables at once. That is not a nicety: the four figures this section names are split
+across them.
+
+| Said | Shown | Where |
+|---|---|---|
+| "destroys **66.1%** of the recurring book" | `244 · 66.1%` | upper table, `MANDATES HALTED` |
+| "**eight lakh rupees** of invoices" | `7,91,834` | **lower** table, `GROSS` |
+| "**sixty lakh** of future revenue" | `(59,73,804)` | **lower** table, `FORFEITED` |
+| "**Rs 62 lakh** behind the agent" | `(56,09,640)` against `5,74,947` | upper table, `LIFT ON CONTROL`, two rows apart |
+
+So the choreography is upper table, down to the lower one, back up. Naive's `44.3%` sits two
+columns from its `(51,88,983)` — that pairing, a recovery rate that reads as a win beside a
+net that is a catastrophe, is the whole argument, and both are on the same row.
 
 For the sensitivity paragraph there is nothing to show and that is fine — stay on the table.
 Do not cut to a terminal running `sensitivity`; it takes minutes and the silence will cost

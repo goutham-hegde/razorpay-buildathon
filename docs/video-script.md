@@ -139,6 +139,10 @@ Third: this is batch B. I tuned on A, and the policy has never seen this one.
 
 > **Open:** <http://127.0.0.1:8000/?batch=B&view=statement&zoom=present>
 >
+> For the second half of this section, press **End**. Nothing follows the working table, so
+> the bottom of the page puts *both* tables in one frame — which is required, because two of
+> the four figures named below live in the lower one.
+>
 > **Scroll ~2 notches first**, until the `reclaim` masthead is gone and `THE CLAIM` sits at
 > the top. The tab bar is sticky so it stays, keeping `BATCH B` and `ARM agent` on screen —
 > and only from there is the derivation's double-ruled total, `Net lift over doing nothing
