@@ -191,10 +191,24 @@ headline on screen under a sentence about the control arm.
 
 ### 2:32 — 3:24 · The result, and the thing it caught
 
-**Window B**, the Statement tab. Open on the claim sentence and the derivation beside it —
-the headline figure worked line by line, ending in a double-ruled total. Let a viewer read
-down it once before you say anything; it is the shot that makes the number checkable rather
-than assertable. Then scroll to the four-arm table.
+**Window B**, the Statement tab, **scrolled about two notches** — far enough that the
+`reclaim` masthead is gone and `THE CLAIM` is at the top of the frame. `.tabs` is
+`position: sticky`, so the tab bar and the `BATCH B` / `ARM agent` pickers stay pinned while
+the masthead goes.
+
+That scroll is not cosmetic. Unscrolled at 1080 the derivation runs off the bottom at
+`less  Recovered without any help — what the control arm collected  (4,20,657)`, so the
+double-ruled total it is all building to — `Net lift over doing nothing  5,74,947` — is
+below the fold. Reading a viewer down a sum whose answer is off screen is worse than not
+showing the sum. Scrolled, the claim, the four figures and the complete derivation are in
+one frame together.
+
+Let a viewer read down it once before you say anything; it is the shot that makes the number
+checkable rather than assertable. **Rs 2,47,129**, the figure the script names here, is in the
+Notes column on the right under "is what the model is worth" — point at it rather than at the
+arms table, which is not on screen yet.
+
+Then scroll to the four-arm table.
 
 The two columns to point at are `halt %` and `net Rs` — naive at **66.1%** and
 **−5,188,982** against a gross figure that looks like a win. If you can highlight, highlight

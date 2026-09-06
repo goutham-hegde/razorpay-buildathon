@@ -139,17 +139,19 @@ Third: this is batch B. I tuned on A, and the policy has never seen this one.
 
 > **Open:** <http://127.0.0.1:8000/?batch=B&view=statement&zoom=present>
 >
-> **On screen:** the claim sentence, then the derivation beside it — the headline figure
-> worked line by line to a double-ruled total. Let a viewer read down it once before you say
-> anything. Then scroll to the four-arm table and point at `halt %` and `net Rs`: naive at
-> **66.1%** and **−5,188,982**, against a gross figure that looks like a win.
+> **Scroll ~2 notches first**, until the `reclaim` masthead is gone and `THE CLAIM` sits at
+> the top. The tab bar is sticky so it stays, keeping `BATCH B` and `ARM agent` on screen —
+> and only from there is the derivation's double-ruled total, `Net lift over doing nothing
+> 5,74,947`, actually inside the frame. Unscrolled it is a few pixels below the fold, which
+> would leave you reading down a sum whose answer is off screen.
 >
-> For the sensitivity paragraph there is nothing to show, and that is fine — stay on the
-> table. Do not cut to a terminal running `sensitivity`; it takes minutes.
+> **On screen:** the claim sentence, the four figures, and the whole derivation. **Hold five
+> seconds in silence** and let a viewer read down it. The number you name — **Rs 2,47,129** —
+> is in the Notes column on the right, under "is what the model is worth".
 
 Four arms, one batch. Rules-only and the agent run the **same policy engine** and differ
-only in what diagnosed the failure — so the gap between those two rows is exactly what the
-model is worth.
+only in what diagnosed the failure. So that gap — **Rs 2,47,129** — is exactly what the model
+is worth, and nothing else.
 
 Now look at naive. Retry a subscription too often and the rail **halts the mandate**. Naive
 destroys **66.1%** of the recurring book. It recovers eight lakh rupees of invoices and
