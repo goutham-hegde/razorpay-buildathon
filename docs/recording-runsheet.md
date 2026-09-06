@@ -296,7 +296,27 @@ is the fix — but the script does not call for it, and the spoken script alread
 
 ### 4:26 — 4:55 · What it does not do
 
-**Browser**, the GitHub repo page, then the README results table. Nothing to operate.
+**Browser**, held static on the README's own limits section:
+
+> <https://github.com/goutham-hegde/razorpay-buildathon#what-this-does-not-do>
+
+Nothing to operate. The anchor is `## What this does not do` in `README.md`, slugified;
+if that heading is ever retitled, the link dies silently, so re-check it before a take.
+
+Not the results table. Two sections have already been spent on those figures, and the words
+here are about limits — landing on the list of things the project does *not* claim, in a repo
+the viewer can now see is public, is the stronger close.
+
+**Set these before the take:**
+
+- **The repo description.** GitHub's About sidebar occupies the right third of this frame and
+  an empty one reads as an unfinished project. About → gear.
+- **GitHub's light theme.** Settings → Appearance. Every other frame in the cut is on ledger
+  paper; a dark page here is a visible seam between the console and the closing card.
+
+This is the one shot in the runsheet that could not be checked headlessly — GitHub renders
+too much of itself in JavaScript for a `--screenshot` capture to be worth anything. Open it
+and look at it yourself before you record.
 
 ### 4:55 — 5:00 · Close
 

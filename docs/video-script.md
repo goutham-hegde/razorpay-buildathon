@@ -212,7 +212,16 @@ and why.
 
 ## 4:26 — 4:55 · What it does not do
 
-> **Show:** the GitHub repo page, then the README results table. Nothing to operate.
+> **Open:** <https://github.com/goutham-hegde/razorpay-buildathon#what-this-does-not-do> and
+> hold it static. The anchor lands on the section the script is about, so the five bullets are
+> on screen as you say them. Not the results table — two clips have already been spent on
+> those numbers, and ending on a list of things you are *not* claiming is the more credible
+> finish.
+>
+> **Two things to set before this take.** The repo needs a description: the About sidebar is
+> a third of this frame and an empty one reads as an unfinished repo. And switch GitHub to
+> the light theme — a dark flash between the light console and the light closing card is a
+> seam.
 
 The limits, straight. The world is synthetic and its constants are anchors from public
 sources, not measurements. I am not claiming they are right — I am claiming the ranking
