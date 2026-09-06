@@ -35,8 +35,9 @@ Then open two browser windows and leave them on these:
 And one terminal, cleared, sitting in the repo root.
 
 Console URLs take `batch`, `run` (arm name or run id), `case`, `view` (`statement`, `book`
-or `assurance`) and `zoom`. A link naming a `case` opens the case book on it. The address bar rewrites itself as you click, so any shot you find by hand is a
-link you can paste back into this file.
+or `assurance`) and `zoom`. A link naming a `case` opens the case book on it. With no `batch`
+the console opens on **B**, the reported one. The address bar rewrites itself as you click,
+so any shot you find by hand is a link you can paste back into this file.
 
 **Record at 1920x1080 or wider, and leave the console on `Large`.** Every link here carries
 `zoom=present`, which scales the whole page — type, padding and controls together — to

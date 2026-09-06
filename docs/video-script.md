@@ -129,8 +129,8 @@ gap between those two rows is exactly what the model is worth.
 Now look at naive. Retry a subscription too often and the rail **halts the mandate**. Naive
 destroys **66.1%** of the recurring book — nine months of forfeited revenue each. It recovers
 eight lakh rupees of invoices and destroys sixty lakh of future revenue, finishing **Rs 62
-lakh** behind the agent. Invisible, if you report recovery rate
-alone — which is why there is a halt column and a net column.
+lakh** behind the agent. Invisible, if you report recovery rate alone — which is why there is
+a halt column and a net column.
 
 How confident am I? Twenty worlds, every constant moved twenty percent at once. The agent is
 the top arm in **all twenty**. The full ordering holds in **sixteen**, and sixteen is what I
@@ -154,15 +154,15 @@ The track asks for compliant escalation, stopping rules, and an audit trail. Her
 not features — they are six assertions that can fail, re-derived from the ledger after every
 run.
 
-The first is structural. "No payment charged twice" is a unique constraint, and the
-executor inserts the claim **before** it charges. Check-then-charge leaves a window where a
-retry and a redelivered webhook both get through. A constraint has no window.
+The first is structural. "No payment charged twice" is a unique constraint, and the executor
+inserts the claim **before** it charges. Check-then-charge leaves a window where a retry and
+a redelivered webhook both get through. A constraint has no window.
 
-And on the held-out batch it broke anyway — not the constraint, but a *new* attempt, against a
-payment that had already moved money. The model called that one
-a technical decline, confidently. So there is one more rule, and it reads no diagnosis at
-all: if the failure came back **after** the debit instruction went out, we never charge again.
-It costs four recoveries, and the repo prices that.
+And on the held-out batch it broke anyway — not the constraint, but a *new* attempt, against
+a payment that had already moved money. The model called that one a technical decline,
+confidently. So there is one more rule, and it reads no diagnosis at all: if the failure came
+back **after** the debit instruction went out, we never charge again. It costs four
+recoveries, and the repo prices that.
 
 The ledger is append-only, enforced by triggers. Every decision is on it — what the agent
 believed, how confident, and why.
