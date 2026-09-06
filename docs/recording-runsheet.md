@@ -66,7 +66,7 @@ better shot, so give the window the full width.
 
 ## The shots, in script order
 
-### 0:00 — 0:15 · Title
+### 0:00 — 0:17 · Title
 
 **A third window**, or the same one on another tab: `docs/card-open.html`, opened from the
 filesystem. Fullscreen, nothing moves, nothing to operate. Hold two seconds before the first
@@ -75,7 +75,11 @@ word and two after the last, so the cut into the console has somewhere to land.
 Check the name on it before recording — it is taken from the repository's git identity, not
 from anything you typed.
 
-### 0:15 — 0:51 · The trap
+The last line of the intro plants *"retries everything three times"*, and the last line of
+the next section pays it off with *"and charges it twice"*. They are a pair; if one gets
+rewritten, rewrite both or the payoff lands on nothing.
+
+### 0:17 — 0:53 · The trap
 
 **Window A**, already loaded: `case_B00072` under the **naive** arm.
 
@@ -92,15 +96,15 @@ more than a sentence.
 
 > <http://127.0.0.1:8000/?batch=B&run=agent&case=case_B00072&zoom=present>
 
-### 0:51 — 1:29 · What it does
+### 0:53 — 1:30 · What it does
 
 **Editor**, not the browser: `reclaim/core/policy.py`, the `WHAT EACH CAUSE BUYS` block in
 the module docstring (near the top). Nine causes, nine actions, one screen, no scrolling.
 
 Then scroll once to `_post_authorization_veto` if you want a second beat — but the script
-does not need it here, and the same code has its own moment at 3:23.
+does not need it here, and the same code has its own moment at 3:24.
 
-### 1:29 — 2:31 · Why you can believe the number
+### 1:30 — 2:32 · Why you can believe the number
 
 **Terminal**, one command, let it run on camera. It takes about a second:
 
@@ -131,7 +135,7 @@ The stream says *"no actions recorded — which for the control arm is the entir
 is the shot for "a control arm that does **nothing at all**", and it is better than any
 diagram of one.
 
-### 2:31 — 3:23 · The result, and the thing it caught
+### 2:32 — 3:24 · The result, and the thing it caught
 
 **Window B**, the Statement tab. Open on the claim sentence and the derivation beside it —
 the headline figure worked line by line, ending in a double-ruled total. Let a viewer read
@@ -146,7 +150,7 @@ For the sensitivity paragraph there is nothing to show and that is fine — stay
 Do not cut to a terminal running `sensitivity`; it takes minutes and the silence will cost
 you the take. The numbers are in `README.md` if a still is wanted instead.
 
-### 3:23 — 4:25 · Bounded, and provable
+### 3:24 — 4:26 · Bounded, and provable
 
 **Window B**, the **Assurance** tab:
 
@@ -173,7 +177,7 @@ the project.
 If you want the before-and-after, `git show 5509291 --stat` is the D7 commit and `a802135`
 is the fix — but the script does not call for it, and the spoken script already fills 5:00.
 
-### 4:25 — 4:55 · What it does not do
+### 4:26 — 4:55 · What it does not do
 
 **Browser**, the GitHub repo page, then the README results table. Nothing to operate.
 
@@ -208,5 +212,5 @@ card. The comment at the top of the file says so too.
 other submission will have. Time spent on the console's UI is time not spent on it.
 
 **Re-recording to fix a stumble in the middle.** The spine is "why you can believe the
-number", at 1:29 — 2:31. If that section is clean, a stumble elsewhere is survivable. If it
+number", at 1:30 — 2:32. If that section is clean, a stumble elsewhere is survivable. If it
 is not, the take is not worth keeping however good the rest was.

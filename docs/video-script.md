@@ -14,7 +14,7 @@ recording with talking either side of it.
 Spoken text only — headings, cues and this preamble excluded — it runs **749 words**: exactly
 **5:00** at 150 words per minute, and **4:41** at 160, which is the pace this register
 actually wants. Take the second number: the difference is what pays for the deliberate
-silences — the arm switch at 0:51, the derivation at 2:31, the reason field at 4:25, and two
+silences — the arm switch at 0:53, the derivation at 2:32, the reason field at 4:26, and two
 seconds of held card at each end. The timestamps below are speaking time, derived from each
 section's own word count rather than guessed, so they stay honest if you re-cut it. Re-check
 after any edit:
@@ -44,18 +44,18 @@ Record at 1920x1080 or wider and leave the console on **Large** — every link b
 
 ---
 
-## 0:00 — 0:15 · Title
+## 0:00 — 0:17 · Title
 
 > **Open:** `docs/card-open.html` from the filesystem, fullscreen. Nothing moves. Hold the
 > frame for two seconds before speaking and two after, so the cut has somewhere to land.
 
-I'm Goutham. This is `reclaim`, built for Track 3. The brief asks for measured money
-recovered — with stopping rules and an audit trail. So the harness and the honest baseline
-are the product here, not the features.
+I'm Goutham. This is `reclaim`, for Track 3 — it recovers failed payments. Most systems
+retry everything three times and call it a day. That works, until it meets the one failure
+where retrying is the worst thing you can possibly do.
 
 ---
 
-## 0:15 — 0:51 · The trap
+## 0:17 — 0:53 · The trap
 
 > **Open:** <http://127.0.0.1:8000/?batch=B&run=naive&case=case_B00072&zoom=present>
 >
@@ -78,7 +78,7 @@ A system that retries everything three times finds that case. And charges it twi
 
 ---
 
-## 0:51 — 1:29 · What it does
+## 0:53 — 1:30 · What it does
 
 > **Show:** the editor, not the browser — `reclaim/core/policy.py`, the `WHAT EACH CAUSE
 > BUYS` block near the top of the module docstring. Nine causes, nine actions, one screen,
@@ -88,7 +88,7 @@ It sorts every failure into one of nine root causes, because each implies a diff
 action. An empty account needs a different **time**, not more attempts. An abandoned OTP
 screen needs the *customer* back. A broken route needs another route, now.
 
-Nine causes, nine right answers. A retry loop gets one of them by accident.
+Nine causes, nine right answers. A retry loop gets one by accident.
 
 Exactly one module calls a language model: it reads the issuer's messy free text and names
 the cause. That is all. Retry timing is a policy, budgets are arithmetic, and anything that
@@ -96,7 +96,7 @@ moves money is plain code behind a gate.
 
 ---
 
-## 1:29 — 2:31 · Why you can believe the number
+## 1:30 — 2:32 · Why you can believe the number
 
 > **Show:** the terminal. Run this live — it takes about a second, and the six test names are
 > the whole argument. `-vv`, not `-v`: `addopts = "-q"` in `pyproject.toml` cancels a single
@@ -131,7 +131,7 @@ never been tuned against.
 
 ---
 
-## 2:31 — 3:23 · The result, and the thing it caught
+## 2:32 — 3:24 · The result, and the thing it caught
 
 > **Open:** <http://127.0.0.1:8000/?batch=B&view=statement&zoom=present>
 >
@@ -157,7 +157,7 @@ twenty**. The full ordering holds in **sixteen**, and sixteen is what I report.
 
 ---
 
-## 3:23 — 4:25 · Bounded, and provable
+## 3:24 — 4:26 · Bounded, and provable
 
 > **Open:** <http://127.0.0.1:8000/?batch=B&view=assurance&zoom=present>
 > — four arms side by side, six checks each. Both asserted arms read `6 of 6 held`. Naive
@@ -187,7 +187,7 @@ and why.
 
 ---
 
-## 4:25 — 4:55 · What it does not do
+## 4:26 — 4:55 · What it does not do
 
 > **Show:** the GitHub repo page, then the README results table. Nothing to operate.
 
@@ -195,7 +195,7 @@ The limits, straight. The world is synthetic and its constants are anchors from 
 sources, not measurements. I am not claiming they are right — I am claiming the ranking
 survives moving all of them at once.
 
-The model runs **once per batch, ever**, and its output is committed. There is no key to get:
+The model runs **once per batch, ever**, and its output is committed. No key to get:
 four commands, and every number reproduces.
 
 That was the goal. Not the highest recovery rate — a number you can check.
