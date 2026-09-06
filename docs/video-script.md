@@ -80,9 +80,11 @@ A system that retries everything three times finds that case. And charges it twi
 
 ## 0:53 — 1:30 · What it does
 
-> **Show:** the editor, not the browser — `reclaim/core/policy.py`, the `WHAT EACH CAUSE
-> BUYS` block near the top of the module docstring. Nine causes, nine actions, one screen,
-> no scrolling.
+> **Show:** the terminal, same window as the next section — `reclaim/core/policy.py` lines
+> 32-51, printed with `sed -n '32,51p' reclaim/core/policy.py`. Twenty lines, no scrolling.
+> Run it before the take. Not an editor: the block is a docstring, so every editor colours it
+> as one flat string and charges you a sidebar for the privilege. Land the last line on
+> `SEALED. Imports nothing from the simulated world.`
 
 It sorts every failure into one of nine root causes, because each implies a different
 action. An empty account needs a different **time**, not more attempts. An abandoned OTP

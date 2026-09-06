@@ -98,8 +98,27 @@ more than a sentence.
 
 ### 0:53 — 1:30 · What it does
 
-**Editor**, not the browser: `reclaim/core/policy.py`, the `WHAT EACH CAUSE BUYS` block in
-the module docstring (near the top). Nine causes, nine actions, one screen, no scrolling.
+**The terminal** — the same window as the next section, which is one less application on
+camera. `reclaim/core/policy.py` lines 32-51, the `WHAT EACH CAUSE BUYS` block:
+
+```bash
+sed -n '32,51p' reclaim/core/policy.py                                   # bash
+Get-Content reclaim/core/policy.py | Select-Object -Skip 31 -First 20    # PowerShell
+```
+
+Twenty lines, 91 characters at the widest, which is comfortable at a 24px terminal font on a
+1080 capture. Run it before the take so the output is already sitting there.
+
+**Not an editor, and not GitHub**, both of which were tried. The block is inside a docstring,
+so every editor colours the whole thing as one string — there is no highlighting to gain, and
+an editor adds a sidebar, tabs and a minimap to pay for it. GitHub's blob view renders dark
+by default, spends 320px on the file tree, and its `#L32-L51` anchor leaves the block at the
+bottom edge of the viewport.
+
+Land the last line — "anything that moves money is plain code behind a gate" — on
+`SEALED. Imports nothing from the simulated world.`, which is the last line on screen.
+`ambiguous_debited  never charge` is also sitting in that table, four rows up, tying back to
+the case from the cold open without you having to say so.
 
 Then scroll once to `_post_authorization_veto` if you want a second beat — but the script
 does not need it here, and the same code has its own moment at 3:24.
