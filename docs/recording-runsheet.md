@@ -260,6 +260,26 @@ card. The comment at the top of the file says so too.
 
 ---
 
+## Do not press Play
+
+Not in any shot. Every case in this cut is reached by URL, and the transport controls exist
+for someone browsing a batch, not for the recording.
+
+On the **control** arm it is worse than pointless. `/api/timeline?run=B-control` returns
+`total_events: 0` — 1,800 ledger rows, nothing replayable, because the arm took no actions.
+`play()` sees `cursor >= events.length`, flips the label to `Pause`, and `tick()` immediately
+stops it again: the button flickers and nothing happens. That reads on camera as an app that
+ignored a click, in the section about whether the numbers can be trusted.
+
+On a **case** shot it actively destroys the frame. `restart()` sets `state.caseId = null` and
+replaces the case panel with *"Select Play, or choose an entry from the decision list"* — so
+the trail being discussed disappears mid-sentence.
+
+The screen already says the thing without help. *"No actions recorded. This arm did nothing
+at all — which for the control arm is the entire point"* is the shot.
+
+---
+
 ## Two things worth resisting
 
 **A feature tour.** The strongest thing here is the control arm, and it is the one thing no
