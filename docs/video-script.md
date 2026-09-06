@@ -109,7 +109,9 @@ moves money is plain code behind a gate.
 > .venv/Scripts/python -m pytest tests/test_seal.py -vv
 > ```
 >
-> The line to let land is `test_core_cannot_read_ground_truth PASSED`.
+> Same terminal as the last section, `clear`ed, near 100 columns. Have the command typed but
+> not run when you start; press Enter on *"and a test fails if it does"* so the six lines
+> land on the words. `test_core_cannot_read_ground_truth PASSED` is the one to let land.
 >
 > **Then open:** <http://127.0.0.1:8000/?batch=B&run=control&view=book&zoom=present>
 > — the control arm's stream, which reads *"no actions recorded — which for the control arm

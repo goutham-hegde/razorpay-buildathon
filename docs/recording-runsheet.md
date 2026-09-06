@@ -125,11 +125,26 @@ does not need it here, and the same code has its own moment at 3:24.
 
 ### 1:30 — 2:32 · Why you can believe the number
 
-**Terminal**, one command, let it run on camera. It takes about a second:
+**The terminal again**, same window and same size as the previous section. `clear` first, so
+the output starts at the top of an empty screen rather than under the docstring.
+
+One command, run on camera. It finishes in 0.16s, so there is no waiting shot — which is
+why the *timing of the keystroke* is the direction here:
 
 ```bash
 .venv/Scripts/python -m pytest tests/test_seal.py -vv
 ```
+
+Have it typed at the prompt but **not executed** before you start recording. Say the first
+two sentences over the bare command, and press Enter on the words *"and a test fails if it
+does"* — the six lines land exactly there. The last sentence, "the most important test in the
+repository", goes over the finished output. Typing it live only buys a fumble.
+
+**Keep the terminal near 100 columns.** pytest sizes this output to the terminal, so a
+maximized 1920px window at a small font gives ~130 columns and strands `PASSED` and `[ 16%]`
+out at the right edge, far from the names that are the entire point. At ~100 columns — about
+a 26px font at 1080 — the columns stay tight. That width also fits the previous section's
+91-character block, so one terminal setting serves both.
 
 **`-vv`, not `-v`.** `pyproject.toml` sets `addopts = "-q"`, and a single `-v` only cancels
 it back to the default — you get six dots and no names, on the one shot whose whole point is
@@ -144,7 +159,11 @@ tests/test_seal.py::test_core_cannot_read_ground_truth             PASSED
 tests/test_seal.py::test_truth_is_a_separate_file_from_cases       PASSED
 ```
 
-The one to let land is `test_core_cannot_read_ground_truth`.
+The one to let land is `test_core_cannot_read_ground_truth`, fifth of the six.
+
+Leave pytest's header on screen. `platform win32 -- Python 3.13.13, pytest-9.1.1`,
+`configfile: pyproject.toml` and `collected 6 items` are six lines of provenance for free,
+and sixteen lines total still sits comfortably in a 1080 frame at 26px.
 
 Then **Window A**, arm picker to **control**:
 
