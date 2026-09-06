@@ -81,12 +81,16 @@ moves money is plain code behind a gate.
 
 ## 1:14 — 2:18 · Why you can believe the number
 
-> **Show:** the terminal. Run this live — it takes about a second, and the test's name is the
-> whole argument: `test_the_policy_reads_nothing_from_the_simulated_world`.
+> **Show:** the terminal. Run this live — it takes about a second, and the six test names are
+> the whole argument. `-vv`, not `-v`: `addopts = "-q"` in `pyproject.toml` cancels a single
+> `-v` out and you get a row of dots with no names, which is the one shot that has to show
+> names.
 >
 > ```bash
-> .venv/Scripts/python -m pytest tests/test_seal.py -v
+> .venv/Scripts/python -m pytest tests/test_seal.py -vv
 > ```
+>
+> The line to let land is `test_core_cannot_read_ground_truth PASSED`.
 >
 > **Then open:** <http://127.0.0.1:8000/?batch=B&run=control&view=book&zoom=present>
 > — the control arm's stream, which reads *"no actions recorded — which for the control arm

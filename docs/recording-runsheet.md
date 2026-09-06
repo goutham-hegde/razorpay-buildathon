@@ -83,11 +83,23 @@ does not need it here, and the same code has its own moment at 3:17.
 **Terminal**, one command, let it run on camera. It takes about a second:
 
 ```bash
-.venv/Scripts/python -m pytest tests/test_seal.py -v
+.venv/Scripts/python -m pytest tests/test_seal.py -vv
 ```
 
-Six green lines, and the name of the test is the argument:
-`test_the_policy_reads_nothing_from_the_simulated_world`.
+**`-vv`, not `-v`.** `pyproject.toml` sets `addopts = "-q"`, and a single `-v` only cancels
+it back to the default — you get six dots and no names, on the one shot whose whole point is
+the names. With `-vv`:
+
+```
+tests/test_seal.py::test_core_has_no_static_import_of_synth        PASSED
+tests/test_seal.py::test_core_never_references_synth_by_string     PASSED
+tests/test_seal.py::test_the_poison_actually_bites                 PASSED
+tests/test_seal.py::test_core_imports_cleanly_with_synth_poisoned  PASSED
+tests/test_seal.py::test_core_cannot_read_ground_truth             PASSED
+tests/test_seal.py::test_truth_is_a_separate_file_from_cases       PASSED
+```
+
+The one to let land is `test_core_cannot_read_ground_truth`.
 
 Then **Window A**, arm picker to **control**:
 
