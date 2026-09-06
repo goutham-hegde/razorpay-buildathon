@@ -278,6 +278,22 @@ the trail being discussed disappears mid-sentence.
 The screen already says the thing without help. *"No actions recorded. This arm did nothing
 at all — which for the control arm is the entire point"* is the shot.
 
+**If you press Play while setting up, reload the URL before recording.** `step()` increments
+the counter row as it plays, so a stream that was started and stopped leaves `cases worked`,
+`charges presented` and the rest showing partial totals that match nothing in the README —
+and reading a stray number off a screen is exactly the failure this project is built to
+avoid. Use a plain reload, not `Restart`: Restart zeroes the counters but also nulls
+`state.caseId` and empties the case panel with it.
+
+**What Play actually shows, if you ever want it elsewhere.** Not sample data — the feed is
+read back from `data/<batch>/ledger.db` row by row, newest first, which is why entries appear
+at the top and push the rest down. Per arm: naive 3,000 entries, agent 2,340, control 0. The
+speed slider defaults to 18, and the interval is `max(8, 900 / speed)` — 50ms, or 20 entries
+a second, which is a firehose, and two minutes to reach the end. Drag speed to **1** for
+900ms per entry. On the naive arm at that pace the red `charged twice` rows arrive one at a
+time and can actually be read. It is a good shot for a longer cut. There is no room for it
+in five minutes, and no line in the script to carry it.
+
 ---
 
 ## Two things worth resisting
